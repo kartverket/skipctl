@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"log/slog"
 	"os"
 
 	"github.com/spf13/cobra"
@@ -9,6 +10,8 @@ import (
 )
 
 var cfgFile string
+
+var log *slog.Logger
 
 var rootCmd = &cobra.Command{
 	Use:   "skipctl",
@@ -18,7 +21,8 @@ var rootCmd = &cobra.Command{
 	// Run: func(cmd *cobra.Command, args []string) { },
 }
 
-func Execute() {
+func Execute(logger *slog.Logger) {
+	log = logger
 	err := rootCmd.Execute()
 	if err != nil {
 		os.Exit(1)

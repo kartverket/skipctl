@@ -1,11 +1,9 @@
-/*
-Copyright © 2024 NAME HERE <EMAIL ADDRESS>
-*/
 package cmd
 
 import (
-	"fmt"
+	"time"
 
+	"github.com/kartverket/skipctl/pkg/server"
 	"github.com/spf13/cobra"
 )
 
@@ -15,21 +13,21 @@ var serveCmd = &cobra.Command{
 	Short: "Serves API access in order to aid debugging",
 	Long: `Intended to be run inside a SKIP cluster in order to help product teams
 debug various network issues.`,
-	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("serve called")
+	Run: func(_ *cobra.Command, _ []string) {
+		if err := server.Serve(addr, globalTimeout); err != nil {
+			log.Error("could not start server", "error", err)
+		}
 	},
 }
+
+var (
+	addr          string
+	globalTimeout time.Duration
+)
 
 func init() {
 	rootCmd.AddCommand(serveCmd)
 
-	// Here you will define your flags and configuration settings.
-
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// serveCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// serveCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	serveCmd.Flags().StringVar(&addr, "addr", "0.0.0.0:3514", "Address to listen on")
+	serveCmd.Flags().DurationVar(&globalTimeout, "global-timeout", 1*time.Minute, "Max timeout for all probes")
 }
