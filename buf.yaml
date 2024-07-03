@@ -1,0 +1,11 @@
+version: v2
+modules:
+  - path: proto/**
+lint:
+  use:
+    - DEFAULT
+breaking:
+  use:
+    - FILE
+deps:
+  - buf.build/protocolbuffers/gofeatures:v1.34.2

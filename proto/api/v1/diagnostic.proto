@@ -1,0 +1,42 @@
+syntax = "proto3";
+package api.v1;
+
+import "google/protobuf/duration.proto";
+
+// The diagnostic service definition.
+service DiagnosticService {
+  rpc Ping (PingRequest) returns (PingResponse) {}
+  rpc PortProbe (PortProbeRequest) returns (PortProbeResponse) {}
+}
+
+// Do a ping for a given hostname
+message PingRequest {
+  string host = 1;
+  int32 count = 2;
+  optional google.protobuf.Duration timeout = 3;
+}
+
+// Results of the ping test
+message PingResponse {
+  bool pingable = 1;
+  int32 packets_received = 2;
+  int32 packets_sent = 3;
+  int32 packet_loss_percentage = 4;
+  string pinged_host = 5;
+  google.protobuf.Duration min_rtt = 6;
+  google.protobuf.Duration max_rtt = 7;
+  google.protobuf.Duration avg_rtt = 8;
+  google.protobuf.Duration std_dev_rtt = 9;
+}
+
+message PortProbeRequest {
+  // Hostname or IP
+  string host = 1;
+  int32 port = 2;
+  optional google.protobuf.Duration timeout = 3;
+}
+
+message PortProbeResponse {
+  bool open = 1;
+  optional string addr_probed = 2;
+}
