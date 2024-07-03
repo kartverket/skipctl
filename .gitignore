@@ -1,0 +1,7 @@
+/bin/
+/kubeconfig
+
+.vscode/
+.idea/
+dist/
+skipctl
