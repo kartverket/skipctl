@@ -22,7 +22,6 @@ var testCmd = &cobra.Command{
 func init() {
 	rootCmd.AddCommand(testCmd)
 	testCmd.PersistentFlags().StringVarP(&hostAddr, "addr", "a", "localhost:3514", "The server to use")
-	testCmd.PersistentFlags().DurationVarP(&timeout, "timeout", "t", 30*time.Second, "Timeout for network test")
+	testCmd.PersistentFlags().DurationVarP(&timeout, "timeout", "t", 10*time.Second, "Timeout for network test") //nolint:lll,mnd // sane default, line length is to be expected
 	testCmd.PersistentFlags().BoolVar(&tls, "tls", true, "Whether to use TLS towards the server")
-
 }

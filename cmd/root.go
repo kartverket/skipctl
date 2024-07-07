@@ -5,24 +5,25 @@ import (
 	"log/slog"
 	"os"
 
+	"github.com/kartverket/skipctl/pkg/auth"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
 
-var cfgFile string
-
-var log *slog.Logger
+var (
+	cfgFile string
+	log     *slog.Logger
+	debug   bool
+)
 
 var rootCmd = &cobra.Command{
 	Use:   "skipctl",
 	Short: "A tool for interacting with the SKIP platform",
-	// Uncomment the following line if your bare application
-	// has an action associated with it:
-	// Run: func(cmd *cobra.Command, args []string) { },
 }
 
 func Execute(logger *slog.Logger) {
 	log = logger
+	auth.SetLogger(logger)
 	err := rootCmd.Execute()
 	if err != nil {
 		os.Exit(1)
@@ -32,11 +33,8 @@ func Execute(logger *slog.Logger) {
 func init() {
 	cobra.OnInitialize(initConfig)
 
-	// Here you will define your flags and configuration settings.
-	// Cobra supports persistent flags, which, if defined here,
-	// will be global for your application.
-
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.skipctl.yaml)")
+	rootCmd.PersistentFlags().BoolVar(&debug, "debug", false, "enable debug mode")
 }
 
 // initConfig reads in config file and ENV variables if set.

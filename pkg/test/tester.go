@@ -2,11 +2,14 @@ package test
 
 import (
 	"context"
+	"crypto/tls"
 	"fmt"
 	"time"
 
 	"github.com/kartverket/skipctl/pkg/api"
+	"github.com/kartverket/skipctl/pkg/auth"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/protobuf/types/known/durationpb"
 )
@@ -15,13 +18,22 @@ type Tester struct {
 	client api.DiagnosticServiceClient
 }
 
-func NewTester(serverAddr string, useTLS bool) (*Tester, error) {
+func NewTester(_ context.Context, serverAddr string, useTLS bool) (*Tester, error) {
 	var opts []grpc.DialOption
-	if !useTLS {
-		opts = append(opts, grpc.WithTransportCredentials(insecure.NewCredentials()))
+
+	adcCreds, err := auth.NewADCBackedRPCCredentials()
+	if err != nil {
+		return nil, err
 	}
 
-	var conn *grpc.ClientConn
+	opts = append(opts, grpc.WithPerRPCCredentials(adcCreds))
+
+	if !useTLS {
+		opts = append(opts, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	} else {
+		opts = append(opts, grpc.WithTransportCredentials(credentials.NewTLS(&tls.Config{})))
+	}
+
 	conn, err := grpc.NewClient(serverAddr, opts...)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create grpc connection: %w", err)

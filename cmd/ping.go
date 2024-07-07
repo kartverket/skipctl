@@ -17,13 +17,13 @@ var (
 var pingCmd = &cobra.Command{
 	Use:   "ping",
 	Short: "Perform a ping from a SKIP cluster",
-	Run: func(cmd *cobra.Command, args []string) {
+	Run: func(_ *cobra.Command, _ []string) {
 		if len(hostname) == 0 {
 			log.Error("no hostname provided")
 			os.Exit(1)
 		}
 
-		t, err := test.NewTester(hostAddr, tls)
+		t, err := test.NewTester(context.Background(), hostAddr, tls)
 		if err != nil {
 			log.Error("could not create client", "error", err)
 			os.Exit(1)
@@ -42,15 +42,6 @@ var pingCmd = &cobra.Command{
 func init() {
 	testCmd.AddCommand(pingCmd)
 
-	// Here you will define your flags and configuration settings.
-
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// pingCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// pingCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 	pingCmd.Flags().StringVar(&hostname, "hostname", "", "hostname to ping")
 	pingCmd.Flags().Int32VarP(&count, "count", "c", 10, "number of pings to send")
 }

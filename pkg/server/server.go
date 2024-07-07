@@ -1,12 +1,14 @@
 package server
 
 import (
+	"fmt"
 	"log/slog"
 	"net"
 	"os"
 	"time"
 
 	"github.com/kartverket/skipctl/pkg/api"
+	"github.com/kartverket/skipctl/pkg/auth"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 )
@@ -15,16 +17,24 @@ var log *slog.Logger
 
 func init() {
 	log = slog.New(slog.NewJSONHandler(os.Stdout, nil))
+	auth.SetLogger(log)
 }
 
 // TODO: check for priviliges to do ICMP
-func Serve(addr string, timeout time.Duration) error {
+func Serve(addr string, timeout time.Duration, idTokenOrg string) error {
+	if len(idTokenOrg) == 0 {
+		return fmt.Errorf("missing ID token organization")
+	}
+
 	l, err := net.Listen("tcp", addr)
 	if err != nil {
 		return err
 	}
 
-	s := grpc.NewServer()
+	opts := []grpc.ServerOption{
+		grpc.UnaryInterceptor(auth.EnsureValidToken(idTokenOrg)),
+	}
+	s := grpc.NewServer(opts...)
 
 	// Register services
 	api.RegisterDiagnosticServiceServer(s, &DiagnosticService{
