@@ -8,7 +8,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var activeApiServer discovery.ApiServer
+var activeAPIServer discovery.ApiServer
 
 func ValidateAPIServerName(_ *cobra.Command, _ []string) {
 	if len(apiServer) == 0 {
@@ -18,9 +18,9 @@ func ValidateAPIServerName(_ *cobra.Command, _ []string) {
 
 	var matchFound = false
 	for _, server := range apiServers {
-		if strings.ToLower(apiServer) == strings.ToLower(server.Name) {
+		if strings.EqualFold(apiServer, server.Name) {
 			matchFound = true
-			activeApiServer = server
+			activeAPIServer = server
 			break
 		}
 	}

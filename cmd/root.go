@@ -20,6 +20,7 @@ var rootCmd = &cobra.Command{
 }
 
 func Execute() {
+	// TODO: Why is outputFormat always "text"?
 	log = logging.ConfigureLogging(outputFormat, debug)
 
 	err := rootCmd.Execute()

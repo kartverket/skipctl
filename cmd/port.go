@@ -27,7 +27,7 @@ var portProbeCmd = &cobra.Command{
 			os.Exit(1)
 		}
 
-		t, err := test.NewTester(context.Background(), activeApiServer.Addr, tls)
+		t, err := test.NewTester(context.Background(), activeAPIServer.Addr, tls)
 		if err != nil {
 			log.Error("could not create client", "error", err)
 			os.Exit(1)
