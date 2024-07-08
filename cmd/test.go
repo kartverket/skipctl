@@ -15,8 +15,8 @@ var (
 // testCmd represents the test command
 var testCmd = &cobra.Command{
 	Use:   "test",
-	Short: "Perform a network test",
-	Long:  `Perform a network test from the perspective of a SKIP cluster.`,
+	Short: "Perform a connectivity test",
+	Long:  `Perform a connectivity test from the perspective of a SKIP cluster.`,
 }
 
 func init() {

@@ -3,9 +3,12 @@ module github.com/kartverket/skipctl
 go 1.22.4
 
 require (
+	github.com/PumpkinSeed/slog-context v0.1.2
+	github.com/pkg/errors v0.9.1
 	github.com/prometheus-community/pro-bing v0.4.0
 	github.com/spf13/cobra v1.8.1
 	github.com/spf13/viper v1.19.0
+	golang.org/x/oauth2 v0.21.0
 	google.golang.org/api v0.171.0
 	google.golang.org/grpc v1.64.0
 	google.golang.org/protobuf v1.34.2
@@ -44,7 +47,6 @@ require (
 	golang.org/x/crypto v0.24.0 // indirect
 	golang.org/x/exp v0.0.0-20230905200255-921286631fa9 // indirect
 	golang.org/x/net v0.26.0 // indirect
-	golang.org/x/oauth2 v0.21.0 // indirect
 	golang.org/x/sync v0.7.0 // indirect
 	golang.org/x/sys v0.21.0 // indirect
 	golang.org/x/text v0.16.0 // indirect

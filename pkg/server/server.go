@@ -1,7 +1,7 @@
 package server
 
 import (
-	"fmt"
+	"errors"
 	"log/slog"
 	"net"
 	"os"
@@ -9,21 +9,23 @@ import (
 
 	"github.com/kartverket/skipctl/pkg/api"
 	"github.com/kartverket/skipctl/pkg/auth"
+	"github.com/kartverket/skipctl/pkg/logging"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 )
 
 var log *slog.Logger
 
-func init() {
-	log = slog.New(slog.NewJSONHandler(os.Stdout, nil))
-	auth.SetLogger(log)
-}
+// TODO: check for privileges to do ICMP
 
-// TODO: check for priviliges to do ICMP
+// Serve starts a new API server capable of performing various probes for clients
 func Serve(addr string, timeout time.Duration, idTokenOrg string) error {
+	if log == nil {
+		log = logging.Logger()
+	}
+
 	if len(idTokenOrg) == 0 {
-		return fmt.Errorf("missing ID token organization")
+		return errors.New("missing ID token organization")
 	}
 
 	l, err := net.Listen("tcp", addr)
@@ -38,7 +40,6 @@ func Serve(addr string, timeout time.Duration, idTokenOrg string) error {
 
 	// Register services
 	api.RegisterDiagnosticServiceServer(s, &DiagnosticService{
-		log:           log,
 		globalTimeout: timeout,
 	})
 

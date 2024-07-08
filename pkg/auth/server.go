@@ -4,6 +4,8 @@ import (
 	"context"
 	"strings"
 
+	slogcontext "github.com/PumpkinSeed/slog-context"
+	"github.com/kartverket/skipctl/pkg/logging"
 	"google.golang.org/api/idtoken"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -14,9 +16,8 @@ import (
 var (
 	errMissingMetadata = status.Errorf(codes.InvalidArgument, "missing metadata")
 	errInvalidToken    = status.Errorf(codes.Unauthenticated, "invalid token")
+	log                = logging.Logger()
 )
-
-type contextKey string
 
 func validateToken(ctx context.Context, org string, authorization []string) (string, error) {
 	if len(authorization) < 1 {
@@ -27,7 +28,7 @@ func validateToken(ctx context.Context, org string, authorization []string) (str
 	// we are explicitly not setting an audience as it's random
 	payload, err := idtoken.Validate(ctx, token, "")
 	if err != nil {
-		log.ErrorContext(ctx, "error validating token", "error", err)
+		log.WarnContext(ctx, "error validating token", "error", err)
 		return "", errInvalidToken
 	}
 
@@ -48,11 +49,12 @@ func validateToken(ctx context.Context, org string, authorization []string) (str
 // be scoped to a specific organization. If the token is missing or invalid, the interceptor blocks
 // execution of the handler and returns an error. Otherwise, the interceptor invokes the unary
 // handler.
-func ValidADCTokenWithOrg(idTokenOrg string) func(ctx context.Context, req any, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (any, error) {
-	return func(ctx context.Context, req any, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (any, error) {
-
+func ValidADCTokenWithOrg(idTokenOrg string) func(
+	ctx context.Context, req any, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (any, error) {
+	return func(ctx context.Context, req any, _ *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (any, error) {
 		md, ok := metadata.FromIncomingContext(ctx)
 		if !ok {
+			log.WarnContext(ctx, "no metadata present for request")
 			return nil, errMissingMetadata
 		}
 		// The keys within metadata.MD are normalized to lowercase.
@@ -62,8 +64,8 @@ func ValidADCTokenWithOrg(idTokenOrg string) func(ctx context.Context, req any, 
 		if err != nil {
 			return nil, err
 		}
-		log.InfoContext(ctx, "I am authz", "email", email)
-		newCtx := context.WithValue(ctx, contextKey("email"), email)
+
+		newCtx := slogcontext.WithValue(ctx, "auth-user", email)
 		// Continue execution of handler after ensuring a valid token.
 		return handler(newCtx, req)
 	}

@@ -4,7 +4,6 @@ import (
 	context "context"
 	"errors"
 	"fmt"
-	"log/slog"
 	"net"
 	"time"
 
@@ -19,19 +18,17 @@ const dnsResolveTimeout = 2 * time.Second
 
 type DiagnosticService struct {
 	api.UnimplementedDiagnosticServiceServer
-	log           *slog.Logger
 	globalTimeout time.Duration
 }
 
 func (d DiagnosticService) Ping(ctx context.Context, req *api.PingRequest) (*api.PingResponse, error) {
-	l := d.log.With("payload", req)
-	l.InfoContext(ctx, "received ping request")
+	log.InfoContext(ctx, "received ping request")
 	netCtx, cancel := globalTimeoutContext(ctx, d.globalTimeout)
 	defer cancel()
 
 	res, err := doPing(netCtx, req.GetHost(), int(req.GetCount()), protoDuration(req.GetTimeout()))
 	if err != nil {
-		l.WarnContext(ctx, "ping failed", "error", err)
+		log.WarnContext(ctx, "ping failed", "error", err)
 		return nil, err
 	}
 
@@ -39,14 +36,13 @@ func (d DiagnosticService) Ping(ctx context.Context, req *api.PingRequest) (*api
 }
 
 func (d DiagnosticService) PortProbe(ctx context.Context, req *api.PortProbeRequest) (*api.PortProbeResponse, error) {
-	l := d.log.With("payload", req)
 	netCtx, cancel := globalTimeoutContext(ctx, d.globalTimeout)
 	defer cancel()
 
-	l.InfoContext(ctx, "received port probe request")
+	log.InfoContext(ctx, "received port probe request")
 	res, err := doProbe(netCtx, req.GetHost(), int(req.GetPort()), protoDuration(req.GetTimeout()))
 	if err != nil {
-		l.InfoContext(ctx, "port probe failed", "error", err)
+		log.InfoContext(ctx, "port probe failed", "error", err)
 	}
 	return res, nil
 }
