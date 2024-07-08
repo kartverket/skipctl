@@ -32,9 +32,11 @@ func validateToken(ctx context.Context, org string, authorization []string) (str
 		return "", errInvalidToken
 	}
 
+	email := payload.Claims["email"].(string)
+
 	hd, ok := payload.Claims["hd"].(string)
 	if !ok || len(hd) == 0 {
-		log.WarnContext(ctx, "claim 'hd' indicating organization not present or empty", "subject", payload.Subject)
+		log.WarnContext(ctx, "claim 'hd' indicating organization not present or empty", "email", email)
 		return "", errInvalidToken
 	}
 	if hd != org {
@@ -42,7 +44,7 @@ func validateToken(ctx context.Context, org string, authorization []string) (str
 		return "", errInvalidToken
 	}
 
-	return payload.Claims["email"].(string), nil
+	return email, nil
 }
 
 // ValidADCTokenWithOrg ensures a valid token exists within a request's metadata. The token must

@@ -7,6 +7,7 @@ import (
 	"net"
 	"time"
 
+	slogcontext "github.com/PumpkinSeed/slog-context"
 	"github.com/kartverket/skipctl/pkg/api"
 	probing "github.com/prometheus-community/pro-bing"
 	"google.golang.org/protobuf/types/known/durationpb"
@@ -22,13 +23,15 @@ type DiagnosticService struct {
 }
 
 func (d DiagnosticService) Ping(ctx context.Context, req *api.PingRequest) (*api.PingResponse, error) {
-	log.InfoContext(ctx, "received ping request")
-	netCtx, cancel := globalTimeoutContext(ctx, d.globalTimeout)
+	reqCtx := slogcontext.WithValue(ctx, "req", req)
+
+	log.InfoContext(reqCtx, "received ping request")
+	netCtx, cancel := globalTimeoutContext(reqCtx, d.globalTimeout)
 	defer cancel()
 
 	res, err := doPing(netCtx, req.GetHost(), int(req.GetCount()), protoDuration(req.GetTimeout()))
 	if err != nil {
-		log.WarnContext(ctx, "ping failed", "error", err)
+		log.WarnContext(reqCtx, "ping failed", "error", err)
 		return nil, err
 	}
 
@@ -36,13 +39,14 @@ func (d DiagnosticService) Ping(ctx context.Context, req *api.PingRequest) (*api
 }
 
 func (d DiagnosticService) PortProbe(ctx context.Context, req *api.PortProbeRequest) (*api.PortProbeResponse, error) {
-	netCtx, cancel := globalTimeoutContext(ctx, d.globalTimeout)
+	reqCtx := slogcontext.WithValue(ctx, "req", req)
+	netCtx, cancel := globalTimeoutContext(reqCtx, d.globalTimeout)
 	defer cancel()
 
-	log.InfoContext(ctx, "received port probe request")
+	log.InfoContext(reqCtx, "received port probe request")
 	res, err := doProbe(netCtx, req.GetHost(), int(req.GetPort()), protoDuration(req.GetTimeout()))
 	if err != nil {
-		log.InfoContext(ctx, "port probe failed", "error", err)
+		log.InfoContext(reqCtx, "port probe failed", "error", err)
 	}
 	return res, nil
 }

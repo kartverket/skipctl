@@ -4,10 +4,12 @@ import (
 	"context"
 	"crypto/tls"
 	"fmt"
+	"log/slog"
 	"time"
 
 	"github.com/kartverket/skipctl/pkg/api"
 	"github.com/kartverket/skipctl/pkg/auth"
+	"github.com/kartverket/skipctl/pkg/logging"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/credentials/insecure"
@@ -16,6 +18,7 @@ import (
 
 type Tester struct {
 	client api.DiagnosticServiceClient
+	log    *slog.Logger
 }
 
 func NewTester(_ context.Context, serverAddr string, useTLS bool) (*Tester, error) {
@@ -41,13 +44,31 @@ func NewTester(_ context.Context, serverAddr string, useTLS bool) (*Tester, erro
 
 	return &Tester{
 		client: api.NewDiagnosticServiceClient(conn),
+		log:    logging.Logger().With("apiServer", serverAddr),
 	}, nil
 }
 
 func (t *Tester) Ping(ctx context.Context, hostname string, count int32, timeout time.Duration) (*api.PingResponse, error) {
+	t.log.InfoContext(ctx, "starting ping", "hostname", "hostname", hostname, "count", count)
 	res, err := t.client.Ping(ctx, &api.PingRequest{
 		Host:    hostname,
 		Count:   count,
+		Timeout: durationpb.New(timeout),
+	})
+
+	return res, err
+}
+
+func (t *Tester) PortProbe(ctx context.Context, hostname string, port int32, timeout time.Duration) (*api.PortProbeResponse, error) {
+	isValidPort := port >= 1 && port <= 65535
+	if !isValidPort {
+		return nil, fmt.Errorf("invalid port: %d", port)
+	}
+
+	t.log.InfoContext(ctx, "starting port probe", "hostname", hostname, "port", port)
+	res, err := t.client.PortProbe(context.Background(), &api.PortProbeRequest{
+		Host:    hostname,
+		Port:    port,
 		Timeout: durationpb.New(timeout),
 	})
 

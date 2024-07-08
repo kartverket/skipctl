@@ -9,8 +9,8 @@ import (
 )
 
 var (
-	hostname string
-	count    int32
+	pingHostname string
+	pingCount    int32
 )
 
 // pingCmd represents the ping command
@@ -18,7 +18,7 @@ var pingCmd = &cobra.Command{
 	Use:   "ping",
 	Short: "Perform a ping from a SKIP cluster",
 	Run: func(_ *cobra.Command, _ []string) {
-		if len(hostname) == 0 {
+		if len(pingHostname) == 0 {
 			log.Error("no hostname provided")
 			os.Exit(1)
 		}
@@ -29,7 +29,7 @@ var pingCmd = &cobra.Command{
 			os.Exit(1)
 		}
 
-		res, err := t.Ping(context.Background(), hostname, count, timeout)
+		res, err := t.Ping(context.Background(), pingHostname, pingCount, timeout)
 		if err != nil {
 			log.Error("could not ping", "error", err)
 			os.Exit(1)
@@ -42,6 +42,6 @@ var pingCmd = &cobra.Command{
 func init() {
 	testCmd.AddCommand(pingCmd)
 
-	pingCmd.Flags().StringVar(&hostname, "hostname", "", "hostname to ping")
-	pingCmd.Flags().Int32VarP(&count, "count", "c", 10, "number of pings to send")
+	pingCmd.Flags().StringVar(&pingHostname, "hostname", "", "hostname to ping")
+	pingCmd.Flags().Int32VarP(&pingCount, "count", "c", 10, "number of pings to send")
 }
