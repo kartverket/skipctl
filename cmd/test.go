@@ -3,6 +3,7 @@ package cmd
 import (
 	"time"
 
+	"github.com/kartverket/skipctl/pkg/constants"
 	"github.com/kartverket/skipctl/pkg/discovery"
 	"github.com/spf13/cobra"
 )
@@ -31,8 +32,8 @@ var testCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(testCmd)
-	testCmd.PersistentFlags().DurationVarP(&timeout, "timeout", "t", 10*time.Second, "Timeout for network test") //nolint:lll,mnd // sane default, line length is to be expected
+	testCmd.PersistentFlags().DurationVarP(&timeout, "timeout", "t", constants.DefaultTestTimeout, "Timeout for network test") //nolint:lll,mnd // sane default, line length is to be expected
 	testCmd.PersistentFlags().BoolVar(&tls, "tls", true, "Whether to use TLS towards the server")
-	testCmd.PersistentFlags().StringVar(&discoveryHost, "discovery-host", "_skipctl.evenh.net", "The DNS name to use for API server discovery")
+	testCmd.PersistentFlags().StringVar(&discoveryHost, "discovery-host", constants.DefaultDiscoveryServer, "The DNS name to use for API server discovery")
 	testCmd.PersistentFlags().StringVar(&apiServer, "api-server", "", "The name of the API server to use")
 }

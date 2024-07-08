@@ -3,6 +3,7 @@ package cmd
 import (
 	"time"
 
+	"github.com/kartverket/skipctl/pkg/constants"
 	"github.com/kartverket/skipctl/pkg/server"
 	"github.com/spf13/cobra"
 )
@@ -30,6 +31,6 @@ func init() {
 	rootCmd.AddCommand(serveCmd)
 
 	serveCmd.Flags().StringVar(&addr, "addr", "0.0.0.0:3514", "Address to listen on")
-	serveCmd.Flags().DurationVar(&globalTimeout, "global-timeout", 1*time.Minute, "Max timeout for all client probes")
-	serveCmd.Flags().StringVar(&idTokenOrg, "id-token-organization", "kartverket.no", "The organization that is present in valid OIDC ID tokens")
+	serveCmd.Flags().DurationVar(&globalTimeout, "global-timeout", constants.DefaultServerTestTimeout, "Max timeout for all client probes")
+	serveCmd.Flags().StringVar(&idTokenOrg, "id-token-organization", constants.DefaultGoogleOrgId, "The organization that is present in valid OIDC ID tokens")
 }
