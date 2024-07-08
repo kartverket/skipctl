@@ -44,11 +44,11 @@ func validateToken(ctx context.Context, org string, authorization []string) (str
 	return payload.Claims["email"].(string), nil
 }
 
-// EnsureValidToken ensures a valid token exists within a request's metadata. If
-// the token is missing or invalid, the interceptor blocks execution of the
-// handler and returns an error. Otherwise, the interceptor invokes the unary
+// ValidADCTokenWithOrg ensures a valid token exists within a request's metadata. The token must
+// be scoped to a specific organization. If the token is missing or invalid, the interceptor blocks
+// execution of the handler and returns an error. Otherwise, the interceptor invokes the unary
 // handler.
-func EnsureValidToken(idTokenOrg string) func(ctx context.Context, req any, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (any, error) {
+func ValidADCTokenWithOrg(idTokenOrg string) func(ctx context.Context, req any, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (any, error) {
 	return func(ctx context.Context, req any, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (any, error) {
 
 		md, ok := metadata.FromIncomingContext(ctx)

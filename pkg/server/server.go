@@ -32,7 +32,7 @@ func Serve(addr string, timeout time.Duration, idTokenOrg string) error {
 	}
 
 	opts := []grpc.ServerOption{
-		grpc.UnaryInterceptor(auth.EnsureValidToken(idTokenOrg)),
+		grpc.UnaryInterceptor(auth.ValidADCTokenWithOrg(idTokenOrg)),
 	}
 	s := grpc.NewServer(opts...)
 
