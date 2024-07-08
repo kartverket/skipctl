@@ -15,15 +15,16 @@ var (
 
 // pingCmd represents the ping command
 var pingCmd = &cobra.Command{
-	Use:   "ping",
-	Short: "Perform a ping from a SKIP cluster",
+	Use:    "ping",
+	Short:  "Perform a ping from a SKIP cluster",
+	PreRun: ValidateAPIServerName,
 	Run: func(_ *cobra.Command, _ []string) {
 		if len(pingHostname) == 0 {
 			log.Error("no hostname provided")
 			os.Exit(1)
 		}
 
-		t, err := test.NewTester(context.Background(), hostAddr, tls)
+		t, err := test.NewTester(context.Background(), activeApiServer.Addr, tls)
 		if err != nil {
 			log.Error("could not create client", "error", err)
 			os.Exit(1)

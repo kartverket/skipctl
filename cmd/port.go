@@ -14,8 +14,9 @@ var (
 )
 
 var portProbeCmd = &cobra.Command{
-	Use:   "probe",
-	Short: "Check whether a TCP port is open from a SKIP cluster",
+	Use:    "probe",
+	Short:  "Check whether a TCP port is open from a SKIP cluster",
+	PreRun: ValidateAPIServerName,
 	Run: func(_ *cobra.Command, _ []string) {
 		if len(probeHostname) == 0 {
 			log.Error("no hostname provided")
@@ -26,7 +27,7 @@ var portProbeCmd = &cobra.Command{
 			os.Exit(1)
 		}
 
-		t, err := test.NewTester(context.Background(), hostAddr, tls)
+		t, err := test.NewTester(context.Background(), activeApiServer.Addr, tls)
 		if err != nil {
 			log.Error("could not create client", "error", err)
 			os.Exit(1)
