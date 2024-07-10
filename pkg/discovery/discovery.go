@@ -6,18 +6,19 @@ import (
 	"encoding/json"
 	"fmt"
 	"net"
-	"time"
+
+	"github.com/kartverket/skipctl/pkg/constants"
 )
 
 var resolver = net.DefaultResolver
 
-type ApiServer struct {
+type APIServer struct {
 	Name string `json:"name"`
 	Addr string `json:"addr"`
 }
 
-func DiscoverAPIServers(dnsKey string) ([]ApiServer, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
+func DiscoverAPIServers(dnsKey string) ([]APIServer, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), constants.DNSDiscoverTimeout)
 	defer cancel()
 
 	records, err := resolver.LookupTXT(ctx, dnsKey)
@@ -36,7 +37,7 @@ func DiscoverAPIServers(dnsKey string) ([]ApiServer, error) {
 	}
 
 	// Decode JSON into a usable structure
-	var apiServers []ApiServer
+	var apiServers []APIServer
 	err = json.Unmarshal(decodedBytes, &apiServers)
 	if err != nil {
 		return nil, fmt.Errorf("failed unmarshalling TXT record: %w", err)

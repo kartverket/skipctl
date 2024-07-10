@@ -5,7 +5,7 @@ import (
 )
 
 var (
-	// Used for communicating version
+	// Used for communicating version.
 	GitTag        = "0.0.0"
 	GitCommitHash string
 )

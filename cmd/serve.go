@@ -8,7 +8,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// serveCmd represents the serve command
+// serveCmd represents the serve command.
 var serveCmd = &cobra.Command{
 	Use:   "serve",
 	Short: "Serves API access in order to aid debugging",
@@ -32,5 +32,5 @@ func init() {
 
 	serveCmd.Flags().StringVar(&addr, "addr", "0.0.0.0:3514", "Address to listen on")
 	serveCmd.Flags().DurationVar(&globalTimeout, "global-timeout", constants.DefaultServerTestTimeout, "Max timeout for all client probes")
-	serveCmd.Flags().StringVar(&idTokenOrg, "id-token-organization", constants.DefaultGoogleOrgId, "The organization that is present in valid OIDC ID tokens")
+	serveCmd.Flags().StringVar(&idTokenOrg, "id-token-organization", constants.DefaultGoogleOrgID, "The organization that is present in valid OIDC ID tokens")
 }

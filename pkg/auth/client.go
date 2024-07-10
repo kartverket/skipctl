@@ -16,7 +16,7 @@ type grpcTokenSource struct {
 }
 
 // idTokenSource is an oauth2.TokenSource that wraps another
-// It takes the id_token from TokenSource and passes that on as a bearer token
+// It takes the id_token from TokenSource and passes that on as a bearer token.
 type idTokenSource struct {
 	TokenSource oauth2.TokenSource
 }

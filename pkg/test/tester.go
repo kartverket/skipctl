@@ -2,7 +2,6 @@ package test
 
 import (
 	"context"
-	"crypto/tls"
 	"fmt"
 	"log/slog"
 	"time"
@@ -36,7 +35,7 @@ func NewTester(_ context.Context, serverAddr string, useTLS bool) (*Tester, erro
 	if !useTLS {
 		opts = append(opts, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	} else {
-		opts = append(opts, grpc.WithTransportCredentials(credentials.NewTLS(&tls.Config{})))
+		opts = append(opts, grpc.WithTransportCredentials(credentials.NewTLS(nil)))
 	}
 
 	conn, err := grpc.NewClient(serverAddr, opts...)

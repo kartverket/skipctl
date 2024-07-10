@@ -18,7 +18,7 @@ var log *slog.Logger
 
 // TODO: check for privileges to do ICMP
 
-// Serve starts a new API server capable of performing various probes for clients
+// Serve starts a new API server capable of performing various probes for clients.
 func Serve(addr string, timeout time.Duration, idTokenOrg string) error {
 	if log == nil {
 		log = logging.Logger()

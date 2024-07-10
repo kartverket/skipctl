@@ -13,10 +13,10 @@ var (
 	timeout       time.Duration
 	tls           bool
 	discoveryHost string
-	apiServers    []discovery.ApiServer
+	apiServers    []discovery.APIServer
 )
 
-// testCmd represents the test command
+// testCmd represents the test command.
 var testCmd = &cobra.Command{
 	Use:   "test",
 	Short: "Perform a connectivity test",
@@ -32,7 +32,7 @@ var testCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(testCmd)
-	testCmd.PersistentFlags().DurationVarP(&timeout, "timeout", "t", constants.DefaultTestTimeout, "Timeout for network test") //nolint:lll,mnd // sane default, line length is to be expected
+	testCmd.PersistentFlags().DurationVarP(&timeout, "timeout", "t", constants.DefaultTestTimeout, "Timeout for network test")
 	testCmd.PersistentFlags().BoolVar(&tls, "tls", true, "Whether to use TLS towards the server")
 	testCmd.PersistentFlags().StringVar(&discoveryHost, "discovery-host", constants.DefaultDiscoveryServer, "The DNS name to use for API server discovery")
 	testCmd.PersistentFlags().StringVar(&apiServer, "api-server", "", "The name of the API server to use")

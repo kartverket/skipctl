@@ -8,7 +8,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var activeAPIServer discovery.ApiServer
+var activeAPIServer discovery.APIServer
 
 func ValidateAPIServerName(_ *cobra.Command, _ []string) {
 	if len(apiServer) == 0 {

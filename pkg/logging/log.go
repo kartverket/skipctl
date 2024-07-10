@@ -21,7 +21,7 @@ func init() {
 }
 
 func ConfigureLogging(mode string, isDebug bool) *slog.Logger {
-	parsedMode, err := ParseOutputMode(mode)
+	parsedMode, err := parseOutputMode(mode)
 	if err != nil {
 		panic(err)
 	}

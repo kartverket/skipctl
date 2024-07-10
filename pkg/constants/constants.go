@@ -6,5 +6,7 @@ const (
 	DefaultDiscoveryServer   = "_skipctl.evenh.net"
 	DefaultTestTimeout       = 10 * time.Second
 	DefaultServerTestTimeout = 1 * time.Minute
-	DefaultGoogleOrgId       = "kartverket.no"
+	DefaultPingCount         = 10
+	DefaultGoogleOrgID       = "kartverket.no"
+	DNSDiscoverTimeout       = 5 * time.Second
 )

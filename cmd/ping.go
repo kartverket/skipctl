@@ -4,6 +4,7 @@ import (
 	"context"
 	"os"
 
+	"github.com/kartverket/skipctl/pkg/constants"
 	"github.com/kartverket/skipctl/pkg/test"
 	"github.com/spf13/cobra"
 )
@@ -13,7 +14,7 @@ var (
 	pingCount    int32
 )
 
-// pingCmd represents the ping command
+// pingCmd represents the ping command.
 var pingCmd = &cobra.Command{
 	Use:    "ping",
 	Short:  "Perform a ping from a SKIP cluster",
@@ -44,5 +45,5 @@ func init() {
 	testCmd.AddCommand(pingCmd)
 
 	pingCmd.Flags().StringVar(&pingHostname, "hostname", "", "hostname to ping")
-	pingCmd.Flags().Int32VarP(&pingCount, "count", "c", 10, "number of pings to send")
+	pingCmd.Flags().Int32VarP(&pingCount, "count", "c", constants.DefaultPingCount, "number of pings to send")
 }

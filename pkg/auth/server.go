@@ -32,7 +32,11 @@ func validateToken(ctx context.Context, org string, authorization []string) (str
 		return "", errInvalidToken
 	}
 
-	email := payload.Claims["email"].(string)
+	email, ok := payload.Claims["email"].(string)
+	if !ok || len(email) == 0 {
+		log.WarnContext(ctx, "error getting email from token, rejecting further operations", "error", err)
+		return "", errInvalidToken
+	}
 
 	hd, ok := payload.Claims["hd"].(string)
 	if !ok || len(hd) == 0 {
