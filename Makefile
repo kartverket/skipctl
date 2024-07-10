@@ -1,8 +1,11 @@
 # Calculate version
 version ?= $(shell git describe --always --tags --dirty)
 
+debug:
+	go build -race -ldflags="-X 'main.GitCommitHash=$(version)'"
+
 build:
-	go build
+	go build -trimpath -ldflags="-s -w -X 'main.GitCommitHash=$(version)'"
 
 dev: lint test build
 

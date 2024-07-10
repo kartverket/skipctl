@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"fmt"
 	"log/slog"
 	"os"
 
@@ -15,11 +16,13 @@ var (
 )
 
 var rootCmd = &cobra.Command{
-	Use:   "skipctl",
-	Short: "A tool for interacting with the SKIP platform",
+	Use:     "skipctl",
+	Short:   "A tool for interacting with the SKIP platform",
+	Version: "See spf13/cobra#943",
 }
 
-func Execute() {
+func Execute(version, hash string) {
+	rootCmd.SetVersionTemplate(fmt.Sprintf("skipctl %s (%s)\n", version, hash))
 	// TODO: Why is outputFormat always "text"?
 	log = logging.ConfigureLogging(outputFormat, debug)
 
