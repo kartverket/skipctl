@@ -17,6 +17,7 @@ var lock sync.Mutex
 func init() {
 	leveler = new(slog.LevelVar)
 	leveler.Set(slog.LevelInfo)
+	// This is the default before anyone calls this function
 	ConfigureLogging("json", false)
 }
 

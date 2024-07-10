@@ -17,6 +17,9 @@ type APIServer struct {
 	Addr string `json:"addr"`
 }
 
+// DiscoverAPIServers will try to do a TXT lookup for a given DNS name. If found it will
+// attempt a unmarshaL(base64_decode(TXT_RECORD_VALUE)) (pseudo code) into a list of APIServer
+// structs.
 func DiscoverAPIServers(dnsKey string) ([]APIServer, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), constants.DNSDiscoverTimeout)
 	defer cancel()

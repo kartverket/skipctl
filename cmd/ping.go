@@ -14,7 +14,6 @@ var (
 	pingCount    int32
 )
 
-// pingCmd represents the ping command.
 var pingCmd = &cobra.Command{
 	Use:    "ping",
 	Short:  "Perform a ping from a SKIP cluster",
