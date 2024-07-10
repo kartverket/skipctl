@@ -23,8 +23,6 @@ var rootCmd = &cobra.Command{
 
 func Execute(version, hash string) {
 	rootCmd.SetVersionTemplate(fmt.Sprintf("skipctl %s (%s)\n", version, hash))
-	// TODO: Why is outputFormat always "text"?
-	log = logging.ConfigureLogging(outputFormat, debug)
 
 	err := rootCmd.Execute()
 	if err != nil {
@@ -33,6 +31,11 @@ func Execute(version, hash string) {
 }
 
 func init() {
+	cobra.OnInitialize(initLogging)
 	rootCmd.PersistentFlags().BoolVar(&debug, "debug", false, "enable debug mode")
-	rootCmd.PersistentFlags().StringVar(&outputFormat, "output", "text", `the output format for logs - must either be "text" or "json"`)
+	rootCmd.PersistentFlags().StringVarP(&outputFormat, "output", "o", "text", `the output format for logs - must either be "text" or "json"`)
+}
+
+func initLogging() {
+	log = logging.ConfigureLogging(outputFormat, debug)
 }
