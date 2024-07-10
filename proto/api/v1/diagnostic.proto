@@ -1,5 +1,5 @@
 syntax = "proto3";
-package api;
+package api.v1;
 
 import "google/protobuf/duration.proto";
 
@@ -19,14 +19,14 @@ message PingRequest {
 // Results of the ping test
 message PingResponse {
   bool pingable = 1;
-  int32 packetsReceived = 2;
-  int32 packetsSent = 3;
-  int32 packetLossPercentage = 4;
-  string pingedHost = 5;
-  google.protobuf.Duration minRtt = 6;
-  google.protobuf.Duration maxRtt = 7;
-  google.protobuf.Duration avgRtt = 8;
-  google.protobuf.Duration stdDevRtt = 9;
+  int32 packets_received = 2;
+  int32 packets_sent = 3;
+  int32 packet_loss_percentage = 4;
+  string pinged_host = 5;
+  google.protobuf.Duration min_rtt = 6;
+  google.protobuf.Duration max_rtt = 7;
+  google.protobuf.Duration avg_rtt = 8;
+  google.protobuf.Duration std_dev_rtt = 9;
 }
 
 message PortProbeRequest {
@@ -38,5 +38,5 @@ message PortProbeRequest {
 
 message PortProbeResponse {
   bool open = 1;
-  optional string addrProbed = 2;
+  optional string addr_probed = 2;
 }

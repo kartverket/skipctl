@@ -7,7 +7,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/kartverket/skipctl/pkg/api"
+	api "github.com/kartverket/skipctl/pkg/api/v1"
 	"github.com/kartverket/skipctl/pkg/auth"
 	"github.com/kartverket/skipctl/pkg/logging"
 	"google.golang.org/grpc"

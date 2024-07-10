@@ -2,9 +2,9 @@
 // versions:
 // - protoc-gen-go-grpc v1.4.0
 // - protoc             (unknown)
-// source: api/diagnostic.proto
+// source: api/v1/diagnostic.proto
 
-package api
+package apiv1
 
 import (
 	context "context"
@@ -19,8 +19,8 @@ import (
 const _ = grpc.SupportPackageIsVersion8
 
 const (
-	DiagnosticService_Ping_FullMethodName      = "/api.DiagnosticService/Ping"
-	DiagnosticService_PortProbe_FullMethodName = "/api.DiagnosticService/PortProbe"
+	DiagnosticService_Ping_FullMethodName      = "/api.v1.DiagnosticService/Ping"
+	DiagnosticService_PortProbe_FullMethodName = "/api.v1.DiagnosticService/PortProbe"
 )
 
 // DiagnosticServiceClient is the client API for DiagnosticService service.
@@ -135,7 +135,7 @@ func _DiagnosticService_PortProbe_Handler(srv interface{}, ctx context.Context, 
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
 var DiagnosticService_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "api.DiagnosticService",
+	ServiceName: "api.v1.DiagnosticService",
 	HandlerType: (*DiagnosticServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
@@ -148,5 +148,5 @@ var DiagnosticService_ServiceDesc = grpc.ServiceDesc{
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "api/diagnostic.proto",
+	Metadata: "api/v1/diagnostic.proto",
 }

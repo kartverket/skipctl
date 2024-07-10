@@ -7,7 +7,7 @@ import (
 	"log/slog"
 	"time"
 
-	"github.com/kartverket/skipctl/pkg/api"
+	api "github.com/kartverket/skipctl/pkg/api/v1"
 	"github.com/kartverket/skipctl/pkg/auth"
 	"github.com/kartverket/skipctl/pkg/logging"
 	"google.golang.org/grpc"
@@ -15,6 +15,8 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/protobuf/types/known/durationpb"
 )
+
+const highestPort = 65535
 
 type Tester struct {
 	client api.DiagnosticServiceClient
@@ -49,7 +51,7 @@ func NewTester(_ context.Context, serverAddr string, useTLS bool) (*Tester, erro
 }
 
 func (t *Tester) Ping(ctx context.Context, hostname string, count int32, timeout time.Duration) (*api.PingResponse, error) {
-	t.log.InfoContext(ctx, "starting ping", "hostname", "hostname", hostname, "count", count)
+	t.log.InfoContext(ctx, "starting ping", "hostname", hostname, "count", count)
 	res, err := t.client.Ping(ctx, &api.PingRequest{
 		Host:    hostname,
 		Count:   count,
@@ -60,7 +62,7 @@ func (t *Tester) Ping(ctx context.Context, hostname string, count int32, timeout
 }
 
 func (t *Tester) PortProbe(ctx context.Context, hostname string, port int32, timeout time.Duration) (*api.PortProbeResponse, error) {
-	isValidPort := port >= 1 && port <= 65535
+	isValidPort := port >= 1 && port <= highestPort
 	if !isValidPort {
 		return nil, fmt.Errorf("invalid port: %d", port)
 	}

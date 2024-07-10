@@ -8,7 +8,7 @@ import (
 	"time"
 
 	slogcontext "github.com/PumpkinSeed/slog-context"
-	"github.com/kartverket/skipctl/pkg/api"
+	api "github.com/kartverket/skipctl/pkg/api/v1"
 	probing "github.com/prometheus-community/pro-bing"
 	"google.golang.org/protobuf/types/known/durationpb"
 )
