@@ -10,6 +10,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
+	"google.golang.org/grpc/peer"
 	"google.golang.org/grpc/status"
 )
 
@@ -71,8 +72,12 @@ func ValidADCTokenWithOrg(idTokenOrg string) func(
 			return nil, err
 		}
 
-		newCtx := slogcontext.WithValue(ctx, "auth-user", email)
+		p, _ := peer.FromContext(ctx)
+		userContext := slogcontext.WithValue(ctx, "userInfo", map[string]string{
+			"email": email,
+			"ip":    p.Addr.String(),
+		})
 		// Continue execution of handler after ensuring a valid token.
-		return handler(newCtx, req)
+		return handler(userContext, req)
 	}
 }
