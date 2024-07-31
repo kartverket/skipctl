@@ -22,9 +22,15 @@ builds:
     ignore:
       - goos: darwin
         goarch: i386
+    tags:
+      - osusergo
+      - netgo
 
 archives:
   - format: tar.gz
+    files:
+      - readme.md
+      - server.md
     # this name template makes the OS and Arch compatible with the results of `uname`.
     name_template: >-
       {{ .ProjectName }}_
@@ -38,9 +44,73 @@ archives:
       - goos: windows
         format: zip
 
+dockers:
+  - image_templates:
+      - "ghcr.io/kartverket/skipctl:{{ .Tag }}-linux-amd64"
+    use: buildx
+    build_flag_templates:
+      - "--pull"
+      - "--platform=linux/amd64"
+    goos: linux
+    goarch: amd64
+  - image_templates:
+      - "ghcr.io/kartverket/skipctl:{{ .Tag }}-linux-arm64"
+    use: buildx
+    build_flag_templates:
+      - "--pull"
+      - "--platform=linux/arm64"
+    goos: linux
+    goarch: arm64
+  - image_templates:
+      - "ghcr.io/kartverket/skipctl:{{ .Tag }}-darwin-arm64"
+    use: buildx
+    build_flag_templates:
+      - "--pull"
+      - "--platform=darwin/arm64"
+    goos: darwin
+    goarch: arm64
+  - image_templates:
+      - "ghcr.io/kartverket/skipctl:{{ .Tag }}-darwin-amd64"
+    use: buildx
+    build_flag_templates:
+      - "--pull"
+      - "--platform=darwin/amd64"
+    goos: darwin
+    goarch: amd64
+
+docker_manifests:
+  - name_template: "ghcr.io/kartverket/skipctl:{{ .Tag }}"
+    image_templates:
+      - "ghcr.io/kartverket/skipctl:{{ .Tag }}-linux-arm64"
+      - "ghcr.io/kartverket/skipctl:{{ .Tag }}-linux-amd64"
+      - "ghcr.io/kartverket/skipctl:{{ .Tag }}-darwin-arm64"
+      - "ghcr.io/kartverket/skipctl:{{ .Tag }}-darwin-amd64"
+
+docker_signs:
+  - artifacts: all
+    cmd: cosign
+    args:
+      - "sign"
+      - "--oidc-issuer=https://token.actions.githubusercontent.com"
+      - "${artifact}"
+      - "--yes"
+
+signs:
+  - artifacts: all
+    cmd: cosign
+    signature: "${artifact}.sig"
+    args:
+      - "sign-blob"
+      - "--oidc-issuer=https://token.actions.githubusercontent.com"
+      - "--output-signature=${signature}"
+      - "${artifact}"
+      - "--yes"
+
+sboms:
+  - artifacts: archive
+
+checksum:
+  name_template: "checksums.txt"
+
 changelog:
   sort: asc
-  filters:
-    exclude:
-      - "^docs:"
-      - "^test:"

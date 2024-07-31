@@ -32,9 +32,8 @@ debug:
 
 .PHONY: build
 build: lint test proto-lint generate
-	go build -trimpath -ldflags="-s -w -X 'main.GitCommitHash=$(version)'"
+	go build -tags osusergo,netgo -trimpath -ldflags="-s -w -X 'main.GitCommitHash=$(version)'"
 
 .PHONY: build-nolint
 build-nolint: test proto-lint generate
-	go build -trimpath -ldflags="-s -w -X 'main.GitCommitHash=$(version)'"
-
+	go build -tags osusergo,netgo -trimpath -ldflags="-s -w -X 'main.GitCommitHash=$(version)'"
