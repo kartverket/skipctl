@@ -3,7 +3,7 @@ package constants
 import "time"
 
 const (
-	DefaultDiscoveryServer   = "_skipctl.evenh.net"
+	DefaultDiscoveryServer   = "_skipctl.kartverket-intern.cloud"
 	DefaultTestTimeout       = 10 * time.Second
 	DefaultServerTestTimeout = 1 * time.Minute
 	DefaultPingCount         = 10
