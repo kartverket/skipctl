@@ -103,7 +103,6 @@ brews:
     homepage: "https://github.com/kartverket/skipctl"
     caveats: "Contact SKIP with feature requests or questions (#gen-skip)."
     description: "A tool to perform various network troubleshooting"
-    skip_upload: true # TODO: Remove
     repository:
       owner: kartverket
       name: homebrew-taps
