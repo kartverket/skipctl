@@ -4,7 +4,14 @@ A simple client (and [server](./server.md)) to perform various network troublesh
 
 ## Installation
 
-Download the [latest release](https://github.com/kartverket/skipctl/releases).
+Download the [latest release](https://github.com/kartverket/skipctl/releases) or use the provided Docker image (mainly for running a server).
+
+### Use Homebrew
+
+```shell
+brew tap kartverket/taps && \
+brew install skipctl
+```
 
 ## Usage
 
