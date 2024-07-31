@@ -11,10 +11,13 @@ COPY Makefile ./
 COPY . .
 RUN make
 
-FROM scratch
+FROM alpine
 
-COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
+RUN apk add libcap
+
 COPY --from=builder /build/skipctl ./
+
+RUN setcap cap_net_raw+ep /skipctl
 
 USER 150:150
 ENTRYPOINT ["/skipctl"]
