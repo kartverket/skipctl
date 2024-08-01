@@ -1,6 +1,6 @@
 # Running a skipctl server
 
-1. `skipctl --output=json serve` with priviliges to do raw ICMP sockets.
+1. `skipctl --output=json serve` with privileges to do raw ICMP sockets (CAP_NET_RAW or root).
 2. Put it behind a reverse proxy terminating TLS (e.g. an Istio gateway or nginx)
 3. Update DNS to make it available via service discovery from the clients
 
@@ -15,28 +15,27 @@ dig TXT _skipctl.example.com
 ; <<>> DiG 9.10.6 <<>> TXT _skipctl.example.com
 ;; global options: +cmd
 ;; Got answer:
-;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 44391
-;; flags: qr rd ra; QUERY: 1, ANSWER: 1, AUTHORITY: 0, ADDITIONAL: 1
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 32281
+;; flags: qr rd ra; QUERY: 1, ANSWER: 2, AUTHORITY: 0, ADDITIONAL: 1
 
 ;; OPT PSEUDOSECTION:
-; EDNS: version: 0, flags:; udp: 512
+; EDNS: version: 0, flags:; udp: 4000
 ;; QUESTION SECTION:
-;_skipctl.example.com.		IN	TXT
+;_skipctl.example.com. IN TXT
 
 ;; ANSWER SECTION:
-_skipctl.example.com.	60	IN	TXT	"WwogICAgewogICAgICAgICJuYW1lIjogImF0a3YzLWV2ZW5oIiwKICAgICAgICAiYWRkciI6ICJsb2NhbGhvc3QuZXZlbmgubmV0OjQ0MyIKICAgIH0KXQ=="
+_skipctl.example.com. 299 IN TXT "eyJhZGRyIjoiYXBpc2VydmVyMS5leGFtcGxlLmNvbTo0NDMiLCJuYW1lIjoibXlBcGlTZXJ2ZXIifQ=="
+_skipctl.example.com. 299 IN TXT "eyJhZGRyIjoiYXBpc2VydmVyMi5leGFtcGxlLmNvbTo0NDMiLCJuYW1lIjoiYW5vdGhlckFwaVNlcnZlciJ9"
 
 […]
 ```
 
 The response is a base64 encoded JSON structure in the following form:
 ```json
-[
-  {
+{
     "name": "myApiServer",
     "addr": "api-server-1.internal.example.com:443"
-  }
-]
+}
 ```
 
-In order to make more API servers available, this array must be expanded, base64 encoded and the TXT record must be updated. Be sure to validate both JSON and base64 encoding before updating the record.
+In order to make more API servers available, a new TXT record under the same domain must be provisioned. Each entry must be base64 encoded and the new TXT record must be added. Be sure to validate both JSON and base64 encoding before updating records.

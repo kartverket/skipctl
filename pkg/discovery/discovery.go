@@ -10,7 +10,10 @@ import (
 	"github.com/kartverket/skipctl/pkg/constants"
 )
 
-var resolver = net.DefaultResolver
+var (
+	resolver = net.DefaultResolver
+	b64      = base64.StdEncoding
+)
 
 type APIServer struct {
 	Name string `json:"name"`
@@ -18,8 +21,10 @@ type APIServer struct {
 }
 
 // DiscoverAPIServers will try to do a TXT lookup for a given DNS name. If found it will
-// attempt a unmarshaL(base64_decode(TXT_RECORD_VALUE)) (pseudo code) into a list of APIServer
+// attempt a unmarshal(base64_decode(TXT_RECORD_VALUE)) (pseudo code) into a list of APIServer
 // structs.
+//
+// One TXT record per server.
 func DiscoverAPIServers(dnsKey string) ([]APIServer, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), constants.DNSDiscoverTimeout)
 	defer cancel()
@@ -29,21 +34,23 @@ func DiscoverAPIServers(dnsKey string) ([]APIServer, error) {
 		return nil, fmt.Errorf("failed discover available API servers: %w", err)
 	}
 
-	if len(records) > 1 {
-		return nil, fmt.Errorf("found more than one TXT record with the same name: %s", dnsKey)
-	}
-
-	// Wrap the outer layer
-	decodedBytes, err := base64.StdEncoding.DecodeString(records[0])
-	if err != nil {
-		return nil, fmt.Errorf("failed base64 decoding TXT record: %w", err)
-	}
-
-	// Decode JSON into a usable structure
 	var apiServers []APIServer
-	err = json.Unmarshal(decodedBytes, &apiServers)
-	if err != nil {
-		return nil, fmt.Errorf("failed unmarshalling TXT record: %w", err)
+
+	for _, txtRecord := range records {
+		// Wrap the outer layer
+		decodedBytes, decodeErr := b64.DecodeString(txtRecord)
+		if decodeErr != nil {
+			return nil, fmt.Errorf("failed base64 decoding TXT record: %w", decodeErr)
+		}
+
+		// Decode JSON into a usable structure
+		var apiServer APIServer
+		err = json.Unmarshal(decodedBytes, &apiServer)
+		if err != nil {
+			return nil, fmt.Errorf("failed unmarshalling TXT record: %w", err)
+		}
+
+		apiServers = append(apiServers, apiServer)
 	}
 
 	return apiServers, nil
