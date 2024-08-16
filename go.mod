@@ -4,7 +4,7 @@ go 1.22.4
 
 require (
 	github.com/PumpkinSeed/slog-context v0.1.2
-	github.com/bufbuild/buf v1.35.1
+	github.com/bufbuild/buf v1.36.0
 	github.com/grpc-ecosystem/go-grpc-middleware/providers/prometheus v1.0.1
 	github.com/oklog/run v1.1.0
 	github.com/pkg/errors v0.9.1
