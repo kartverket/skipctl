@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"math"
 	"net"
 	"strconv"
 	"time"
@@ -125,10 +126,20 @@ func doPing(ctx context.Context, host string, count int, timeout *time.Duration)
 	}
 
 	stats := p.Statistics()
+
+	pRecv, err := safeIntToInt32(stats.PacketsRecv)
+	if err != nil {
+		return nil, err
+	}
+	pSent, err := safeIntToInt32(stats.PacketsSent)
+	if err != nil {
+		return nil, err
+	}
+
 	r := &api.PingResponse{
 		Pingable:             stats.PacketsRecv > 0,
-		PacketsReceived:      int32(stats.PacketsRecv),
-		PacketsSent:          int32(stats.PacketsSent),
+		PacketsReceived:      pRecv,
+		PacketsSent:          pSent,
 		PacketLossPercentage: int32(stats.PacketLoss),
 		PingedHost:           stats.IPAddr.String(),
 		MinRtt:               durationpb.New(stats.MinRtt),
@@ -181,4 +192,11 @@ func protoDuration(pbDuration *durationpb.Duration) *time.Duration {
 	}
 	d := pbDuration.AsDuration()
 	return &d
+}
+
+func safeIntToInt32(value int) (int32, error) {
+	if value > math.MaxInt32 || value < math.MinInt32 {
+		return 0, fmt.Errorf("value %d is out of int32 range", value)
+	}
+	return int32(value), nil
 }
