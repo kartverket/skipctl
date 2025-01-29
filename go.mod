@@ -13,7 +13,7 @@ require (
 	github.com/spf13/cobra v1.8.1
 	golang.org/x/oauth2 v0.25.0
 	google.golang.org/api v0.214.0
-	google.golang.org/grpc v1.69.2
+	google.golang.org/grpc v1.70.0
 	google.golang.org/protobuf v1.36.4
 )
 
