@@ -31,3 +31,4 @@ skipctl test ping --hostname=example.com --api-server=myApiServer
 ```shell
 skipctl test probe --hostname=example.com --port=1521 --api-server=myApiServer
 ```
+
