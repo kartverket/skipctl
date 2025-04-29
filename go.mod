@@ -12,7 +12,7 @@ require (
 	github.com/prometheus/client_golang v1.22.0
 	github.com/spf13/cobra v1.9.1
 	golang.org/x/oauth2 v0.29.0
-	google.golang.org/api v0.228.0
+	google.golang.org/api v0.230.0
 	google.golang.org/grpc v1.72.0
 	google.golang.org/protobuf v1.36.6
 )
@@ -27,7 +27,7 @@ require (
 	buf.build/go/protoyaml v0.3.2 // indirect
 	buf.build/go/spdx v0.2.0 // indirect
 	cel.dev/expr v0.23.1 // indirect
-	cloud.google.com/go/auth v0.15.0 // indirect
+	cloud.google.com/go/auth v0.16.0 // indirect
 	cloud.google.com/go/auth/oauth2adapt v0.2.8 // indirect
 	cloud.google.com/go/compute/metadata v0.6.0 // indirect
 	connectrpc.com/connect v1.18.1 // indirect
