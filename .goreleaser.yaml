@@ -27,7 +27,7 @@ builds:
       - netgo
 
 archives:
-  - format: tar.gz
+  - formats: ['tar.gz']
     files:
       - readme.md
       - server.md
@@ -42,7 +42,7 @@ archives:
     # use zip for windows archives
     format_overrides:
       - goos: windows
-        format: zip
+        formats: ['zip']
 
 dockers:
   - image_templates:
