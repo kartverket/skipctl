@@ -6,7 +6,7 @@ require (
 	github.com/PumpkinSeed/slog-context v0.1.2
 	github.com/bufbuild/buf v1.55.1
 	github.com/grpc-ecosystem/go-grpc-middleware/providers/prometheus v1.1.0
-	github.com/oklog/run v1.1.0
+	github.com/oklog/run v1.2.0
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus-community/pro-bing v0.7.0
 	github.com/prometheus/client_golang v1.22.0
