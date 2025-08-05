@@ -9,7 +9,7 @@ require (
 	github.com/oklog/run v1.2.0
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus-community/pro-bing v0.7.0
-	github.com/prometheus/client_golang v1.22.0
+	github.com/prometheus/client_golang v1.23.0
 	github.com/spf13/cobra v1.9.1
 	golang.org/x/oauth2 v0.30.0
 	google.golang.org/api v0.243.0
@@ -87,9 +87,9 @@ require (
 	github.com/opencontainers/image-spec v1.1.1 // indirect
 	github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c // indirect
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
-	github.com/prometheus/client_model v0.6.1 // indirect
-	github.com/prometheus/common v0.63.0 // indirect
-	github.com/prometheus/procfs v0.16.0 // indirect
+	github.com/prometheus/client_model v0.6.2 // indirect
+	github.com/prometheus/common v0.65.0 // indirect
+	github.com/prometheus/procfs v0.16.1 // indirect
 	github.com/quic-go/qpack v0.5.1 // indirect
 	github.com/quic-go/quic-go v0.52.0 // indirect
 	github.com/rs/cors v1.11.1 // indirect
