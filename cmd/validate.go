@@ -23,30 +23,12 @@ var validateCmd = &cobra.Command{
 }
 
 func runValidate(_ *cobra.Command, args []string) {
-
-	var files []string
-
-	if len(args) > 0 {
-		if strings.HasSuffix(args[0], ".jsonnet") {
-			files = append(files, args[0])
-		}
-	} else {
-		err := filepath.Walk(pathname, func(path string, info os.FileInfo, err error) error {
-			if err != nil {
-				return err
-			}
-			if !info.IsDir() && (filepath.Ext(path) == ".jsonnet") {
-				files = append(files, path)
-			}
-			return nil
-		})
-		if err != nil {
-			log.Error("Error walking path",
-				"pathname", pathname,
-				"error", err.Error(),
-			)
-			os.Exit(1)
-		}
+	files, err := collectJsonnetFiles(args)
+	if err != nil {
+		log.Error("Error collecting files",
+			"error", err.Error(),
+		)
+		os.Exit(1)
 	}
 
 	if len(files) == 0 {
@@ -56,11 +38,11 @@ func runValidate(_ *cobra.Command, args []string) {
 
 	failed := false
 	for _, file := range files {
-		err := validator.ValidateManifest(file)
-		if err != nil {
+		validationErr := validator.ValidateManifest(file)
+		if validationErr != nil {
 			log.Error("validation failed",
 				"file", file,
-				"error", err.Error(),
+				"error", validationErr.Error(),
 			)
 			failed = true
 		} else {
@@ -73,6 +55,24 @@ func runValidate(_ *cobra.Command, args []string) {
 	if failed {
 		os.Exit(1)
 	}
+}
+
+func collectJsonnetFiles(args []string) ([]string, error) {
+	if len(args) > 0 && strings.HasSuffix(args[0], ".jsonnet") {
+		return []string{args[0]}, nil
+	}
+
+	var files []string
+	err := filepath.Walk(pathname, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		if !info.IsDir() && filepath.Ext(path) == ".jsonnet" {
+			files = append(files, path)
+		}
+		return nil
+	})
+	return files, err
 }
 
 func init() {
