@@ -1,7 +1,9 @@
 package cmd
 
 import (
+	"fmt"
 	"os"
+	"strings"
 
 	"github.com/kartverket/skipctl/pkg/constants"
 	"github.com/kartverket/skipctl/pkg/manifest"
@@ -10,19 +12,18 @@ import (
 
 var (
 	pathname  string
-	validator *manifest.ManifestValidator
+	validator *manifest.Validator
 )
 
 var validateCmd = &cobra.Command{
 	Use:   "validate",
-	Short: "Validate .jsonnet files",
-	Long:  `Recursively validates all .jsonnet files in the specified path.`,
+	Short: "Validate manifest files",
+	Long:  fmt.Sprintf("`Recursively validates %v files in the specified path.`", strings.Join(constants.Suffixes, ", ")),
 	Args:  cobra.ArbitraryArgs,
 	Run:   runValidate,
 }
 
 func runValidate(_ *cobra.Command, args []string) {
-
 	var rootDirName = pathname
 
 	if len(args) > 0 {
@@ -65,6 +66,6 @@ func runValidate(_ *cobra.Command, args []string) {
 
 func init() {
 	manifestCmd.AddCommand(validateCmd)
-	validator = manifest.NewManifestValidator()
-	validateCmd.Flags().StringVar(&pathname, "pathname", ".", "pathname to look for .jsonnet files in")
+	validator = manifest.NewValidator()
+	validateCmd.Flags().StringVar(&pathname, "pathname", ".", fmt.Sprintf("pathname to look for %v files in", strings.Join(constants.Suffixes, ", ")))
 }

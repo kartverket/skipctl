@@ -8,28 +8,27 @@ import (
 	"github.com/kartverket/skipctl/pkg/constants"
 )
 
-type ManifestValidator struct {
+type Validator struct {
 	jsonnet *jsonnet.VM
 }
 
-func NewManifestValidator() *ManifestValidator {
-	return &ManifestValidator{
+func NewValidator() *Validator {
+	return &Validator{
 		jsonnet: jsonnet.MakeVM(),
 	}
 }
 
-func (v *ManifestValidator) ValidateManifest(filename string) error {
+func (v *Validator) ValidateManifest(filename string) error {
+	extension := filepath.Ext(filename)
 
-	switch filepath.Ext(filename) {
-	case constants.Suffixes[0]:
+	if extension == constants.Suffixes[0] {
 		return v.validateJsonnet(filename)
-
 	}
-	return nil
 
+	return nil
 }
 
-func (v *ManifestValidator) validateJsonnet(filename string) error {
+func (v *Validator) validateJsonnet(filename string) error {
 	_, err := v.jsonnet.EvaluateFile(filename)
 	return err
 }
