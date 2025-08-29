@@ -15,8 +15,9 @@ const (
 
 const (
 	ManifestSuffixJsonnet = ".jsonnet"
+	ManifestSuffixYaml    = ".yaml"
 )
 
 var (
-	ManifestSuffixes = []string{ManifestSuffixJsonnet}
+	ManifestSuffixes = []string{ManifestSuffixJsonnet, ManifestSuffixYaml}
 )
