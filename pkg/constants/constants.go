@@ -11,3 +11,7 @@ const (
 	DNSDiscoverTimeout       = 5 * time.Second
 	HTTPReadHeaderTimeout    = 5 * time.Second
 )
+
+var (
+	Suffixes = []string{".jsonnet"}
+)

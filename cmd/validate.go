@@ -2,16 +2,15 @@ package cmd
 
 import (
 	"os"
-	"path/filepath"
-	"strings"
 
+	"github.com/kartverket/skipctl/pkg/constants"
 	"github.com/kartverket/skipctl/pkg/manifest"
 	"github.com/spf13/cobra"
 )
 
 var (
 	pathname  string
-	validator *manifest.JsonnetValidator
+	validator *manifest.ManifestValidator
 )
 
 var validateCmd = &cobra.Command{
@@ -24,43 +23,32 @@ var validateCmd = &cobra.Command{
 
 func runValidate(_ *cobra.Command, args []string) {
 
-	var files []string
+	var rootDirName = pathname
 
 	if len(args) > 0 {
-		if strings.HasSuffix(args[0], ".jsonnet") {
-			files = append(files, args[0])
-		}
-	} else {
-		err := filepath.Walk(pathname, func(path string, info os.FileInfo, err error) error {
-			if err != nil {
-				return err
-			}
-			if !info.IsDir() && (filepath.Ext(path) == ".jsonnet") {
-				files = append(files, path)
-			}
-			return nil
-		})
-		if err != nil {
-			log.Error("Error walking path",
-				"pathname", pathname,
-				"error", err.Error(),
-			)
-			os.Exit(1)
-		}
+		rootDirName = args[0]
 	}
 
+	files, err := findFilesWithSuffixes(rootDirName, constants.Suffixes)
+
+	if err != nil {
+		log.Error("Error collecting files",
+			"error", err.Error(),
+		)
+		os.Exit(1)
+	}
 	if len(files) == 0 {
-		log.Info("No .jsonnet files found.")
+		log.Info("No manifests found.")
 		return
 	}
 
 	failed := false
 	for _, file := range files {
-		err := validator.ValidateManifest(file)
-		if err != nil {
+		validationErr := validator.ValidateManifest(file)
+		if validationErr != nil {
 			log.Error("validation failed",
 				"file", file,
-				"error", err.Error(),
+				"error", validationErr.Error(),
 			)
 			failed = true
 		} else {
@@ -77,6 +65,6 @@ func runValidate(_ *cobra.Command, args []string) {
 
 func init() {
 	manifestCmd.AddCommand(validateCmd)
-	validator = manifest.NewJsonnetValidator()
+	validator = manifest.NewManifestValidator()
 	validateCmd.Flags().StringVar(&pathname, "pathname", ".", "pathname to look for .jsonnet files in")
 }
