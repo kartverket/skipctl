@@ -12,6 +12,11 @@ const (
 	HTTPReadHeaderTimeout    = 5 * time.Second
 )
 
+const (
+	ManifestSuffixJsonnet   = ".jsonnet"
+	ManifestSuffixLibsonnet = ".libsonnet"
+)
+
 var (
-	Suffixes = []string{".jsonnet"}
+	ManifestSuffixes = []string{ManifestSuffixJsonnet, ManifestSuffixLibsonnet}
 )

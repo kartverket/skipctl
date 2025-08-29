@@ -1,7 +1,9 @@
 package cmd
 
 import (
+	"fmt"
 	"os"
+	"strings"
 
 	"github.com/kartverket/skipctl/pkg/constants"
 	"github.com/kartverket/skipctl/pkg/manifest"
@@ -9,27 +11,19 @@ import (
 )
 
 var (
-	pathname  string
-	validator *manifest.ManifestValidator
+	validator *manifest.Validator
+	path      string
 )
 
 var validateCmd = &cobra.Command{
 	Use:   "validate",
-	Short: "Validate .jsonnet files",
-	Long:  `Recursively validates all .jsonnet files in the specified path.`,
-	Args:  cobra.ArbitraryArgs,
+	Short: "Validate manifest files",
+	Long:  fmt.Sprintf("Recursively validates %s files in the specified path", strings.Join(constants.ManifestSuffixes, ", ")),
 	Run:   runValidate,
 }
 
-func runValidate(_ *cobra.Command, args []string) {
-
-	var rootDirName = pathname
-
-	if len(args) > 0 {
-		rootDirName = args[0]
-	}
-
-	files, err := findFilesWithSuffixes(rootDirName, constants.Suffixes)
+func runValidate(_ *cobra.Command, _ []string) {
+	files, err := findFilesWithSuffixes(path, constants.ManifestSuffixes)
 
 	if err != nil {
 		log.Error("Error collecting files",
@@ -42,29 +36,16 @@ func runValidate(_ *cobra.Command, args []string) {
 		return
 	}
 
-	failed := false
-	for _, file := range files {
-		validationErr := validator.ValidateManifest(file)
-		if validationErr != nil {
-			log.Error("validation failed",
-				"file", file,
-				"error", validationErr.Error(),
-			)
-			failed = true
-		} else {
-			log.Info("validation succeeded",
-				"file", file,
-			)
-		}
-	}
+	processor := manifest.NewManifestProcessor()
 
-	if failed {
-		os.Exit(1)
-	}
+	processor.ProcessManifests(
+		files,
+		validator.ValidateManifest,
+	)
 }
 
 func init() {
 	manifestCmd.AddCommand(validateCmd)
-	validator = manifest.NewManifestValidator()
-	validateCmd.Flags().StringVar(&pathname, "pathname", ".", "pathname to look for .jsonnet files in")
+	validateCmd.Flags().StringVar(&path, "path", ".", "pathname to look for"+strings.Join(constants.ManifestSuffixes, ", "))
+	validator = manifest.NewValidator()
 }

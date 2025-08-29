@@ -5,7 +5,7 @@ import (
 )
 
 var manifestCmd = &cobra.Command{
-	Use:   "manifest",
+	Use:   "manifests",
 	Short: "Work with manifests",
 	Long:  `Commands for working with manifests.`,
 }
