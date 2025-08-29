@@ -1,0 +1,10 @@
+{
+  person: {
+    name: "Alice"
+    age: 30,
+    hobbies: [
+      "reading"
+      "cycling",
+    ],
+  }
+}
