@@ -38,11 +38,11 @@ func runFormat(_ *cobra.Command, args []string) {
 
 	failed := false
 	for _, file := range files {
-		_, err := manifest.FormatManifest(file)
-		if err != nil {
+		_, formattingErr := manifest.FormatManifest(file)
+		if formattingErr != nil {
 			log.Error("formatting failed",
 				"file", file,
-				"error", err.Error(),
+				"error", formattingErr.Error(),
 			)
 			failed = true
 		} else {

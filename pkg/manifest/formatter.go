@@ -19,7 +19,7 @@ func FormatJsonnet(filename string) (string, error) {
 	if err != nil {
 		log.Fatalf("Error formatting .jsonnet file %v", err)
 	}
-	err = os.WriteFile(filename, []byte(jsonOut), 0677)
+	err = os.WriteFile(filename, []byte(jsonOut), 0600)
 	if err != nil {
 		log.Fatalf("Error writing to file %v", err)
 	}
