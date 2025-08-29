@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -13,10 +12,6 @@ import (
 var (
 	pathname  string
 	validator *manifest.JsonnetValidator
-
-	green = "\033[32m"
-	red   = "\033[31m"
-	reset = "\033[0m"
 )
 
 var validateCmd = &cobra.Command{
@@ -46,13 +41,16 @@ func runValidate(_ *cobra.Command, args []string) {
 			return nil
 		})
 		if err != nil {
-			fmt.Printf("Error walking the path %q: %v\n", pathname, err)
+			log.Error("Error walking path",
+				"pathname", pathname,
+				"error", err.Error(),
+			)
 			os.Exit(1)
 		}
 	}
 
 	if len(files) == 0 {
-		fmt.Println("No .jsonnet files found.")
+		log.Info("No .jsonnet files found.")
 		return
 	}
 
@@ -60,10 +58,15 @@ func runValidate(_ *cobra.Command, args []string) {
 	for _, file := range files {
 		err := validator.ValidateManifest(file)
 		if err != nil {
-			fmt.Printf("%sInvalid:%s %s\n  Error: %v\n", red, reset, file, err)
+			log.Error("validation failed",
+				"file", file,
+				"error", err.Error(),
+			)
 			failed = true
 		} else {
-			fmt.Printf("%sValid:%s   %s\n", green, reset, file)
+			log.Info("validation succeeded",
+				"file", file,
+			)
 		}
 	}
 
