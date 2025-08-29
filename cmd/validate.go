@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/kartverket/skipctl/pkg/manifest"
 	"github.com/spf13/cobra"
@@ -20,34 +21,38 @@ var (
 
 var validateCmd = &cobra.Command{
 	Use:   "validate",
-	Short: "Validate Jsonnet and libsonnet files",
-	Long:  `Recursively validates all Jsonnet and libsonnet files in the specified path.`,
+	Short: "Validate .jsonnet files",
+	Long:  `Recursively validates all .jsonnet files in the specified path.`,
+	Args:  cobra.ArbitraryArgs,
 	Run:   runValidate,
 }
 
-func runValidate(_ *cobra.Command, _ []string) {
-	if pathname == "" {
-		fmt.Println("Please provide a --pathname")
-		os.Exit(1)
-	}
+func runValidate(_ *cobra.Command, args []string) {
 
 	var files []string
-	err := filepath.Walk(pathname, func(path string, info os.FileInfo, err error) error {
+
+	if len(args) > 0 {
+		if strings.HasSuffix(args[0], ".jsonnet") {
+			files = append(files, args[0])
+		}
+	} else {
+		err := filepath.Walk(pathname, func(path string, info os.FileInfo, err error) error {
+			if err != nil {
+				return err
+			}
+			if !info.IsDir() && (filepath.Ext(path) == ".jsonnet") {
+				files = append(files, path)
+			}
+			return nil
+		})
 		if err != nil {
-			return err
+			fmt.Printf("Error walking the path %q: %v\n", pathname, err)
+			os.Exit(1)
 		}
-		if !info.IsDir() && (filepath.Ext(path) == ".jsonnet" || filepath.Ext(path) == ".libsonnet") {
-			files = append(files, path)
-		}
-		return nil
-	})
-	if err != nil {
-		fmt.Printf("Error walking the path %q: %v\n", pathname, err)
-		os.Exit(1)
 	}
 
 	if len(files) == 0 {
-		fmt.Println("No .jsonnet or .libsonnet files found.")
+		fmt.Println("No .jsonnet files found.")
 		return
 	}
 
@@ -70,5 +75,5 @@ func runValidate(_ *cobra.Command, _ []string) {
 func init() {
 	manifestCmd.AddCommand(validateCmd)
 	validator = manifest.NewJsonnetValidator()
-	validateCmd.Flags().StringVar(&pathname, "pathname", "", "pathname to look for jsonnet and libsonnet files in")
+	validateCmd.Flags().StringVar(&pathname, "pathname", ".", "pathname to look for .jsonnet files in")
 }
