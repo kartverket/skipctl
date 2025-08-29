@@ -2,9 +2,8 @@ package cmd
 
 import (
 	"os"
-	"path/filepath"
-	"strings"
 
+	"github.com/kartverket/skipctl/pkg/constants"
 	"github.com/kartverket/skipctl/pkg/manifest"
 	"github.com/spf13/cobra"
 )
@@ -18,33 +17,22 @@ var formatCmd = &cobra.Command{
 }
 
 func runFormat(_ *cobra.Command, args []string) {
-	var files []string
+	var rootDirName = pathname
 
 	if len(args) > 0 {
-		if strings.HasSuffix(args[0], ".jsonnet") {
-			files = append(files, args[0])
-		}
-	} else {
-		err := filepath.Walk(pathname, func(path string, info os.FileInfo, err error) error {
-			if err != nil {
-				return err
-			}
-			if !info.IsDir() && (filepath.Ext(path) == ".jsonnet") {
-				files = append(files, path)
-			}
-			return nil
-		})
-		if err != nil {
-			log.Error("Error walking path",
-				"pathname", pathname,
-				"error", err.Error(),
-			)
-			os.Exit(1)
-		}
+		rootDirName = args[0]
 	}
 
+	files, err := findFilesWithSuffixes(rootDirName, constants.Suffixes)
+
+	if err != nil {
+		log.Error("Error collecting files",
+			"error", err.Error(),
+		)
+		os.Exit(1)
+	}
 	if len(files) == 0 {
-		log.Info("No .jsonnet files found.")
+		log.Info("No manifests found.")
 		return
 	}
 
