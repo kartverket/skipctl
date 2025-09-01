@@ -42,25 +42,13 @@ func runValidate(_ *cobra.Command, args []string) {
 		return
 	}
 
-	failed := false
-	for _, file := range files {
-		validationErr := validator.ValidateManifest(file)
-		if validationErr != nil {
-			log.Error("validation failed",
-				"file", file,
-				"error", validationErr.Error(),
-			)
-			failed = true
-		} else {
-			log.Info("validation succeeded",
-				"file", file,
-			)
-		}
-	}
+	processor := manifest.NewManfiestProcessor("validate")
+	validator := manifest.NewValidator()
 
-	if failed {
-		os.Exit(1)
-	}
+	processor.ProcessManifests(
+		files,
+		validator.ValidateManifest,
+	)
 }
 
 func init() {

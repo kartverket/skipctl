@@ -18,7 +18,7 @@ brew install skipctl
 The various `test` commands will execute against an API server. Run `skipctl test ping --api-server=something` to get a list of supported API server names.
 An API server represents a location that can run tests from their perspective. All communication with API servers is encrypted over TLS.
 
-> :exclamation: Before issuing any commands, be sure to be authenticated first (`gcloud auth application-default login`). 
+> :exclamation: Before issuing any commands, be sure to be authenticated first (`gcloud auth application-default login`).
 
 ### Ping
 
@@ -32,3 +32,8 @@ skipctl test ping --hostname=example.com --api-server=myApiServer
 skipctl test probe --hostname=example.com --port=1521 --api-server=myApiServer
 ```
 
+
+### Validate manifest
+```bash
+skipctl manifest validate <pathname/filename>
+```
