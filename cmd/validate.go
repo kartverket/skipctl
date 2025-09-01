@@ -43,7 +43,6 @@ func runValidate(_ *cobra.Command, args []string) {
 	}
 
 	processor := manifest.NewManfiestProcessor("validate")
-	validator := manifest.NewValidator()
 
 	processor.ProcessManifests(
 		files,

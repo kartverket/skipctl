@@ -7,21 +7,21 @@ import (
 	"github.com/kartverket/skipctl/pkg/logging"
 )
 
-type ManifestProcessor struct {
+type Processor struct {
 	log      *slog.Logger
 	logLabel string
 }
 
 type StringToErrorFunc func(string) error
 
-func NewManfiestProcessor(label string) *ManifestProcessor {
-	return &ManifestProcessor{
+func NewManfiestProcessor(label string) *Processor {
+	return &Processor{
 		log:      logging.Logger(),
 		logLabel: label,
 	}
 }
 
-func (p *ManifestProcessor) ProcessManifests(files []string, process StringToErrorFunc) {
+func (p *Processor) ProcessManifests(files []string, process StringToErrorFunc) {
 	failed := false
 
 	for _, file := range files {
