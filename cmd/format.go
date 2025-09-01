@@ -41,5 +41,4 @@ func runFormat(_ *cobra.Command, args []string) {
 }
 func init() {
 	manifestCmd.AddCommand(formatCmd)
-
 }
