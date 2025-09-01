@@ -12,18 +12,18 @@ var formatCmd = &cobra.Command{
 	Use:   "format",
 	Short: "Formats .jsonnet files",
 	Long:  "Recursively formats all .jsonnet files in the specified path",
-	Args:  cobra.ArbitraryArgs,
+	Args:  cobra.RangeArgs(0, 1),
 	Run:   runFormat,
 }
 
 func runFormat(_ *cobra.Command, args []string) {
-	var rootDirName = pathname
+	var rootDirName = "."
 
 	if len(args) > 0 {
 		rootDirName = args[0]
 	}
 
-	files, err := findFilesWithSuffixes(rootDirName, constants.Suffixes)
+	files, err := findFilesWithSuffixes(rootDirName, constants.ManifestSuffixes)
 
 	if err != nil {
 		log.Error("Error collecting files",
@@ -36,27 +36,10 @@ func runFormat(_ *cobra.Command, args []string) {
 		return
 	}
 
-	failed := false
-	for _, file := range files {
-		_, formattingErr := manifest.FormatManifest(file)
-		if formattingErr != nil {
-			log.Error("formatting failed",
-				"file", file,
-				"error", formattingErr.Error(),
-			)
-			failed = true
-		} else {
-			log.Info("formatting succeeded",
-				"file", file,
-			)
-		}
-	}
-
-	if failed {
-		os.Exit(1)
-	}
+	processor := manifest.NewManfiestProcessor("format")
+	processor.ProcessManifests(files, manifest.FormatManifest)
 }
 func init() {
 	manifestCmd.AddCommand(formatCmd)
-	formatCmd.Flags().StringVar(&pathname, "pathname", ".", "pathname for the desired jsonnet file(s)")
+
 }

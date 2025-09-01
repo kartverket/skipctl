@@ -1,7 +1,7 @@
 package manifest
 
 import (
-	"log"
+	"errors"
 	"os"
 	"path/filepath"
 
@@ -9,29 +9,29 @@ import (
 	"github.com/kartverket/skipctl/pkg/constants"
 )
 
-func FormatJsonnet(filename string) (string, error) {
+func FormatJsonnet(filename string) error {
 	byteOut, err := os.ReadFile(filename)
 	if err != nil {
-		log.Fatalf("Error reading file %v", err)
+		return err
 	}
 	outStr := string(byteOut)
 	jsonOut, err := formatter.Format(filename, outStr, formatter.DefaultOptions())
 	if err != nil {
-		log.Fatalf("Error formatting .jsonnet file %v", err)
+		return err
 	}
 	err = os.WriteFile(filename, []byte(jsonOut), 0600)
 	if err != nil {
-		log.Fatalf("Error writing to file %v", err)
+		return err
 	}
 
-	return jsonOut, err
+	return err
 }
 
-func FormatManifest(filename string) (string, error) {
+func FormatManifest(filename string) error {
 	switch filepath.Ext(filename) {
-	case constants.Suffixes[0]:
+	case constants.ManifestSuffixJsonnet:
 		return FormatJsonnet(filename)
 	default:
-		return "", nil
+		return errors.New("invalid file format")
 	}
 }
