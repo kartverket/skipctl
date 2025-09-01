@@ -23,9 +23,11 @@ func NewValidator() *Validator {
 func (v *Validator) ValidateManifest(filename string) error {
 	extension := filepath.Ext(filename)
 
-	switch extension { //nolint:gocritic // singleCaseSwitch: this is intentional
+	switch extension {
 	case constants.ManifestSuffixJsonnet:
 		return v.validateJsonnet(filename)
+	case constants.ManifestSuffixYaml:
+		return v.validateYaml(filename)
 	}
 	return nil
 }
