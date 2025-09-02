@@ -22,7 +22,7 @@ func NewValidator() *Validator {
 func (v *Validator) ValidateManifest(filename string) error {
 	extension := strings.ToLower(filepath.Ext(filename))
 
-	switch extension { //nolint:gocritic // singleCaseSwitch: this is intentional
+	switch extension {
 	case constants.ManifestSuffixJsonnet:
 		return v.validateJsonnet(filename)
 	case constants.ManifestSuffixLibsonnet:

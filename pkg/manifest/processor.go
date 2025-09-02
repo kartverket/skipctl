@@ -13,7 +13,7 @@ type Processor struct {
 
 type StringToErrorFunc func(string) error
 
-func NewManifestProcessor(label string) *Processor {
+func NewManifestProcessor() *Processor {
 	return &Processor{
 		log: logging.Logger(),
 	}

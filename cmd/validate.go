@@ -23,7 +23,6 @@ var validateCmd = &cobra.Command{
 }
 
 func runValidate(_ *cobra.Command, _ []string) {
-
 	files, err := findFilesWithSuffixes(path, constants.ManifestSuffixes)
 
 	if err != nil {
@@ -37,7 +36,7 @@ func runValidate(_ *cobra.Command, _ []string) {
 		return
 	}
 
-	processor := manifest.NewManifestProcessor("validate")
+	processor := manifest.NewManifestProcessor()
 
 	processor.ProcessManifests(
 		files,
