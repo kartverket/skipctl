@@ -15,7 +15,7 @@ lint:
 
 .PHONY: fmt
 fmt:
-	go fmt ./...
+	go run golang.org/x/tools/cmd/goimports@latest -w .
 
 .PHONY: proto-lint
 proto-lint:
@@ -25,6 +25,7 @@ proto-lint:
 generate:
 	rm -rf ./pkg/api
 	go run github.com/bufbuild/buf/cmd/buf generate proto
+	$(MAKE) fmt
 
 .PHONY: debug
 debug:
