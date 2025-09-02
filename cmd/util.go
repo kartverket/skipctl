@@ -40,7 +40,7 @@ func ValidateAPIServerName(_ *cobra.Command, _ []string) {
 
 func findFilesWithSuffixes(directory string, suffixes []string) ([]string, error) {
 	var files []string
-	err := filepath.Walk(directory, func(path string, info os.FileInfo, err error) error {
+	err := filepath.WalkDir(directory, func(path string, info fs.DirEntry, err error) error {
 		if err != nil {
 			return err
 		}
