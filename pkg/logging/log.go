@@ -41,9 +41,9 @@ func ConfigureLogging(mode string, isDebug bool) *slog.Logger {
 	var h slog.Handler
 	switch parsedMode {
 	case OutputModeJSON:
-		h = slog.NewJSONHandler(os.Stdout, opts)
+		h = slog.NewJSONHandler(os.Stderr, opts)
 	case OutputModeText:
-		h = slog.NewTextHandler(os.Stdout, opts)
+		h = slog.NewTextHandler(os.Stderr, opts)
 	default:
 		panic(errors.Errorf("invalid output option: %v", parsedMode))
 	}

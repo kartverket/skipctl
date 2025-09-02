@@ -39,7 +39,7 @@ func (v *Renderer) renderJsonnet(filename string) error {
 	if err != nil {
 		return err
 	}
-	v.rawOutput.Info("\n" + filename + ":\n" + result)
+	v.rawOutput.Info(result)
 
 	return nil
 }
