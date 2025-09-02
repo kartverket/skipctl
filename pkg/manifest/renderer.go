@@ -1,21 +1,25 @@
 package manifest
 
 import (
+	"log/slog"
 	"path/filepath"
 	"strings"
 
 	"github.com/google/go-jsonnet"
 
 	"github.com/kartverket/skipctl/pkg/constants"
+	"github.com/kartverket/skipctl/pkg/logging"
 )
 
 type Renderer struct {
-	jsonnet *jsonnet.VM
+	jsonnet   *jsonnet.VM
+	rawOutput *slog.Logger
 }
 
 func NewRenderer() *Renderer {
 	return &Renderer{
-		jsonnet: jsonnet.MakeVM(),
+		jsonnet:   jsonnet.MakeVM(),
+		rawOutput: logging.RawLogger(),
 	}
 }
 
@@ -30,6 +34,12 @@ func (v *Renderer) RenderManifest(filename string) error {
 }
 
 func (v *Renderer) renderJsonnet(filename string) error {
-	_, err := v.jsonnet.EvaluateFile(filename)
-	return err
+	result, err := v.jsonnet.EvaluateFile(filename)
+
+	if err != nil {
+		return err
+	}
+	v.rawOutput.Info("\n" + filename + ":\n" + result)
+
+	return nil
 }
