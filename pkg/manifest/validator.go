@@ -1,7 +1,6 @@
 package manifest
 
 import (
-	"os"
 	"path/filepath"
 	"strings"
 
@@ -35,20 +34,4 @@ func (v *Validator) ValidateManifest(filename string) error {
 func (v *Validator) validateJsonnet(filename string) error {
 	_, err := v.jsonnet.EvaluateFile(filename)
 	return err
-}
-
-func validateJsonnetSyntax(filename string) error {
-	// Read the file content
-	content, err := os.ReadFile(filename)
-	if err != nil {
-		return err
-	}
-
-	// Strip trailing newlines (\n and \r)
-	trimmed := strings.TrimRight(string(content), "\r\n")
-
-	// Parse the content using SnippetToAST
-	_, err = jsonnet.SnippetToAST(filename, trimmed)
-	return err // Returns nil if syntax is valid, error if not
-
 }
