@@ -11,15 +11,21 @@ import (
 )
 
 var (
-	validator *manifest.Renderer
-	path      string
+	renderer *manifest.Renderer
+	path     string
 )
 
-var validateCmd = &cobra.Command{
+var renderCmd = &cobra.Command{
 	Use:   "render",
-	Short: "Render manifest files",
-	Long:  fmt.Sprintf("Recursively validates %s files in the specified path", strings.Join(constants.ManifestSuffixes, ", ")),
-	Run:   runRender,
+	Short: "Render manifest files to stdout",
+	Long: fmt.Sprintf(`Recursively validates manifest files in the specified path.
+
+Supported formats are: %s.
+
+Any valid output will be printed raw to stdout, error messages to stderr. Returns 0 if all input is rendered
+correctly, otherwise return code 1 is used to indicate failure.`,
+		strings.Join(constants.ManifestSuffixes, ", ")),
+	Run: runRender,
 }
 
 func runRender(_ *cobra.Command, _ []string) {
@@ -40,12 +46,12 @@ func runRender(_ *cobra.Command, _ []string) {
 
 	processor.ProcessManifests(
 		files,
-		validator.RenderManifest,
+		renderer.RenderManifest,
 	)
 }
 
 func init() {
-	manifestCmd.AddCommand(validateCmd)
-	validateCmd.Flags().StringVar(&path, "path", ".", "pathname to look for"+strings.Join(constants.ManifestSuffixes, ", "))
-	validator = manifest.NewRenderer()
+	manifestCmd.AddCommand(renderCmd)
+	renderCmd.Flags().StringVar(&path, "path", ".", "filesystem path to look for manifests")
+	renderer = manifest.NewRenderer()
 }
