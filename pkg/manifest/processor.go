@@ -28,8 +28,6 @@ func (p *Processor) ProcessManifests(files []string, process StringToErrorFunc) 
 		if err != nil {
 			p.log.Error("failed", "file", file, "error", err.Error())
 			failed = true
-		} else {
-			p.log.Info("succeeded", "file", file)
 		}
 	}
 	if failed {

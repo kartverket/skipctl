@@ -45,7 +45,7 @@ func findFilesWithSuffixes(directory string, suffixes []string) ([]string, error
 			return err
 		}
 		if !info.IsDir() {
-			ext := filepath.Ext(path)
+			ext := strings.ToLower(filepath.Ext(path))
 
 			if slices.Contains(suffixes, ext) {
 				files = append(files, path)

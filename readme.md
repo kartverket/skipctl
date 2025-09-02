@@ -33,7 +33,9 @@ skipctl test probe --hostname=example.com --port=1521 --api-server=myApiServer
 ```
 
 
-### Validate manifest
-```bash
-skipctl manifest validate <pathname/filename>
+### Render manifest
+
+Validates a Skiperator Jsonnet manifest in the specified directory and alerts if any errors are found.
+```shell
+skipctl manifests render --path <pathname>
 ```
