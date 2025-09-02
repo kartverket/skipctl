@@ -2,6 +2,8 @@ package cmd
 
 import (
 	"os"
+	"path/filepath"
+	"slices"
 	"strings"
 
 	"github.com/kartverket/skipctl/pkg/discovery"
@@ -34,4 +36,22 @@ func ValidateAPIServerName(_ *cobra.Command, _ []string) {
 		log.Error("unknown api server - please pick another supported", "specified", apiServer, "supported", names)
 		os.Exit(1)
 	}
+}
+
+func findFilesWithSuffixes(directory string, suffixes []string) ([]string, error) {
+	var files []string
+	err := filepath.WalkDir(directory, func(path string, info os.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+		if !info.IsDir() {
+			ext := strings.ToLower(filepath.Ext(path))
+
+			if slices.Contains(suffixes, ext) {
+				files = append(files, path)
+			}
+		}
+		return nil
+	})
+	return files, err
 }

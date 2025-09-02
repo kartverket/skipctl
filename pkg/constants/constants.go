@@ -11,3 +11,11 @@ const (
 	DNSDiscoverTimeout       = 5 * time.Second
 	HTTPReadHeaderTimeout    = 5 * time.Second
 )
+
+const (
+	ManifestSuffixJsonnet = ".jsonnet"
+)
+
+var (
+	ManifestSuffixes = []string{ManifestSuffixJsonnet}
+)

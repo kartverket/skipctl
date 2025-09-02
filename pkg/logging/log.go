@@ -10,11 +10,13 @@ import (
 )
 
 var logger *slog.Logger
+var rawLogger *slog.Logger
 var leveler *slog.LevelVar
 
 var lock sync.Mutex
 
 func init() {
+	rawLogger = slog.New(&rawHandler{})
 	leveler = new(slog.LevelVar)
 	leveler.Set(slog.LevelInfo)
 	// This is the default before anyone calls this function
@@ -39,9 +41,9 @@ func ConfigureLogging(mode string, isDebug bool) *slog.Logger {
 	var h slog.Handler
 	switch parsedMode {
 	case OutputModeJSON:
-		h = slog.NewJSONHandler(os.Stdout, opts)
+		h = slog.NewJSONHandler(os.Stderr, opts)
 	case OutputModeText:
-		h = slog.NewTextHandler(os.Stdout, opts)
+		h = slog.NewTextHandler(os.Stderr, opts)
 	default:
 		panic(errors.Errorf("invalid output option: %v", parsedMode))
 	}
@@ -61,4 +63,14 @@ func Logger() *slog.Logger {
 	}
 
 	return logger
+}
+
+// RawLogger returns a logger that just prints the message field as-is, without any extra formatting.
+// This is useful for programs that need to output raw data.
+func RawLogger() *slog.Logger {
+	if rawLogger == nil {
+		panic("logger not initialized")
+	}
+
+	return rawLogger
 }
