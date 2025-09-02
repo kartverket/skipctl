@@ -12,24 +12,19 @@ import (
 
 var (
 	validator *manifest.Validator
+	path      string
 )
 
 var validateCmd = &cobra.Command{
 	Use:   "validate",
 	Short: "Validate manifest files",
 	Long:  fmt.Sprintf("Recursively validates %s files in the specified path", strings.Join(constants.ManifestSuffixes, ", ")),
-	Args:  cobra.RangeArgs(0, 1),
 	Run:   runValidate,
 }
 
-func runValidate(_ *cobra.Command, args []string) {
-	var rootDirName = "."
+func runValidate(_ *cobra.Command, _ []string) {
 
-	if len(args) > 0 {
-		rootDirName = args[0]
-	}
-
-	files, err := findFilesWithSuffixes(rootDirName, constants.ManifestSuffixes)
+	files, err := findFilesWithSuffixes(path, constants.ManifestSuffixes)
 
 	if err != nil {
 		log.Error("Error collecting files",
@@ -42,7 +37,7 @@ func runValidate(_ *cobra.Command, args []string) {
 		return
 	}
 
-	processor := manifest.NewManfiestProcessor("validate")
+	processor := manifest.NewManifestProcessor("validate")
 
 	processor.ProcessManifests(
 		files,
@@ -52,5 +47,6 @@ func runValidate(_ *cobra.Command, args []string) {
 
 func init() {
 	manifestCmd.AddCommand(validateCmd)
+	validateCmd.Flags().StringVar(&path, "path", ".", "pathname to look for"+strings.Join(constants.ManifestSuffixes, ", "))
 	validator = manifest.NewValidator()
 }

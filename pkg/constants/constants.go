@@ -13,9 +13,10 @@ const (
 )
 
 const (
-	ManifestSuffixJsonnet = ".jsonnet"
+	ManifestSuffixJsonnet   = ".jsonnet"
+	ManifestSuffixLibsonnet = ".libsonnet"
 )
 
 var (
-	ManifestSuffixes = []string{ManifestSuffixJsonnet}
+	ManifestSuffixes = []string{ManifestSuffixJsonnet, ManifestSuffixLibsonnet}
 )

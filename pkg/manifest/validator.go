@@ -1,7 +1,9 @@
 package manifest
 
 import (
+	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/google/go-jsonnet"
 
@@ -19,11 +21,13 @@ func NewValidator() *Validator {
 }
 
 func (v *Validator) ValidateManifest(filename string) error {
-	extension := filepath.Ext(filename)
+	extension := strings.ToLower(filepath.Ext(filename))
 
 	switch extension { //nolint:gocritic // singleCaseSwitch: this is intentional
 	case constants.ManifestSuffixJsonnet:
 		return v.validateJsonnet(filename)
+	case constants.ManifestSuffixLibsonnet:
+		return validateJsonnetSyntax(filename)
 	}
 	return nil
 }
@@ -31,4 +35,16 @@ func (v *Validator) ValidateManifest(filename string) error {
 func (v *Validator) validateJsonnet(filename string) error {
 	_, err := v.jsonnet.EvaluateFile(filename)
 	return err
+}
+
+func validateJsonnetSyntax(filename string) error {
+	// Read the file content
+	content, err := os.ReadFile(filename)
+	if err != nil {
+		return err
+	}
+
+	// Parse the content using SnippetToAST
+	_, err = jsonnet.SnippetToAST(filename, string(content))
+	return err // Returns nil if syntax is valid, error if not
 }
