@@ -27,7 +27,7 @@ func (v *Validator) ValidateManifest(filename string) error {
 	case constants.ManifestSuffixJsonnet:
 		return v.validateJsonnet(filename)
 	case constants.ManifestSuffixLibsonnet:
-		return validateJsonnetSyntax(filename)
+		return v.validateJsonnet(filename)
 	}
 	return nil
 }
@@ -44,7 +44,11 @@ func validateJsonnetSyntax(filename string) error {
 		return err
 	}
 
+	// Strip trailing newlines (\n and \r)
+	trimmed := strings.TrimRight(string(content), "\r\n")
+
 	// Parse the content using SnippetToAST
-	_, err = jsonnet.SnippetToAST(filename, string(content))
+	_, err = jsonnet.SnippetToAST(filename, trimmed)
 	return err // Returns nil if syntax is valid, error if not
+
 }

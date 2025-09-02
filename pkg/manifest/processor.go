@@ -8,8 +8,7 @@ import (
 )
 
 type Processor struct {
-	log      *slog.Logger
-	logLabel string
+	log *slog.Logger
 }
 
 type StringToErrorFunc func(string) error
