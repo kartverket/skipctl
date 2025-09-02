@@ -22,7 +22,7 @@ func NewRenderer() *Renderer {
 func (v *Renderer) RenderManifest(filename string) error {
 	extension := strings.ToLower(filepath.Ext(filename))
 
-	switch extension {
+	switch extension { //nolint:gocritic // singleCaseSwitch: this is intentional
 	case constants.ManifestSuffixJsonnet:
 		return v.renderJsonnet(filename)
 	}
