@@ -11,6 +11,7 @@ import (
 
 	slogcontext "github.com/PumpkinSeed/slog-context"
 	api "github.com/kartverket/skipctl/pkg/api/v1"
+	"github.com/kartverket/skipctl/pkg/constants"
 	probing "github.com/prometheus-community/pro-bing"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
@@ -37,7 +38,8 @@ type DiagnosticService struct {
 }
 
 func NewDiagnosticService(reg *prometheus.Registry, globalTimeout time.Duration) (*DiagnosticService, error) {
-	conn, err := net.Dial("ip4:icmp", "127.0.0.1")
+	d := net.Dialer{Timeout: constants.SelfTestTimeout}
+	conn, err := d.DialContext(context.TODO(), "ip4:icmp", "127.0.0.1")
 	if err != nil {
 		return nil, errors.New("unable to do raw ICMP sockets – missing permissions")
 	}

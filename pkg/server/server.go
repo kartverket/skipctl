@@ -62,11 +62,14 @@ func Serve(addr string, metricsAddr string, timeout time.Duration, idTokenOrg st
 
 	reflection.Register(grpcSrv)
 
+	ctx := context.Background()
+
 	// Binding
 	g := &run.Group{}
 
 	g.Add(func() error {
-		l, lerr := net.Listen("tcp", addr)
+		lc := net.ListenConfig{}
+		l, lerr := lc.Listen(ctx, "tcp", addr)
 		if lerr != nil {
 			return err
 		}
@@ -91,7 +94,7 @@ func Serve(addr string, metricsAddr string, timeout time.Duration, idTokenOrg st
 		}
 	})
 
-	g.Add(run.SignalHandler(context.Background(), syscall.SIGINT, syscall.SIGTERM))
+	g.Add(run.SignalHandler(ctx, syscall.SIGINT, syscall.SIGTERM))
 
 	if gerr := g.Run(); gerr != nil {
 		log.Error("failed to run server", "error", gerr)

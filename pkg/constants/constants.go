@@ -10,6 +10,7 @@ const (
 	DefaultGoogleOrgID       = "kartverket.no"
 	DNSDiscoverTimeout       = 5 * time.Second
 	HTTPReadHeaderTimeout    = 5 * time.Second
+	SelfTestTimeout          = 2 * time.Second
 )
 
 const (
