@@ -8,4 +8,4 @@ breaking:
   use:
     - FILE
 deps:
-  - buf.build/protocolbuffers/gofeatures:v1.34.2
+  - buf.build/protocolbuffers/wellknowntypes:v32.0
