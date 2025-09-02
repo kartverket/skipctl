@@ -16,8 +16,7 @@ type StringToErrorFunc func(string) error
 
 func NewManfiestProcessor(label string) *Processor {
 	return &Processor{
-		log:      logging.Logger(),
-		logLabel: label,
+		log: logging.Logger().With("operation", label),
 	}
 }
 
