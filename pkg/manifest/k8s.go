@@ -1,0 +1,140 @@
+package manifest
+
+import (
+	"encoding/json"
+	"fmt"
+	"io"
+	"log/slog"
+	"os"
+	"strings"
+
+	"github.com/kartverket/skipctl/pkg/logging"
+	"github.com/yannh/kubeconform/pkg/validator"
+)
+
+type K8sValidator struct {
+	log       *slog.Logger
+	validator validator.Validator
+}
+
+type ValidateResult struct {
+	ValidCount   int
+	InvalidCount int
+	ErrorCount   int
+	SkippedCount int
+}
+
+// isJSONArray checks if the content is a JSON array.
+func isJSONArray(content string) bool {
+	return strings.HasPrefix(content, "[") && strings.HasSuffix(content, "]")
+}
+
+// validateK8sSchema validates the Kubernetes schema of the given content.
+//
+// The content can be either in form JSON or YAML.
+// It handles both single resources and arrays of resources.
+func (k8 *K8sValidator) validateK8sSchema(filename string, content string) (ValidateResult, error) {
+	content = strings.TrimSpace(content)
+
+	if isJSONArray(content) {
+		// Parse the content as an array of raw JSON messages
+		var resources []json.RawMessage
+		if err := json.Unmarshal([]byte(content), &resources); err != nil {
+			return ValidateResult{}, fmt.Errorf("failed to parse JSON array: %w", err)
+		}
+
+		// Validate each resource in the array
+		return k8.validateResourceArray(filename, resources)
+	}
+
+	reader := io.NopCloser(strings.NewReader(content))
+	results := k8.validator.Validate(filename, reader)
+	return k8.processValidationResults(filename, results)
+}
+
+// validateResourceArray validates each resource in a JSON array.
+//
+// For each resource, it creates a reader and validates it individually.
+// Only for JSON arrays.
+func (k8 *K8sValidator) validateResourceArray(filename string, resources []json.RawMessage) (ValidateResult, error) {
+	var allResults []validator.Result
+
+	for i, resource := range resources {
+		reader := io.NopCloser(strings.NewReader(string(resource)))
+		docFilename := fmt.Sprintf("%s[%d]", filename, i)
+		results := k8.validator.Validate(docFilename, reader)
+		allResults = append(allResults, results...)
+	}
+
+	return k8.processValidationResults(filename, allResults)
+}
+
+// processValidationResults processes and logs the results of the validation.
+//
+// Counts the number of valid, invalid, error, and skipped resources,
+// and returns the errors encountered during validation.
+func (k8 *K8sValidator) processValidationResults(filename string, results []validator.Result) (ValidateResult, error) {
+	// Initialize counters for each status
+	var validCount, invalidCount, errorCount, skippedCount int
+
+	var error error
+
+	for _, result := range results {
+		switch result.Status {
+		case validator.Valid:
+			validCount++
+
+		case validator.Invalid:
+			invalidCount++
+			fmt.Printf("✖ %s: is invalid\n", filename)
+
+			for _, validationErr := range result.ValidationErrors {
+				fmt.Printf("  - %s: %s\n", validationErr.Path, validationErr.Msg)
+			}
+
+		case validator.Error:
+			errorCount++
+
+			fmt.Printf("✖ %s: Error processing resource: %s\n", filename, result.Err.Error())
+
+		case validator.Skipped:
+			skippedCount++
+
+		case validator.Empty:
+			// Skip empty documents
+		}
+	}
+
+	return ValidateResult{
+		ValidCount:   validCount,
+		InvalidCount: invalidCount,
+		ErrorCount:   errorCount,
+		SkippedCount: skippedCount,
+	}, error
+}
+
+// initValidator initializes the Kubernetes schema validator.
+//
+// Enforces strict validation mode and loads the necessary custom K8s CRDs.
+func initValidator() validator.Validator {
+	schemaLocations := []string{
+		"default",
+		"config/crd/{{ .ResourceKind }}_{{ .ResourceAPIVersion }}.json",
+		"https://raw.githubusercontent.com/datreeio/CRDs-catalog/main/{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}.json",
+	}
+
+	v, err := validator.New(schemaLocations, validator.Opts{Strict: true})
+	if err != nil {
+		logging.Logger().Error("Failed to initialize K8s validator", "error", err)
+		os.Exit(1)
+	}
+
+	return v
+}
+
+func NewK8sValidator() *K8sValidator {
+	return &K8sValidator{
+		log:       logging.ConfigureLogging("text", false),
+		validator: initValidator(),
+	}
+}
