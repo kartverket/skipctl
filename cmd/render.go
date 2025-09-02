@@ -11,18 +11,18 @@ import (
 )
 
 var (
-	validator *manifest.Validator
+	validator *manifest.Renderer
 	path      string
 )
 
 var validateCmd = &cobra.Command{
-	Use:   "validate",
-	Short: "Validate manifest files",
+	Use:   "render",
+	Short: "Render manifest files",
 	Long:  fmt.Sprintf("Recursively validates %s files in the specified path", strings.Join(constants.ManifestSuffixes, ", ")),
-	Run:   runValidate,
+	Run:   runRender,
 }
 
-func runValidate(_ *cobra.Command, _ []string) {
+func runRender(_ *cobra.Command, _ []string) {
 	files, err := findFilesWithSuffixes(path, constants.ManifestSuffixes)
 
 	if err != nil {
@@ -40,12 +40,12 @@ func runValidate(_ *cobra.Command, _ []string) {
 
 	processor.ProcessManifests(
 		files,
-		validator.ValidateManifest,
+		validator.RenderManifest,
 	)
 }
 
 func init() {
 	manifestCmd.AddCommand(validateCmd)
 	validateCmd.Flags().StringVar(&path, "path", ".", "pathname to look for"+strings.Join(constants.ManifestSuffixes, ", "))
-	validator = manifest.NewValidator()
+	validator = manifest.NewRenderer()
 }
