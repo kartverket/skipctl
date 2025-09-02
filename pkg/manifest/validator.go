@@ -5,7 +5,6 @@ import (
 	"strings"
 
 	"github.com/google/go-jsonnet"
-
 	"github.com/kartverket/skipctl/pkg/constants"
 )
 

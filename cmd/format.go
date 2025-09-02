@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"os"
+	"strings"
 
 	"github.com/kartverket/skipctl/pkg/constants"
 	"github.com/kartverket/skipctl/pkg/manifest"
@@ -36,9 +37,10 @@ func runFormat(_ *cobra.Command, args []string) {
 		return
 	}
 
-	processor := manifest.NewManfiestProcessor("format")
+	processor := manifest.NewManifestProcessor()
 	processor.ProcessManifests(files, manifest.FormatManifest)
 }
 func init() {
 	manifestCmd.AddCommand(formatCmd)
+	formatCmd.Flags().StringVar(&path, "path", ".", "pathname to look for"+strings.Join(constants.ManifestSuffixes, ", "))
 }
