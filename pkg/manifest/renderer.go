@@ -31,7 +31,7 @@ func (r *Renderer) RenderManifest(filename string) error {
 	switch extension {
 	case constants.ManifestSuffixJsonnet:
 		return r.renderJsonnet(filename)
-	case constants.ManifestSuffixYaml:
+	case constants.ManifestSuffixYaml, constants.ManifestSuffixYml:
 		return r.renderYaml(filename)
 	}
 
@@ -57,5 +57,13 @@ func (r *Renderer) renderYaml(filename string) error {
 
 	var output any
 
-	return yaml.Unmarshal(fileContents, &output)
+	err = yaml.Unmarshal(fileContents, &output)
+	if err != nil {
+		return err
+	}
+
+	r.rawOutput.Info("---")
+	r.rawOutput.Info(string(fileContents))
+
+	return nil
 }
