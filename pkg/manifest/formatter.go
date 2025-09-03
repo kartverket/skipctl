@@ -57,7 +57,7 @@ func formatYaml(filename string) error {
 	return nil
 }
 func FormatManifest(filename string) error {
-	switch filepath.Ext(strings.ToLower(filename)) {
+	switch strings.ToLower(filepath.Ext(filename)) {
 	case constants.ManifestSuffixJsonnet:
 		return formatJsonnet(filename)
 	case constants.ManifestSuffixYaml:
