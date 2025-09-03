@@ -10,21 +10,26 @@ import (
 )
 
 func FormatJsonnet(filename string) error {
-	byteOut, err := os.ReadFile(filename)
-	if err != nil {
-		return err
-	}
-	outStr := string(byteOut)
-	jsonOut, err := formatter.Format(filename, outStr, formatter.DefaultOptions())
-	if err != nil {
-		return err
-	}
-	err = os.WriteFile(filename, []byte(jsonOut), 0600)
+	rawContents, err := os.ReadFile(filename)
 	if err != nil {
 		return err
 	}
 
-	return err
+	formatted, err := formatter.Format(filename, string(rawContents), formatter.DefaultOptions())
+	if err != nil {
+		return err
+	}
+
+	fileInfo, err := os.Stat(filename)
+	if err != nil {
+		return err
+	}
+
+	if err = os.WriteFile(filename, []byte(formatted), fileInfo.Mode().Perm()); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func FormatManifest(filename string) error {
