@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"fmt"
 	"os"
 	"strings"
 
@@ -11,20 +12,20 @@ import (
 
 var formatCmd = &cobra.Command{
 	Use:   "format",
-	Short: "Formats .jsonnet files",
-	Long:  "Recursively formats all .jsonnet files in the specified path",
-	Args:  cobra.RangeArgs(0, 1),
-	Run:   runFormat,
+	Short: "Format manifest in place",
+	Long: fmt.Sprintf(`Recursively formats manifest files in the specified path.
+
+Supported formats are: %s.
+
+Any errors will be printed to stderr. Returns 0 if all input files are formatted
+correctly, otherwise return code 1 is used to indicate failure.`,
+		strings.Join(constants.ManifestSuffixes, ", ")),
+	Run: runFormat,
 }
 
-func runFormat(_ *cobra.Command, args []string) {
-	var rootDirName = "."
+func runFormat(_ *cobra.Command, _ []string) {
 
-	if len(args) > 0 {
-		rootDirName = args[0]
-	}
-
-	files, err := findFilesWithSuffixes(rootDirName, constants.ManifestSuffixes)
+	files, err := findFilesWithSuffixes(path, constants.ManifestSuffixes)
 
 	if err != nil {
 		log.Error("Error collecting files",

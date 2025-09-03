@@ -1,6 +1,7 @@
 package manifest
 
 import (
+	"fmt"
 	"log/slog"
 	"path/filepath"
 	"strings"
@@ -29,8 +30,9 @@ func (v *Renderer) RenderManifest(filename string) error {
 	switch extension { //nolint:gocritic // singleCaseSwitch: this is intentional
 	case constants.ManifestSuffixJsonnet:
 		return v.renderJsonnet(filename)
+	default:
+		return fmt.Errorf("invalid file format in file %s", filename)
 	}
-	return nil
 }
 
 func (v *Renderer) renderJsonnet(filename string) error {

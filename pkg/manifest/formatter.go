@@ -1,7 +1,7 @@
 package manifest
 
 import (
-	"errors"
+	"fmt"
 	"os"
 	"path/filepath"
 
@@ -32,6 +32,6 @@ func FormatManifest(filename string) error {
 	case constants.ManifestSuffixJsonnet:
 		return FormatJsonnet(filename)
 	default:
-		return errors.New("invalid file format")
+		return fmt.Errorf("invalid file format in file %s", filename)
 	}
 }
