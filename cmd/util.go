@@ -8,6 +8,7 @@ import (
 
 	"github.com/kartverket/skipctl/pkg/discovery"
 	"github.com/spf13/cobra"
+	"go.yaml.in/yaml/v4"
 )
 
 var activeAPIServer discovery.APIServer
@@ -54,4 +55,18 @@ func findFilesWithSuffixes(directory string, suffixes []string) ([]string, error
 		return nil
 	})
 	return files, err
+}
+func UnmarshalYamlFromFile(filename string) (any, error) {
+	fileContents, err := os.ReadFile(filename)
+	if err != nil {
+		return nil, err
+	}
+
+	var output any
+
+	err = yaml.Unmarshal(fileContents, &output)
+	if err != nil {
+		return nil, err
+	}
+	return output, nil
 }
