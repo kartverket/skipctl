@@ -1,12 +1,13 @@
 package manifest
 
 import (
-	"fmt"
 	"log/slog"
+	"os"
 	"path/filepath"
 	"strings"
 
 	"github.com/google/go-jsonnet"
+	"go.yaml.in/yaml/v4"
 
 	"github.com/kartverket/skipctl/pkg/constants"
 	"github.com/kartverket/skipctl/pkg/logging"
@@ -24,24 +25,37 @@ func NewRenderer() *Renderer {
 	}
 }
 
-func (v *Renderer) RenderManifest(filename string) error {
+func (r *Renderer) RenderManifest(filename string) error {
 	extension := strings.ToLower(filepath.Ext(filename))
 
 	switch extension {
 	case constants.ManifestSuffixJsonnet:
-		return v.renderJsonnet(filename)
-	default:
-		return fmt.Errorf("invalid file format in file %s", filename)
+		return r.renderJsonnet(filename)
+	case constants.ManifestSuffixYaml:
+		return r.renderYaml(filename)
 	}
+
+	return nil
 }
 
-func (v *Renderer) renderJsonnet(filename string) error {
-	result, err := v.jsonnet.EvaluateFile(filename)
+func (r *Renderer) renderJsonnet(filename string) error {
+	result, err := r.jsonnet.EvaluateFile(filename)
 
 	if err != nil {
 		return err
 	}
-	v.rawOutput.Info(result)
+	r.rawOutput.Info(result)
 
 	return nil
+}
+
+func (r *Renderer) renderYaml(filename string) error {
+	fileContents, err := os.ReadFile(filename)
+	if err != nil {
+		return err
+	}
+
+	var output any
+
+	return yaml.Unmarshal(fileContents, &output)
 }
