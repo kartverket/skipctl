@@ -24,7 +24,6 @@ correctly, otherwise return code 1 is used to indicate failure.`,
 }
 
 func runFormat(_ *cobra.Command, _ []string) {
-
 	files, err := findFilesWithSuffixes(path, constants.ManifestSuffixes)
 
 	if err != nil {
