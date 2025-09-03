@@ -5,14 +5,12 @@ import (
 	"path/filepath"
 
 	"github.com/google/go-jsonnet"
-	"go.yaml.in/yaml/v4"
 
 	"github.com/kartverket/skipctl/pkg/constants"
 )
 
 type Validator struct {
-	jsonnet *jsonnet.VM
-	k8s     *K8sValidator
+	k8s *K8sValidator
 }
 
 func NewValidator() *Validator {
@@ -24,21 +22,19 @@ func NewValidator() *Validator {
 func (v *Validator) ValidateManifest(filename string) (ValidateResult, error) {
 	extension := filepath.Ext(filename)
 
-	switch extension { //nolint:gocritic // singleCaseSwitch: this is intentional
+	switch extension {
 	case constants.ManifestSuffixJsonnet:
 		return v.validateJsonnet(filename)
+	case constants.ManifestSuffixYaml, constants.ManifestSuffixYml:
+		return v.validateYaml(filename)
 	}
 
 	return ValidateResult{
-		ValidCount:   0,
-		InvalidCount: 0,
-		ErrorCount:   0,
 		SkippedCount: 1,
 	}, nil
 }
 
-func (v *Validator) validateJsonnet(filename string) (result ValidateResult, err error) {
-
+func (v *Validator) validateJsonnet(filename string) (ValidateResult, error) {
 	// There is a memory corruption bug that leads to segfaults if we reuse the same VM for multiple evaluations.
 	// if there is a syntax error within the Jsonnet file, the VM gets corrupted and cannot be used again.
 	vm := jsonnet.MakeVM()
@@ -46,10 +42,7 @@ func (v *Validator) validateJsonnet(filename string) (result ValidateResult, err
 	content, err := vm.EvaluateFile(filename)
 	if err != nil {
 		return ValidateResult{
-			ValidCount:   0,
-			InvalidCount: 0,
-			ErrorCount:   1,
-			SkippedCount: 0,
+			ErrorCount: 1,
 		}, err
 	}
 
@@ -60,19 +53,9 @@ func (v *Validator) validateYaml(filename string) (ValidateResult, error) {
 	fileContents, err := os.ReadFile(filename)
 	if err != nil {
 		return ValidateResult{
-			ValidCount:   0,
-			InvalidCount: 0,
-			ErrorCount:   1,
-			SkippedCount: 0,
+			ErrorCount: 1,
 		}, err
 	}
 
-	summary, err := v.k8s.validateK8sSchema(filename, string(fileContents))
-	if err != nil {
-		return summary, err
-	}
-
-	var output any
-
-	return summary, yaml.Unmarshal(fileContents, &output)
+	return v.k8s.validateK8sSchema(filename, string(fileContents))
 }

@@ -77,8 +77,6 @@ func (k8 *K8sValidator) processValidationResults(filename string, results []vali
 	// Initialize counters for each status
 	var validCount, invalidCount, errorCount, skippedCount int
 
-	var error error
-
 	for _, result := range results {
 		switch result.Status {
 		case validator.Valid:
@@ -86,16 +84,16 @@ func (k8 *K8sValidator) processValidationResults(filename string, results []vali
 
 		case validator.Invalid:
 			invalidCount++
-			fmt.Printf("✖ %s: is invalid\n", filename)
+			k8.log.Error(fmt.Sprintf("✖ %s: is invalid\n", filename))
 
 			for _, validationErr := range result.ValidationErrors {
-				fmt.Printf("  - %s: %s\n", validationErr.Path, validationErr.Msg)
+				k8.log.Error(fmt.Sprintf("  - %s: %s\n", validationErr.Path, validationErr.Msg))
 			}
 
 		case validator.Error:
 			errorCount++
 
-			fmt.Printf("✖ %s: Error processing resource: %s\n", filename, result.Err.Error())
+			k8.log.Error(fmt.Sprintf("✖ %s: Error processing resource: %s\n", filename, result.Err.Error()))
 
 		case validator.Skipped:
 			skippedCount++
@@ -110,7 +108,7 @@ func (k8 *K8sValidator) processValidationResults(filename string, results []vali
 		InvalidCount: invalidCount,
 		ErrorCount:   errorCount,
 		SkippedCount: skippedCount,
-	}, error
+	}, nil
 }
 
 // initValidator initializes the Kubernetes schema validator.
@@ -134,7 +132,7 @@ func initValidator() validator.Validator {
 
 func NewK8sValidator() *K8sValidator {
 	return &K8sValidator{
-		log:       logging.ConfigureLogging("text", false),
+		log:       logging.RawLogger(),
 		validator: initValidator(),
 	}
 }

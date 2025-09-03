@@ -43,5 +43,5 @@ func runFormat(_ *cobra.Command, _ []string) {
 }
 func init() {
 	manifestCmd.AddCommand(formatCmd)
-	formatCmd.Flags().StringVar(&path, "path", ".", "pathname to look for"+strings.Join(constants.ManifestSuffixes, ", "))
+	formatCmd.Flags().StringVarP(&path, "path", "p", ".", "pathname to look for"+strings.Join(constants.ManifestSuffixes, ", "))
 }

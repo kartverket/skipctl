@@ -6,30 +6,25 @@ import (
 	"strings"
 
 	"github.com/kartverket/skipctl/pkg/constants"
+	"github.com/kartverket/skipctl/pkg/logging"
 	"github.com/kartverket/skipctl/pkg/manifest"
 	"github.com/spf13/cobra"
 )
 
 var (
 	validator *manifest.Validator
+	logger    = logging.RawLogger()
 )
 
 var validateCmd = &cobra.Command{
 	Use:   "validate",
 	Short: "Validate manifest files",
 	Long:  fmt.Sprintf("Recursively validates %s files in the specified path", strings.Join(constants.ManifestSuffixes, ", ")),
-	Args:  cobra.RangeArgs(0, 1),
 	Run:   runValidate,
 }
 
-func runValidate(_ *cobra.Command, args []string) {
-	var rootDirName = "."
-
-	if len(args) > 0 {
-		rootDirName = args[0]
-	}
-
-	files, err := findFilesWithSuffixes(rootDirName, constants.ManifestSuffixes)
+func runValidate(_ *cobra.Command, _ []string) {
+	files, err := findFilesWithSuffixes(path, constants.ManifestSuffixes)
 
 	if err != nil {
 		log.Error("Error collecting files",
@@ -49,7 +44,7 @@ func runValidate(_ *cobra.Command, args []string) {
 	for _, file := range files {
 		summary, validationErr := validator.ValidateManifest(file)
 		if validationErr != nil {
-			fmt.Printf("✖ Validation failed for %s:\n %s \n", file, validationErr.Error())
+			logger.Error(fmt.Sprintf("✖ Validation failed for %s:\n %s \n", file, validationErr.Error()))
 			failed = true
 		}
 
@@ -57,12 +52,11 @@ func runValidate(_ *cobra.Command, args []string) {
 		invalidCount += summary.InvalidCount
 		errorCount += summary.ErrorCount
 		skippedCount += summary.SkippedCount
-
 	}
 
 	totalResources := validCount + invalidCount + errorCount + skippedCount
 
-	fmt.Printf("Summary: %d resources found - Valid: %d, Invalid: %d, Errors: %d, Skipped: %d \n", totalResources, validCount, invalidCount, errorCount, skippedCount)
+	logger.Info(fmt.Sprintf("Summary: %d resources found - Valid: %d, Invalid: %d, Errors: %d, Skipped: %d \n", totalResources, validCount, invalidCount, errorCount, skippedCount))
 
 	if failed {
 		os.Exit(1)
@@ -71,5 +65,6 @@ func runValidate(_ *cobra.Command, args []string) {
 
 func init() {
 	manifestCmd.AddCommand(validateCmd)
+	validateCmd.Flags().StringVarP(&path, "path", "p", ".", "filesystem path to look for manifests")
 	validator = manifest.NewValidator()
 }

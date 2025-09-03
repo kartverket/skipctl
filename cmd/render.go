@@ -13,7 +13,6 @@ import (
 
 var (
 	renderer *manifest.Renderer
-	path     string
 )
 
 var renderCmd = &cobra.Command{
@@ -53,6 +52,6 @@ func runRender(_ *cobra.Command, _ []string) {
 
 func init() {
 	manifestCmd.AddCommand(renderCmd)
-	renderCmd.Flags().StringVar(&path, "path", ".", "filesystem path to look for manifests")
+	renderCmd.Flags().StringVarP(&path, "path", "p", ".", "filesystem path to look for manifests")
 	renderer = manifest.NewRenderer()
 }
