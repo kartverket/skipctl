@@ -1,8 +1,0 @@
-foo: bar
-baz:
-  - 1
-  - 2
-  - 3
-settings:
-  enabled: true
-  retries: 5

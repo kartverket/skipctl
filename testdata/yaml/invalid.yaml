@@ -1,4 +1,7 @@
-foo: bar
-baz
-  - 1
-  - 2
+apiVersion: skiperator.kartverket.no/v1alpha1
+kind: Application
+metadata:
+  name: application-missing-required-port
+  namespace: devex
+spec:
+  image: "kartverket/example"
