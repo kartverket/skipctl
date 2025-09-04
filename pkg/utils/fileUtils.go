@@ -184,7 +184,6 @@ func ReadFilesFromStdin() ([]*ManifestFile, error) {
 			Extension: ext,
 			Content:   string(fileContent),
 		})
-
 	}
 	return manifestFiles, nil
 }

@@ -24,14 +24,12 @@ func NewRenderer() *Renderer {
 }
 
 func (r *Renderer) RenderManifest(file *utils.ManifestFile) error {
-
 	switch file.Extension {
 	case constants.ManifestSuffixJsonnet:
 		return r.renderJsonnet(file)
 	case constants.ManifestSuffixYaml, constants.ManifestSuffixYml:
 		return r.renderYaml(file)
 	}
-
 	return nil
 }
 

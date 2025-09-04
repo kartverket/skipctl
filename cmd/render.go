@@ -29,7 +29,6 @@ correctly, otherwise return code 1 is used to indicate failure.`,
 }
 
 func runRender(_ *cobra.Command, args []string) {
-
 	var manifestFiles []*utils.ManifestFile
 	var err error
 
