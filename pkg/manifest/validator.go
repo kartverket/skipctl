@@ -1,12 +1,12 @@
 package manifest
 
 import (
-	"os"
 	"path/filepath"
 
 	"github.com/google/go-jsonnet"
 
 	"github.com/kartverket/skipctl/pkg/constants"
+	"github.com/kartverket/skipctl/pkg/utils"
 )
 
 type Validator struct {
@@ -50,7 +50,7 @@ func (v *Validator) validateJsonnet(filename string) (ValidateResult, error) {
 }
 
 func (v *Validator) validateYaml(filename string) (ValidateResult, error) {
-	fileContents, err := os.ReadFile(filename)
+	fileContents, err := utils.MarshalYamlFromFile(filename)
 	if err != nil {
 		return ValidateResult{
 			ErrorCount: 1,
