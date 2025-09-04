@@ -1,4 +1,4 @@
-package fileutil
+package utils
 
 import (
 	"os"
@@ -26,6 +26,7 @@ func FindFilesWithSuffixes(directory string, suffixes []string) ([]string, error
 	})
 	return files, err
 }
+
 func UnmarshalYamlFromFile(filename string) (any, error) {
 	fileContents, err := os.ReadFile(filename)
 	if err != nil {

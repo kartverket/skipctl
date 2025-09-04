@@ -8,7 +8,7 @@ import (
 
 	"github.com/google/go-jsonnet/formatter"
 	"github.com/kartverket/skipctl/pkg/constants"
-	fileutil "github.com/kartverket/skipctl/pkg/util"
+	"github.com/kartverket/skipctl/pkg/utils"
 	"go.yaml.in/yaml/v4"
 )
 
@@ -36,7 +36,7 @@ func formatJsonnet(filename string) error {
 }
 
 func formatYaml(filename string) error {
-	raw, err := fileutil.UnmarshalYamlFromFile(filename)
+	raw, err := utils.UnmarshalYamlFromFile(filename)
 	if err != nil {
 		return err
 	}
