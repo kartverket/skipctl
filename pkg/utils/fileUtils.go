@@ -4,6 +4,9 @@ import (
 	"fmt"
 	"io"
 	"io/fs"
+	"bytes"
+	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"slices"
@@ -25,6 +28,14 @@ func FindManifestFiles(path string) ([]string, error) {
 	}
 
 	return files, nil
+	"github.com/kartverket/skipctl/pkg/logging"
+	"go.yaml.in/yaml/v4"
+)
+
+type ManifestFile struct {
+	Name      string
+	Extension string
+	Content   string
 }
 
 func FindFilesWithSuffixes(directory string, suffixes []string) ([]string, error) {
@@ -117,4 +128,63 @@ func CopyFilesToDirectory(filesystem fs.FS, destinationDir string) error {
 		}
 		return closeErr
 	})
+func ReadFiles(filenames []string) []*ManifestFile {
+	var files = []*ManifestFile{}
+
+	for _, filename := range filenames {
+		fileContent, err := os.ReadFile(filename)
+
+		if err != nil {
+			logging.Logger().Error("unable to read file", "filename", filename)
+			continue
+		}
+		files = append(files, &ManifestFile{
+			Name:      filename,
+			Extension: strings.ToLower(filepath.Ext(filename)),
+			Content:   string(fileContent),
+		})
+	}
+	return files
+}
+
+func detectFiletype(content []byte) (string, error) {
+	trimmed := bytes.TrimLeft(content, " \t\r\n")
+	if len(trimmed) == 0 {
+		return "", fmt.Errorf("Unable to detect filetype: Empty file content")
+	}
+	firstChar := trimmed[0]
+
+	switch firstChar {
+	case '{', '[':
+		return constants.ManifestSuffixJsonnet, nil
+	default:
+		return constants.ManifestSuffixYaml, nil
+	}
+}
+
+func ReadFilesFromStdin() ([]*ManifestFile, error) {
+	log := logging.Logger()
+
+	content, err := io.ReadAll(os.Stdin)
+	if err != nil {
+		return nil, err
+	}
+	files := bytes.Split(content, []byte("\n---\n"))
+
+	var manifestFiles []*ManifestFile
+
+	for i, fileContent := range files {
+		ext, err := detectFiletype(fileContent)
+		if err != nil {
+			log.Error(err.Error(), "reason", "skipping")
+			continue
+		}
+		manifestFiles = append(manifestFiles, &ManifestFile{
+			Name:      fmt.Sprintf("stdin_%d", i),
+			Extension: ext,
+			Content:   string(fileContent),
+		})
+
+	}
+	return manifestFiles, nil
 }
