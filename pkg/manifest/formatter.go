@@ -4,12 +4,15 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/google/go-jsonnet/formatter"
 	"github.com/kartverket/skipctl/pkg/constants"
+	"github.com/kartverket/skipctl/pkg/utils"
+	"go.yaml.in/yaml/v4"
 )
 
-func FormatJsonnet(filename string) error {
+func formatJsonnet(filename string) error {
 	rawContents, err := os.ReadFile(filename)
 	if err != nil {
 		return err
@@ -32,10 +35,33 @@ func FormatJsonnet(filename string) error {
 	return nil
 }
 
+func formatYaml(filename string) error {
+	raw, err := utils.UnmarshalYamlFromFile(filename)
+	if err != nil {
+		return err
+	}
+
+	formattedYaml, err := yaml.Marshal(raw)
+	if err != nil {
+		return err
+	}
+
+	fileInfo, err := os.Stat(filename)
+	if err != nil {
+		return err
+	}
+
+	if err = os.WriteFile(filename, formattedYaml, fileInfo.Mode().Perm()); err != nil {
+		return err
+	}
+	return nil
+}
 func FormatManifest(filename string) error {
-	switch filepath.Ext(filename) {
+	switch strings.ToLower(filepath.Ext(filename)) {
 	case constants.ManifestSuffixJsonnet:
-		return FormatJsonnet(filename)
+		return formatJsonnet(filename)
+	case constants.ManifestSuffixYaml, constants.ManifestSuffixYml:
+		return formatYaml(filename)
 	default:
 		return fmt.Errorf("invalid file format in file %s", filename)
 	}

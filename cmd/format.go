@@ -7,6 +7,7 @@ import (
 
 	"github.com/kartverket/skipctl/pkg/constants"
 	"github.com/kartverket/skipctl/pkg/manifest"
+	"github.com/kartverket/skipctl/pkg/utils"
 	"github.com/spf13/cobra"
 )
 
@@ -24,7 +25,7 @@ correctly, otherwise return code 1 is used to indicate failure.`,
 }
 
 func runFormat(_ *cobra.Command, _ []string) {
-	files, err := findFilesWithSuffixes(path, constants.ManifestSuffixes)
+	files, err := utils.FindFilesWithSuffixes(path, constants.ManifestSuffixes)
 
 	if err != nil {
 		log.Error("Error collecting files",

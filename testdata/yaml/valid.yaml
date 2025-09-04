@@ -6,3 +6,4 @@ baz:
 settings:
   enabled: true
   retries: 5
+
