@@ -60,9 +60,7 @@ func FormatManifest(filename string) error {
 	switch strings.ToLower(filepath.Ext(filename)) {
 	case constants.ManifestSuffixJsonnet:
 		return formatJsonnet(filename)
-	case constants.ManifestSuffixYaml:
-		return formatYaml(filename)
-	case constants.ManifestSuffixYml:
+	case constants.ManifestSuffixYaml, constants.ManifestSuffixYml:
 		return formatYaml(filename)
 	default:
 		return fmt.Errorf("invalid file format in file %s", filename)
