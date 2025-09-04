@@ -15,5 +15,6 @@ var manifestCmd = &cobra.Command{
 }
 
 func init() {
+	manifestCmd.PersistentFlags().StringVarP(&path, "path", "p", ".", "path to file/directory containing manifest")
 	rootCmd.AddCommand(manifestCmd)
 }

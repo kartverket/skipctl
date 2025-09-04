@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"fmt"
-	"os"
 	"strings"
 
 	"github.com/kartverket/skipctl/pkg/constants"
@@ -29,16 +28,9 @@ correctly, otherwise return code 1 is used to indicate failure.`,
 }
 
 func runRender(_ *cobra.Command, _ []string) {
-	files, err := utils.FindFilesWithSuffixes(path, constants.ManifestSuffixes)
-
+	files, err := utils.FindManifestFiles(path)
 	if err != nil {
-		log.Error("Error collecting files",
-			"error", err.Error(),
-		)
-		os.Exit(1)
-	}
-	if len(files) == 0 {
-		log.Info("No manifests found.")
+		log.Error(err.Error())
 		return
 	}
 
@@ -52,6 +44,5 @@ func runRender(_ *cobra.Command, _ []string) {
 
 func init() {
 	manifestCmd.AddCommand(renderCmd)
-	renderCmd.Flags().StringVarP(&path, "path", "p", ".", "filesystem path to look for manifests")
 	renderer = manifest.NewRenderer()
 }

@@ -1,6 +1,7 @@
 package manifest
 
 import (
+	"embed"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -9,8 +10,12 @@ import (
 	"strings"
 
 	"github.com/kartverket/skipctl/pkg/logging"
+	"github.com/kartverket/skipctl/pkg/utils"
 	"github.com/yannh/kubeconform/pkg/validator"
 )
+
+//go:embed schemas/*.json
+var embeddedSchemas embed.FS
 
 type K8sValidator struct {
 	log       *slog.Logger
@@ -84,16 +89,16 @@ func (k8 *K8sValidator) processValidationResults(filename string, results []vali
 
 		case validator.Invalid:
 			invalidCount++
-			k8.log.Error(fmt.Sprintf("✖ %s: is invalid\n", filename))
+			k8.log.Error("✖ file is invalid", "filename", filename)
 
 			for _, validationErr := range result.ValidationErrors {
-				k8.log.Error(fmt.Sprintf("  - %s: %s\n", validationErr.Path, validationErr.Msg))
+				k8.log.Error("  - ", "path", validationErr.Path, "error", validationErr.Msg)
 			}
 
 		case validator.Error:
 			errorCount++
 
-			k8.log.Error(fmt.Sprintf("✖ %s: Error processing resource: %s\n", filename, result.Err.Error()))
+			k8.log.Error("✖ error processing resource", "filename", filename, "error", result.Err.Error())
 
 		case validator.Skipped:
 			skippedCount++
@@ -115,15 +120,29 @@ func (k8 *K8sValidator) processValidationResults(filename string, results []vali
 //
 // Enforces strict validation mode and loads the necessary custom K8s CRDs.
 func initValidator() validator.Validator {
-	schemaLocations := []string{
-		"default",
-		"config/crd/{{ .ResourceKind }}_{{ .ResourceAPIVersion }}.json",
-		"https://raw.githubusercontent.com/datreeio/CRDs-catalog/main/{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}.json",
+	log := logging.Logger()
+
+	// Create a temporary directory for the schema files
+	tempDirName, err := utils.CreateTempDirectory("skipctl-schemas-*")
+	if err != nil {
+		log.Error("Failed to create temp dir for schemas", "error", err)
+		os.Exit(1)
 	}
+
+	err = utils.CopyEmbeddedFilesToDirectory(embeddedSchemas, tempDirName)
+	if err != nil {
+		log.Error("Failed to copy embedded schema files", "error", err)
+		os.Exit(1)
+	}
+
+	crdPath := tempDirName + "/schemas" + "/{{ .ResourceKind }}_{{ .ResourceAPIVersion }}.json"
+	crdCatalogURL := "https://raw.githubusercontent.com/datreeio/CRDs-catalog/main/{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}.json"
+
+	schemaLocations := []string{"default", crdPath, crdCatalogURL}
 
 	v, err := validator.New(schemaLocations, validator.Opts{Strict: true})
 	if err != nil {
-		logging.Logger().Error("Failed to initialize K8s validator", "error", err)
+		log.Error("Failed to initialize K8s validator", "error", err)
 		os.Exit(1)
 	}
 
@@ -132,7 +151,7 @@ func initValidator() validator.Validator {
 
 func NewK8sValidator() *K8sValidator {
 	return &K8sValidator{
-		log:       logging.RawLogger(),
+		log:       logging.ConfigureLogging("text", false),
 		validator: initValidator(),
 	}
 }

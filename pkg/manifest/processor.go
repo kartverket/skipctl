@@ -13,6 +13,8 @@ type Processor struct {
 
 type StringToErrorFunc func(string) error
 
+type StringToValidateResultFunc func(string) (ValidateResult, error)
+
 func NewManifestProcessor() *Processor {
 	return &Processor{
 		log: logging.Logger(),
@@ -30,6 +32,32 @@ func (p *Processor) ProcessManifests(files []string, process StringToErrorFunc) 
 			failed = true
 		}
 	}
+	if failed {
+		os.Exit(1)
+	}
+}
+
+func (p *Processor) ProcessValidationManifests(files []string, process StringToValidateResultFunc) {
+	failed := false
+	var validCount, invalidCount, errorCount, skippedCount int
+
+	for _, file := range files {
+		summary, validationErr := process(file)
+		if validationErr != nil {
+			p.log.Error("✖ validation failed", "file", file, "error", validationErr.Error())
+			failed = true
+		}
+
+		validCount += summary.ValidCount
+		invalidCount += summary.InvalidCount
+		errorCount += summary.ErrorCount
+		skippedCount += summary.SkippedCount
+	}
+
+	totalResources := validCount + invalidCount + errorCount + skippedCount
+
+	p.log.Info("validation completed", "totalResources", totalResources, "valid", validCount, "invalid", invalidCount, "errors", errorCount, "skipped", skippedCount)
+
 	if failed {
 		os.Exit(1)
 	}
