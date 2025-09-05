@@ -89,16 +89,13 @@ func (k8 *K8sValidator) processValidationResults(filename string, results []vali
 
 		case validator.Invalid:
 			invalidCount++
-			k8.log.Error("✖ file is invalid", "filename", filename)
 
-			for _, validationErr := range result.ValidationErrors {
-				k8.log.Error("  - ", "path", validationErr.Path, "error", validationErr.Msg)
-			}
+			k8.log.Error("file is invalid", "filename", filename, "errors", result.ValidationErrors)
 
 		case validator.Error:
 			errorCount++
 
-			k8.log.Error("✖ error processing resource", "filename", filename, "error", result.Err.Error())
+			k8.log.Error("error processing resource", "filename", filename, "error", result.Err.Error())
 
 		case validator.Skipped:
 			skippedCount++
@@ -119,23 +116,16 @@ func (k8 *K8sValidator) processValidationResults(filename string, results []vali
 // initValidator initializes the Kubernetes schema validator.
 //
 // Enforces strict validation mode and loads the necessary custom K8s CRDs.
-func initValidator() validator.Validator {
+func initValidator(tempDir string) validator.Validator {
 	log := logging.Logger()
 
-	// Create a temporary directory for the schema files
-	tempDirName, err := utils.CreateTempDirectory("skipctl-schemas-*")
-	if err != nil {
-		log.Error("Failed to create temp dir for schemas", "error", err)
-		os.Exit(1)
-	}
-
-	err = utils.CopyEmbeddedFilesToDirectory(embeddedSchemas, tempDirName)
+	err := utils.CopyFilesToDirectory(embeddedSchemas, tempDir)
 	if err != nil {
 		log.Error("Failed to copy embedded schema files", "error", err)
 		os.Exit(1)
 	}
 
-	crdPath := tempDirName + "/schemas" + "/{{ .ResourceKind }}_{{ .ResourceAPIVersion }}.json"
+	crdPath := tempDir + "/schemas" + "/{{ .ResourceKind }}_{{ .ResourceAPIVersion }}.json"
 	crdCatalogURL := "https://raw.githubusercontent.com/datreeio/CRDs-catalog/main/{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}.json"
 
 	schemaLocations := []string{"default", crdPath, crdCatalogURL}
@@ -143,15 +133,15 @@ func initValidator() validator.Validator {
 	v, err := validator.New(schemaLocations, validator.Opts{Strict: true})
 	if err != nil {
 		log.Error("Failed to initialize K8s validator", "error", err)
-		os.Exit(1)
+		return nil
 	}
 
 	return v
 }
 
-func NewK8sValidator() *K8sValidator {
+func NewK8sValidator(tempDir string) *K8sValidator {
 	return &K8sValidator{
-		log:       logging.ConfigureLogging("text", false),
-		validator: initValidator(),
+		log:       logging.Logger(),
+		validator: initValidator(tempDir),
 	}
 }

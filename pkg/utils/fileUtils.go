@@ -1,8 +1,8 @@
 package utils
 
 import (
-	"embed"
 	"fmt"
+	"io"
 	"io/fs"
 	"os"
 	"path/filepath"
@@ -73,39 +73,48 @@ func MarshalYamlFromFile(filename string) ([]byte, error) {
 	return marshalled, nil
 }
 
-func CreateTempDirectory(pattern string) (string, error) {
-	tempDir, err := os.MkdirTemp("", pattern)
+// CreateTempDirectory creates a temporary directory with a given name in a unique location.
+func CreateTempDirectory(name string) (string, error) {
+	tempDir, err := os.MkdirTemp("", fmt.Sprintf("skipctl-%s-*", name))
+
 	if err != nil {
 		return "", fmt.Errorf("failed to create temp dir: %w", err)
 	}
 	return tempDir, nil
 }
 
-// CopyEmbeddedFilesToDirectory copies files from an embedded filesystem to a specified directory.
+// CopyFilesToDirectory copies files from an filesystem to a specified local directory.
 //
-// It walks through the embedded filesystem and writes each file to the destination directory,
+// It walks through the filesystem and writes each file to the destination directory,
 // preserving the directory structure. Directories are created as needed.
-func CopyEmbeddedFilesToDirectory(embeddedSchemas embed.FS, tempDir string) error {
-	return fs.WalkDir(embeddedSchemas, ".", func(path string, d fs.DirEntry, err error) error {
+func CopyFilesToDirectory(filesystem fs.FS, destinationDir string) error {
+	return fs.WalkDir(filesystem, ".", func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
 			return err
 		}
-
-		if !d.IsDir() {
-			content, readErr := embeddedSchemas.ReadFile(path)
-			if readErr != nil {
-				return readErr
-			}
-
-			destPath := filepath.Join(tempDir, path)
-
-			// Create the directory if it doesn't exist
-			if err = os.MkdirAll(filepath.Dir(destPath), 0755); err != nil {
-				return err
-			}
-
-			return os.WriteFile(destPath, content, 0600)
+		if d.IsDir() {
+			return nil
 		}
-		return nil
+		src, openErr := filesystem.Open(path)
+		if openErr != nil {
+			return openErr
+		}
+		defer src.Close()
+		destPath := filepath.Join(destinationDir, path)
+		// Create the directory if it doesn't exist
+		if err = os.MkdirAll(filepath.Dir(destPath), 0o755); err != nil {
+			return err
+		}
+		// Create/truncate the destination file.
+		dst, createErr := os.OpenFile(destPath, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0o600)
+		if createErr != nil {
+			return createErr
+		}
+		_, copyErr := io.Copy(dst, src)
+		closeErr := dst.Close() // close explicitly (don’t defer inside loop)
+		if copyErr != nil {
+			return copyErr
+		}
+		return closeErr
 	})
 }

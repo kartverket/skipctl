@@ -13,9 +13,9 @@ type Validator struct {
 	k8s *K8sValidator
 }
 
-func NewValidator() *Validator {
+func NewValidator(tempDir string) *Validator {
 	return &Validator{
-		k8s: NewK8sValidator(),
+		k8s: NewK8sValidator(tempDir),
 	}
 }
 
