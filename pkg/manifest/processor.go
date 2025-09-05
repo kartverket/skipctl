@@ -1,6 +1,7 @@
 package manifest
 
 import (
+	"errors"
 	"log/slog"
 	"os"
 
@@ -37,14 +38,14 @@ func (p *Processor) ProcessManifests(files []string, process StringToErrorFunc) 
 	}
 }
 
-func (p *Processor) ProcessValidationManifests(files []string, process StringToValidateResultFunc) {
+func (p *Processor) ProcessValidationManifests(files []string, process StringToValidateResultFunc) error {
 	failed := false
 	var validCount, invalidCount, errorCount, skippedCount int
 
 	for _, file := range files {
 		summary, validationErr := process(file)
 		if validationErr != nil {
-			p.log.Error("✖ validation failed", "file", file, "error", validationErr.Error())
+			p.log.Error("validation failed", "file", file, "error", validationErr.Error())
 			failed = true
 		}
 
@@ -59,6 +60,8 @@ func (p *Processor) ProcessValidationManifests(files []string, process StringToV
 	p.log.Info("validation completed", "totalResources", totalResources, "valid", validCount, "invalid", invalidCount, "errors", errorCount, "skipped", skippedCount)
 
 	if failed {
-		os.Exit(1)
+		return errors.New("validation failed")
 	}
+
+	return nil
 }
