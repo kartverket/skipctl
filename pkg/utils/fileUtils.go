@@ -5,6 +5,7 @@ import (
 	"io"
 	"io/fs"
 	"bytes"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -36,6 +37,7 @@ type ManifestFile struct {
 	Name      string
 	Extension string
 	Content   string
+	IsStdin   bool
 }
 
 func FindFilesWithSuffixes(directory string, suffixes []string) ([]string, error) {
@@ -142,6 +144,7 @@ func ReadFiles(filenames []string) []*ManifestFile {
 			Name:      filename,
 			Extension: strings.ToLower(filepath.Ext(filename)),
 			Content:   string(fileContent),
+			IsStdin:   false,
 		})
 	}
 	return files
@@ -150,7 +153,7 @@ func ReadFiles(filenames []string) []*ManifestFile {
 func detectFiletype(content []byte) (string, error) {
 	trimmed := bytes.TrimLeft(content, " \t\r\n")
 	if len(trimmed) == 0 {
-		return "", fmt.Errorf("Unable to detect filetype: Empty file content")
+		return "", errors.New("unable to detect filetype: Empty file content")
 	}
 	firstChar := trimmed[0]
 
@@ -174,15 +177,16 @@ func ReadFilesFromStdin() ([]*ManifestFile, error) {
 	var manifestFiles []*ManifestFile
 
 	for i, fileContent := range files {
-		ext, err := detectFiletype(fileContent)
-		if err != nil {
-			log.Error(err.Error(), "reason", "skipping")
+		ext, detectFiletypeErr := detectFiletype(fileContent)
+		if detectFiletypeErr != nil {
+			log.Error(detectFiletypeErr.Error(), "reason", "skipping")
 			continue
 		}
 		manifestFiles = append(manifestFiles, &ManifestFile{
 			Name:      fmt.Sprintf("stdin_%d", i),
 			Extension: ext,
 			Content:   string(fileContent),
+			IsStdin:   true,
 		})
 	}
 	return manifestFiles, nil

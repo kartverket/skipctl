@@ -23,15 +23,30 @@ correctly, otherwise return code 1 is used to indicate failure.`,
 	Run: runFormat,
 }
 
-func runFormat(_ *cobra.Command, _ []string) {
-	files, err := utils.FindManifestFiles(path)
+func runFormat(_ *cobra.Command, args []string) {
+	var manifestFiles []*utils.ManifestFile
+	var err error
+
+	if len(args) > 0 && args[0] == "-" {
+		manifestFiles, err = utils.ReadFilesFromStdin()
+	} else {
+		var filenames []string
+		filenames, err = utils.FindFilesWithSuffixes(path, constants.ManifestSuffixes)
+		if err == nil {
+			manifestFiles = utils.ReadFiles(filenames)
+		}
+	}
 	if err != nil {
-		log.Error(err.Error())
+		log.Error("Error collecting files", "error", err.Error())
+		os.Exit(1)
+	}
+	if len(manifestFiles) == 0 {
+		log.Info("No manifests found.")
 		return
 	}
 
-	processor := manifest.NewManifestProcessor()
-	processor.ProcessManifests(files, manifest.FormatManifest)
+	processor := manifest.NewManifestFileProcessor()
+	processor.ProcessManifestFiles(manifestFiles, manifest.FormatManifest)
 }
 func init() {
 	manifestCmd.AddCommand(formatCmd)

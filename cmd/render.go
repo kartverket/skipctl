@@ -35,7 +35,8 @@ func runRender(_ *cobra.Command, args []string) {
 	if len(args) > 0 && args[0] == "-" {
 		manifestFiles, err = utils.ReadFilesFromStdin()
 	} else {
-		filenames, err := utils.FindFilesWithSuffixes(path, constants.ManifestSuffixes)
+		var filenames []string
+		filenames, err = utils.FindFilesWithSuffixes(path, constants.ManifestSuffixes)
 		if err == nil {
 			manifestFiles = utils.ReadFiles(filenames)
 		}

@@ -2,9 +2,8 @@ package manifest
 
 import (
 	"fmt"
+	"io"
 	"os"
-	"path/filepath"
-	"strings"
 
 	"github.com/google/go-jsonnet/formatter"
 	"github.com/kartverket/skipctl/pkg/constants"
@@ -12,57 +11,70 @@ import (
 	"go.yaml.in/yaml/v4"
 )
 
-func formatJsonnet(filename string) error {
-	rawContents, err := os.ReadFile(filename)
+func formatJsonnet(file *utils.ManifestFile) error {
+	formatted, err := formatter.Format(file.Name, file.Content, formatter.DefaultOptions())
 	if err != nil {
 		return err
 	}
 
-	formatted, err := formatter.Format(filename, string(rawContents), formatter.DefaultOptions())
-	if err != nil {
-		return err
-	}
-
-	fileInfo, err := os.Stat(filename)
-	if err != nil {
-		return err
-	}
-
-	if err = os.WriteFile(filename, []byte(formatted), fileInfo.Mode().Perm()); err != nil {
-		return err
+	if !file.IsStdin {
+		fileInfo, fileInfoErr := os.Stat(file.Name)
+		if fileInfoErr != nil {
+			return fileInfoErr
+		}
+		if err = os.WriteFile(file.Name, []byte(formatted), fileInfo.Mode().Perm()); err != nil {
+			return err
+		}
+	} else {
+		_, err = io.WriteString(os.Stdout, formatted)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil
 }
 
-func formatYaml(filename string) error {
-	raw, err := utils.UnmarshalYamlFromFile(filename)
+func formatYaml(file *utils.ManifestFile) error {
+	if file.IsStdin {
+		var out any
+		if err := yaml.Unmarshal([]byte(file.Content), &out); err != nil {
+			return err
+		}
+		formattedYaml, err := yaml.Marshal(out)
+		if err != nil {
+			return err
+		}
+		if _, err = os.Stdout.Write(formattedYaml); err != nil {
+			return err
+		}
+		return nil
+	}
+
+	raw, err := utils.UnmarshalYamlFromFile(file.Name)
 	if err != nil {
 		return err
 	}
-
 	formattedYaml, err := yaml.Marshal(raw)
 	if err != nil {
 		return err
 	}
-
-	fileInfo, err := os.Stat(filename)
+	fileInfo, err := os.Stat(file.Name)
 	if err != nil {
 		return err
 	}
-
-	if err = os.WriteFile(filename, formattedYaml, fileInfo.Mode().Perm()); err != nil {
+	if err = os.WriteFile(file.Name, formattedYaml, fileInfo.Mode().Perm()); err != nil {
 		return err
 	}
 	return nil
 }
-func FormatManifest(filename string) error {
-	switch strings.ToLower(filepath.Ext(filename)) {
+func FormatManifest(file *utils.ManifestFile) error {
+	switch file.Extension {
 	case constants.ManifestSuffixJsonnet:
-		return formatJsonnet(filename)
+		return formatJsonnet(file)
 	case constants.ManifestSuffixYaml, constants.ManifestSuffixYml:
-		return formatYaml(filename)
+		return formatYaml(file)
 	default:
-		return fmt.Errorf("invalid file format in file %s", filename)
+		return fmt.Errorf("invalid file format in file %s", file.Name)
 	}
 }

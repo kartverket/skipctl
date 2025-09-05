@@ -14,13 +14,13 @@ type ManifestProcessor struct {
 
 type ManifestFileToErrorFunc func(*utils.ManifestFile) error
 
-func NewManifestFileProcessor() *Processor {
-	return &Processor{
+func NewManifestFileProcessor() *ManifestProcessor {
+	return &ManifestProcessor{
 		log: logging.Logger(),
 	}
 }
 
-func (p *Processor) ProcessManifestFiles(files []*utils.ManifestFile, process ManifestFileToErrorFunc) {
+func (p *ManifestProcessor) ProcessManifestFiles(files []*utils.ManifestFile, process ManifestFileToErrorFunc) {
 	failed := false
 
 	for _, file := range files {
