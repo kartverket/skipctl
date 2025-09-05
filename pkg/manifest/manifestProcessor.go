@@ -8,19 +8,19 @@ import (
 	"github.com/kartverket/skipctl/pkg/utils"
 )
 
-type ManifestProcessor struct {
+type Processor struct {
 	log *slog.Logger
 }
 
-type ManifestFileToErrorFunc func(*utils.ManifestFile) error
+type FileToErrorFunc func(*utils.ManifestFile) error
 
-func NewManifestFileProcessor() *ManifestProcessor {
-	return &ManifestProcessor{
+func NewManifestFileProcessor() *Processor {
+	return &Processor{
 		log: logging.Logger(),
 	}
 }
 
-func (p *ManifestProcessor) ProcessManifestFiles(files []*utils.ManifestFile, process ManifestFileToErrorFunc) {
+func (p *Processor) ProcessManifestFiles(files []*utils.ManifestFile, process FileToErrorFunc) {
 	failed := false
 
 	for _, file := range files {
