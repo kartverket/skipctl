@@ -1,19 +1,18 @@
 package utils
 
 import (
-	"fmt"
-	"io"
-	"io/fs"
 	"bytes"
 	"errors"
 	"fmt"
 	"io"
+	"io/fs"
 	"os"
 	"path/filepath"
 	"slices"
 	"strings"
 
 	"github.com/kartverket/skipctl/pkg/constants"
+	"github.com/kartverket/skipctl/pkg/logging"
 	"go.yaml.in/yaml/v4"
 )
 
@@ -29,9 +28,7 @@ func FindManifestFiles(path string) ([]string, error) {
 	}
 
 	return files, nil
-	"github.com/kartverket/skipctl/pkg/logging"
-	"go.yaml.in/yaml/v4"
-)
+}
 
 type ManifestFile struct {
 	Name      string
@@ -130,6 +127,8 @@ func CopyFilesToDirectory(filesystem fs.FS, destinationDir string) error {
 		}
 		return closeErr
 	})
+}
+
 func ReadFiles(filenames []string) []*ManifestFile {
 	var files = []*ManifestFile{}
 

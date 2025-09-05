@@ -38,7 +38,7 @@ func runValidate(_ *cobra.Command, _ []string) error {
 		log.Error(err.Error())
 		return err
 	}
-	processor := manifest.NewManifestProcessor()
+	processor := manifest.NewManifestFileProcessor()
 	err = processor.ProcessValidationManifests(files, manifest.NewValidator(tempDir).ValidateManifest)
 
 	// Cobra does not call the PostRun or PersistentPostRun functions if the program exits with an error (os.Exit(>0))
