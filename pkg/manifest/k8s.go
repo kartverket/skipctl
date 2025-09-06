@@ -1,7 +1,6 @@
 package manifest
 
 import (
-	"embed"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -9,13 +8,11 @@ import (
 	"os"
 	"strings"
 
+	"github.com/kartverket/skipctl/pkg/crd"
 	"github.com/kartverket/skipctl/pkg/logging"
 	"github.com/kartverket/skipctl/pkg/utils"
 	"github.com/yannh/kubeconform/pkg/validator"
 )
-
-//go:embed schemas/*.json
-var embeddedSchemas embed.FS
 
 type K8sValidator struct {
 	log       *slog.Logger
@@ -127,13 +124,13 @@ func (k8 *K8sValidator) processValidationResults(filename string, results []vali
 func initValidator(tempDir string) validator.Validator {
 	log := logging.Logger()
 
-	err := utils.CopyFilesToDirectory(embeddedSchemas, tempDir)
+	err := utils.CopyFilesToDirectory(crd.Schemas, tempDir)
 	if err != nil {
 		log.Error("Failed to copy embedded schema files", "error", err)
 		os.Exit(1)
 	}
 
-	crdPath := tempDir + "/schemas" + "/{{ .ResourceKind }}_{{ .ResourceAPIVersion }}.json"
+	crdPath := tempDir + "/schemas" + "/{{ .Group }}_{{ .ResourceKind }}_{{ .ResourceAPIVersion }}.json"
 	crdCatalogURL := "https://raw.githubusercontent.com/datreeio/CRDs-catalog/main/{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}.json"
 
 	schemaLocations := []string{"default", crdPath, crdCatalogURL}

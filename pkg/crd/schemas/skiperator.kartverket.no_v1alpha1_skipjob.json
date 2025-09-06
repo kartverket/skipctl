@@ -1,4 +1,5 @@
 {
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "description": "SKIPJob is the Schema for the skipjobs API",
   "properties": {
     "apiVersion": {
@@ -71,8 +72,7 @@
                                   "type": "string"
                                 }
                               },
-                              "type": "object",
-                              "additionalProperties": false
+                              "type": "object"
                             },
                             "type": "array"
                           }
@@ -80,8 +80,7 @@
                         "required": [
                           "application"
                         ],
-                        "type": "object",
-                        "additionalProperties": false
+                        "type": "object"
                       },
                       "type": "array"
                     }
@@ -89,8 +88,7 @@
                   "required": [
                     "rules"
                   ],
-                  "type": "object",
-                  "additionalProperties": false
+                  "type": "object"
                 },
                 "outbound": {
                   "description": "Outbound specifies egress rules. Which apps on the cluster and the\ninternet is the Application allowed to send requests to?",
@@ -137,8 +135,7 @@
                                 "port",
                                 "protocol"
                               ],
-                              "type": "object",
-                              "additionalProperties": false
+                              "type": "object"
                             },
                             "type": "array"
                           }
@@ -146,8 +143,7 @@
                         "required": [
                           "host"
                         ],
-                        "type": "object",
-                        "additionalProperties": false
+                        "type": "object"
                       },
                       "type": "array"
                     },
@@ -198,8 +194,7 @@
                                   "type": "string"
                                 }
                               },
-                              "type": "object",
-                              "additionalProperties": false
+                              "type": "object"
                             },
                             "type": "array"
                           }
@@ -207,18 +202,15 @@
                         "required": [
                           "application"
                         ],
-                        "type": "object",
-                        "additionalProperties": false
+                        "type": "object"
                       },
                       "type": "array"
                     }
                   },
-                  "type": "object",
-                  "additionalProperties": false
+                  "type": "object"
                 }
               },
-              "type": "object",
-              "additionalProperties": false
+              "type": "object"
             },
             "additionalPorts": {
               "items": {
@@ -245,8 +237,7 @@
                   "port",
                   "protocol"
                 ],
-                "type": "object",
-                "additionalProperties": false
+                "type": "object"
               },
               "type": "array"
             },
@@ -292,8 +283,7 @@
                           "key"
                         ],
                         "type": "object",
-                        "x-kubernetes-map-type": "atomic",
-                        "additionalProperties": false
+                        "x-kubernetes-map-type": "atomic"
                       },
                       "fieldRef": {
                         "description": "Selects a field of the pod: supports metadata.name, metadata.namespace, `metadata.labels['<KEY>']`, `metadata.annotations['<KEY>']`,\nspec.nodeName, spec.serviceAccountName, status.hostIP, status.podIP, status.podIPs.",
@@ -311,8 +301,7 @@
                           "fieldPath"
                         ],
                         "type": "object",
-                        "x-kubernetes-map-type": "atomic",
-                        "additionalProperties": false
+                        "x-kubernetes-map-type": "atomic"
                       },
                       "resourceFieldRef": {
                         "description": "Selects a resource of the container: only resources limits and requests\n(limits.cpu, limits.memory, limits.ephemeral-storage, requests.cpu, requests.memory and requests.ephemeral-storage) are currently supported.",
@@ -343,8 +332,7 @@
                           "resource"
                         ],
                         "type": "object",
-                        "x-kubernetes-map-type": "atomic",
-                        "additionalProperties": false
+                        "x-kubernetes-map-type": "atomic"
                       },
                       "secretKeyRef": {
                         "description": "Selects a key of a secret in the pod's namespace",
@@ -367,19 +355,16 @@
                           "key"
                         ],
                         "type": "object",
-                        "x-kubernetes-map-type": "atomic",
-                        "additionalProperties": false
+                        "x-kubernetes-map-type": "atomic"
                       }
                     },
-                    "type": "object",
-                    "additionalProperties": false
+                    "type": "object"
                   }
                 },
                 "required": [
                   "name"
                 ],
-                "type": "object",
-                "additionalProperties": false
+                "type": "object"
               },
               "type": "array"
             },
@@ -395,8 +380,7 @@
                     "type": "string"
                   }
                 },
-                "type": "object",
-                "additionalProperties": false
+                "type": "object"
               },
               "type": "array"
             },
@@ -428,8 +412,7 @@
                 "required": [
                   "mountPath"
                 ],
-                "type": "object",
-                "additionalProperties": false
+                "type": "object"
               },
               "type": "array"
             },
@@ -447,8 +430,7 @@
                   "required": [
                     "serviceAccount"
                   ],
-                  "type": "object",
-                  "additionalProperties": false
+                  "type": "object"
                 },
                 "cloudSqlProxy": {
                   "description": "CloudSQL is used to deploy a CloudSQL proxy sidecar in the pod.\nThis is useful for connecting to CloudSQL databases that require Cloud SQL Auth Proxy.",
@@ -480,12 +462,10 @@
                     "ip",
                     "serviceAccount"
                   ],
-                  "type": "object",
-                  "additionalProperties": false
+                  "type": "object"
                 }
               },
-              "type": "object",
-              "additionalProperties": false
+              "type": "object"
             },
             "image": {
               "type": "string"
@@ -544,8 +524,7 @@
                 "path",
                 "port"
               ],
-              "type": "object",
-              "additionalProperties": false
+              "type": "object"
             },
             "podSettings": {
               "description": "PodSettings",
@@ -569,8 +548,7 @@
                   "type": "integer"
                 }
               },
-              "type": "object",
-              "additionalProperties": false
+              "type": "object"
             },
             "priority": {
               "default": "medium",
@@ -635,8 +613,7 @@
                 "path",
                 "port"
               ],
-              "type": "object",
-              "additionalProperties": false
+              "type": "object"
             },
             "resources": {
               "description": "ResourceRequirements\n\nA simplified version of the Kubernetes native ResourceRequirement field, in which only Limits and Requests are present.\nFor the units used for resources, see https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/#resource-units-in-kubernetes",
@@ -674,8 +651,7 @@
                   "type": "object"
                 }
               },
-              "type": "object",
-              "additionalProperties": false
+              "type": "object"
             },
             "restartPolicy": {
               "default": "Never",
@@ -740,15 +716,13 @@
                 "path",
                 "port"
               ],
-              "type": "object",
-              "additionalProperties": false
+              "type": "object"
             }
           },
           "required": [
             "image"
           ],
-          "type": "object",
-          "additionalProperties": false
+          "type": "object"
         },
         "cron": {
           "description": "Settings for the Job if you are running a scheduled job. Optional as Jobs may be one-off.",
@@ -784,8 +758,7 @@
           "required": [
             "schedule"
           ],
-          "type": "object",
-          "additionalProperties": false
+          "type": "object"
         },
         "istioSettings": {
           "default": {
@@ -827,18 +800,15 @@
                         "type": "integer"
                       }
                     },
-                    "type": "object",
-                    "additionalProperties": false
+                    "type": "object"
                   },
                   "type": "array"
                 }
               },
-              "type": "object",
-              "additionalProperties": false
+              "type": "object"
             }
           },
-          "type": "object",
-          "additionalProperties": false
+          "type": "object"
         },
         "job": {
           "description": "Settings for the actual Job. If you use a scheduled job, the settings in here will also specify the template of the job.",
@@ -863,8 +833,7 @@
               "type": "integer"
             }
           },
-          "type": "object",
-          "additionalProperties": false
+          "type": "object"
         },
         "prometheus": {
           "description": "Prometheus settings for pod running in job. Fields are identical to Application and if set,\na podmonitoring object is created.",
@@ -910,8 +879,7 @@
           "required": [
             "port"
           ],
-          "type": "object",
-          "additionalProperties": false
+          "type": "object"
         }
       },
       "required": [
@@ -927,8 +895,7 @@
           "message": "The field Container is immutable for one-off jobs. Please delete your SKIPJob to change the containers settings.",
           "rule": "((!has(self.cron) && (oldSelf.container == self.container)) || has(self.cron))"
         }
-      ],
-      "additionalProperties": false
+      ]
     },
     "status": {
       "description": "SkiperatorStatus\n\nA status field shown on a Skiperator resource which contains information regarding deployment of the resource.",
@@ -987,8 +954,7 @@
               "status",
               "type"
             ],
-            "type": "object",
-            "additionalProperties": false
+            "type": "object"
           },
           "type": "array"
         },
@@ -1014,8 +980,7 @@
               "status",
               "timestamp"
             ],
-            "type": "object",
-            "additionalProperties": false
+            "type": "object"
           },
           "type": "object"
         },
@@ -1040,8 +1005,7 @@
             "status",
             "timestamp"
           ],
-          "type": "object",
-          "additionalProperties": false
+          "type": "object"
         }
       },
       "required": [
@@ -1050,12 +1014,18 @@
         "subresources",
         "summary"
       ],
-      "type": "object",
-      "additionalProperties": false
+      "type": "object"
     }
   },
   "required": [
     "spec"
   ],
-  "type": "object"
+  "type": "object",
+  "x-kubernetes-group-version-kind": [
+    {
+      "group": "skiperator.kartverket.no",
+      "kind": "SKIPJob",
+      "version": "v1alpha1"
+    }
+  ]
 }
