@@ -131,9 +131,7 @@ func initValidator(tempDir string) validator.Validator {
 	}
 
 	crdPath := tempDir + "/schemas" + "/{{ .Group }}_{{ .ResourceKind }}_{{ .ResourceAPIVersion }}.json"
-	crdCatalogURL := "https://raw.githubusercontent.com/datreeio/CRDs-catalog/main/{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}.json"
-
-	schemaLocations := []string{"default", crdPath, crdCatalogURL}
+	schemaLocations := []string{"default", crdPath}
 
 	v, err := validator.New(schemaLocations, validator.Opts{Strict: true})
 	if err != nil {
