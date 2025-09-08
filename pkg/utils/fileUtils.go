@@ -16,6 +16,26 @@ import (
 	"go.yaml.in/yaml/v4"
 )
 
+type Document struct {
+	Name        string
+	Extension   string
+	Permissions os.FileMode
+	Content     string
+	FromStdin   bool
+}
+
+func (r *Document) Write(content string) error {
+	r.Content = content
+	if r.FromStdin {
+		if _, err := io.WriteString(os.Stdout, r.Content); err != nil {
+			return fmt.Errorf("error writing document to stdout: %w", err)
+		}
+	}
+	if err := os.WriteFile(r.Name, []byte(r.Content), r.Permissions); err != nil {
+		return fmt.Errorf("error writing document to file: %w", err)
+	}
+	return nil
+}
 func FindManifestFiles(path string) ([]string, error) {
 	files, err := FindFilesWithSuffixes(path, constants.ManifestSuffixes)
 
@@ -128,7 +148,6 @@ func CopyFilesToDirectory(filesystem fs.FS, destinationDir string) error {
 		return closeErr
 	})
 }
-
 func ReadFiles(filenames []string) []*ManifestFile {
 	var files = []*ManifestFile{}
 

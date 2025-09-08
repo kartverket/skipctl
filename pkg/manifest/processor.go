@@ -17,7 +17,7 @@ type FileToErrorFunc func(*utils.ManifestFile) error
 
 type StringToValidateResultFunc func(string) (ValidateResult, error)
 
-func NewManifestFileProcessor() *Processor {
+func NewManifestDocumentProcessor() *Processor {
 	return &Processor{
 		log: logging.Logger(),
 	}

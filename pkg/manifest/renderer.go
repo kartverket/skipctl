@@ -52,7 +52,6 @@ func (r *Renderer) renderYaml(file *utils.ManifestFile) error {
 		return err
 	}
 
-	r.rawOutput.Info("---")
 	r.rawOutput.Info(file.Content)
 
 	return nil

@@ -52,7 +52,7 @@ func runRender(_ *cobra.Command, args []string) {
 		return
 	}
 
-	processor := manifest.NewManifestFileProcessor()
+	processor := manifest.NewManifestDocumentProcessor()
 
 	processor.ProcessManifestFiles(
 		manifestFiles,
