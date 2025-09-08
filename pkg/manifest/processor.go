@@ -39,14 +39,12 @@ func (p *Processor) ProcessManifests(files []string, process StringToErrorFunc) 
 }
 
 func (p *Processor) ProcessValidationManifests(files []string, process StringToValidateResultFunc) error {
-	failed := false
 	var validCount, invalidCount, errorCount, skippedCount int
 
 	for _, file := range files {
 		summary, validationErr := process(file)
 		if validationErr != nil {
 			p.log.Error("validation failed", "file", file, "error", validationErr.Error())
-			failed = true
 		}
 
 		validCount += summary.ValidCount
@@ -59,7 +57,7 @@ func (p *Processor) ProcessValidationManifests(files []string, process StringToV
 
 	p.log.Info("validation completed", "totalResources", totalResources, "valid", validCount, "invalid", invalidCount, "errors", errorCount, "skipped", skippedCount)
 
-	if failed {
+	if errorCount > 0 || invalidCount > 0 {
 		return errors.New("validation failed")
 	}
 
