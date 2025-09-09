@@ -28,7 +28,7 @@ func runFormat(_ *cobra.Command, args []string) {
 	var manifestFiles []*manifest.Document
 	var err error
 
-	if len(args) > 0 && args[0] == "-" {
+	if isStdin(args) {
 		manifestFiles, err = manifest.FromStdin()
 	} else {
 		var filenames []string
@@ -46,8 +46,8 @@ func runFormat(_ *cobra.Command, args []string) {
 		return
 	}
 
-	processor := manifest.NewManifestDocumentProcessor()
-	processor.ProcessManifestFiles(manifestFiles, manifest.FormatManifest)
+	processor := manifest.NewDocumentProcessor()
+	processor.ProcessDocuments(manifestFiles, manifest.FormatManifest)
 }
 func init() {
 	manifestCmd.AddCommand(formatCmd)

@@ -33,7 +33,7 @@ func runRender(_ *cobra.Command, args []string) {
 	var manifestFiles []*manifest.Document
 	var err error
 
-	if len(args) > 0 && args[0] == "-" {
+	if isStdin(args) {
 		manifestFiles, err = manifest.FromStdin()
 	} else {
 		var filenames []string
@@ -52,9 +52,9 @@ func runRender(_ *cobra.Command, args []string) {
 		return
 	}
 
-	processor := manifest.NewManifestDocumentProcessor()
+	processor := manifest.NewDocumentProcessor()
 
-	processor.ProcessManifestFiles(
+	processor.ProcessDocuments(
 		manifestFiles,
 		renderer.RenderManifest,
 	)

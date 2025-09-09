@@ -33,12 +33,6 @@ func (r *Document) Write(content string) error {
 	return nil
 }
 
-func NewDocuments(stdin bool, filenames []string) ([]*Document, error) {
-	if stdin {
-		return FromStdin()
-	}
-	return FromFiles(filenames), nil
-}
 func FromFiles(filenames []string) []*Document {
 	var files = []*Document{}
 

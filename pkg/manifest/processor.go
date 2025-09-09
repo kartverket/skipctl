@@ -16,13 +16,13 @@ type FileToErrorFunc func(*Document) error
 
 type StringToValidateResultFunc func(string) (ValidateResult, error)
 
-func NewManifestDocumentProcessor() *Processor {
+func NewDocumentProcessor() *Processor {
 	return &Processor{
 		log: logging.Logger(),
 	}
 }
 
-func (p *Processor) ProcessManifestFiles(files []*Document, process FileToErrorFunc) {
+func (p *Processor) ProcessDocuments(files []*Document, process FileToErrorFunc) {
 	failed := false
 
 	for _, file := range files {
