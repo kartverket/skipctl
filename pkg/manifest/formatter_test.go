@@ -3,7 +3,7 @@ package manifest
 import (
 	"testing"
 
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestFormatManifestValidJsonnet(t *testing.T) {
@@ -19,7 +19,7 @@ ingress: [],
 	filename := writeContentToTmpDir(tmp, validJsonnet, "valid.jsonnet")
 
 	res := FormatManifest(filename)
-	assert.NoError(t, res, "expected no error for valid Jsonnet input")
+	require.NoError(t, res, "expected no error for valid Jsonnet input")
 }
 
 func TestFormatManifestInvalidJsonnet(t *testing.T) {
@@ -35,7 +35,7 @@ ingress = []
 	filename := writeContentToTmpDir(tmp, invalidJsonnet, "invalid.jsonnet")
 
 	res := FormatManifest(filename)
-	assert.Error(t, res, "expected error for invalid Jsonnet input")
+	require.Error(t, res, "expected error for invalid Jsonnet input")
 }
 
 func TestFormatManifestValidYaml(t *testing.T) {
@@ -51,7 +51,7 @@ application:
 	filename := writeContentToTmpDir(tmp, validYaml, "valid.yaml")
 
 	res := FormatManifest(filename)
-	assert.NoError(t, res, "expected no error for valid Yaml input")
+	require.NoError(t, res, "expected no error for valid Yaml input")
 }
 
 func TestFormatManifestInvalidYaml(t *testing.T) {
@@ -67,5 +67,5 @@ port: 8080
 	filename := writeContentToTmpDir(tmp, invalidYaml, "invalid.yaml")
 
 	res := FormatManifest(filename)
-	assert.Error(t, res, "expected error for invalid Yaml input")
+	require.Error(t, res, "expected error for invalid Yaml input")
 }

@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestValidateManifestValidJsonnetManifest(t *testing.T) {
@@ -31,7 +32,7 @@ func TestValidateManifestValidJsonnetManifest(t *testing.T) {
 
 	result, err := NewValidator(tmp).ValidateManifest(filename)
 
-	assert.NoError(t, err, "ValidateManifest should not return an error for valid Jsonnet input")
+	require.NoError(t, err, "ValidateManifest should not return an error for valid Jsonnet input")
 	assert.Equal(t, 0, result.ErrorCount)
 	assert.Equal(t, 0, result.InvalidCount)
 	assert.Equal(t, 0, result.SkippedCount)
@@ -52,7 +53,7 @@ ingress: [],
 
 	result, err := NewValidator(tmp).ValidateManifest(filename)
 
-	assert.NoError(t, err, "ValidateManifest should not return an error for valid Jsonnet input")
+	require.NoError(t, err, "ValidateManifest should not return an error for valid Jsonnet input")
 	assert.Equal(t, 0, result.ErrorCount)
 	assert.Equal(t, 1, result.InvalidCount)
 	assert.Equal(t, 0, result.SkippedCount)
@@ -73,7 +74,7 @@ ingress = []
 
 	result, err := NewValidator(tmp).ValidateManifest(filename)
 
-	assert.Error(t, err, "expected error for invalid Jsonnet input")
+	require.Error(t, err, "expected error for invalid Jsonnet input")
 
 	assert.Equal(t, 1, result.ErrorCount)
 	assert.Equal(t, 0, result.InvalidCount)
@@ -101,7 +102,7 @@ spec:
 
 	result, err := NewValidator(tmp).ValidateManifest(filename)
 
-	assert.NoError(t, err, "ValidateManifest should not return an error for valid yaml input")
+	require.NoError(t, err, "ValidateManifest should not return an error for valid yaml input")
 	assert.Equal(t, 0, result.ErrorCount)
 	assert.Equal(t, 0, result.InvalidCount)
 	assert.Equal(t, 0, result.SkippedCount)
@@ -122,7 +123,7 @@ application:
 
 	result, err := NewValidator(tmp).ValidateManifest(filename)
 
-	assert.NoError(t, err, "expected no error for valid Yaml input")
+	require.NoError(t, err, "expected no error for valid Yaml input")
 
 	assert.Equal(t, 0, result.ErrorCount)
 	assert.Equal(t, 1, result.InvalidCount)
@@ -144,7 +145,7 @@ port: 8080
 
 	result, err := NewValidator(tmp).ValidateManifest(filename)
 
-	assert.Error(t, err, "expected error for invalid Yaml input")
+	require.Error(t, err, "expected error for invalid Yaml input")
 
 	assert.Equal(t, 1, result.ErrorCount)
 	assert.Equal(t, 0, result.InvalidCount)
