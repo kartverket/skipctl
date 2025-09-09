@@ -6,14 +6,13 @@ import (
 	"os"
 
 	"github.com/kartverket/skipctl/pkg/logging"
-	"github.com/kartverket/skipctl/pkg/utils"
 )
 
 type Processor struct {
 	log *slog.Logger
 }
 
-type FileToErrorFunc func(*utils.ManifestFile) error
+type FileToErrorFunc func(*Document) error
 
 type StringToValidateResultFunc func(string) (ValidateResult, error)
 
@@ -23,7 +22,7 @@ func NewManifestDocumentProcessor() *Processor {
 	}
 }
 
-func (p *Processor) ProcessManifestFiles(files []*utils.ManifestFile, process FileToErrorFunc) {
+func (p *Processor) ProcessManifestFiles(files []*Document, process FileToErrorFunc) {
 	failed := false
 
 	for _, file := range files {

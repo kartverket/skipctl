@@ -11,13 +11,13 @@ import (
 	"go.yaml.in/yaml/v4"
 )
 
-func formatJsonnet(file *utils.ManifestFile) error {
+func formatJsonnet(file *Document) error {
 	formatted, err := formatter.Format(file.Name, file.Content, formatter.DefaultOptions())
 	if err != nil {
 		return err
 	}
 
-	if !file.IsStdin {
+	if !file.FromStdin {
 		fileInfo, fileInfoErr := os.Stat(file.Name)
 		if fileInfoErr != nil {
 			return fileInfoErr
@@ -35,8 +35,8 @@ func formatJsonnet(file *utils.ManifestFile) error {
 	return nil
 }
 
-func formatYaml(file *utils.ManifestFile) error {
-	if file.IsStdin {
+func formatYaml(file *Document) error {
+	if file.FromStdin {
 		var out any
 		if err := yaml.Unmarshal([]byte(file.Content), &out); err != nil {
 			return err
@@ -68,7 +68,7 @@ func formatYaml(file *utils.ManifestFile) error {
 	}
 	return nil
 }
-func FormatManifest(file *utils.ManifestFile) error {
+func FormatManifest(file *Document) error {
 	switch file.Extension {
 	case constants.ManifestSuffixJsonnet:
 		return formatJsonnet(file)

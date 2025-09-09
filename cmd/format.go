@@ -25,16 +25,16 @@ correctly, otherwise return code 1 is used to indicate failure.`,
 }
 
 func runFormat(_ *cobra.Command, args []string) {
-	var manifestFiles []*utils.ManifestFile
+	var manifestFiles []*manifest.Document
 	var err error
 
 	if len(args) > 0 && args[0] == "-" {
-		manifestFiles, err = utils.ReadFilesFromStdin()
+		manifestFiles, err = manifest.FromStdin()
 	} else {
 		var filenames []string
 		filenames, err = utils.FindFilesWithSuffixes(path, constants.ManifestSuffixes)
 		if err == nil {
-			manifestFiles = utils.ReadFiles(filenames)
+			manifestFiles = manifest.FromFiles(filenames)
 		}
 	}
 	if err != nil {

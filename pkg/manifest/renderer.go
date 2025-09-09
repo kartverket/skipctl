@@ -8,7 +8,6 @@ import (
 
 	"github.com/kartverket/skipctl/pkg/constants"
 	"github.com/kartverket/skipctl/pkg/logging"
-	"github.com/kartverket/skipctl/pkg/utils"
 )
 
 type Renderer struct {
@@ -23,7 +22,7 @@ func NewRenderer() *Renderer {
 	}
 }
 
-func (r *Renderer) RenderManifest(file *utils.ManifestFile) error {
+func (r *Renderer) RenderManifest(file *Document) error {
 	switch file.Extension {
 	case constants.ManifestSuffixJsonnet:
 		return r.renderJsonnet(file)
@@ -33,7 +32,7 @@ func (r *Renderer) RenderManifest(file *utils.ManifestFile) error {
 	return nil
 }
 
-func (r *Renderer) renderJsonnet(file *utils.ManifestFile) error {
+func (r *Renderer) renderJsonnet(file *Document) error {
 	result, err := r.jsonnet.EvaluateAnonymousSnippet(file.Name, file.Content)
 
 	if err != nil {
@@ -44,7 +43,7 @@ func (r *Renderer) renderJsonnet(file *utils.ManifestFile) error {
 	return nil
 }
 
-func (r *Renderer) renderYaml(file *utils.ManifestFile) error {
+func (r *Renderer) renderYaml(file *Document) error {
 	var output any
 
 	err := yaml.Unmarshal([]byte(file.Content), &output)

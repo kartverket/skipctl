@@ -12,30 +12,9 @@ import (
 	"strings"
 
 	"github.com/kartverket/skipctl/pkg/constants"
-	"github.com/kartverket/skipctl/pkg/logging"
 	"go.yaml.in/yaml/v4"
 )
 
-type Document struct {
-	Name        string
-	Extension   string
-	Permissions os.FileMode
-	Content     string
-	FromStdin   bool
-}
-
-func (r *Document) Write(content string) error {
-	r.Content = content
-	if r.FromStdin {
-		if _, err := io.WriteString(os.Stdout, r.Content); err != nil {
-			return fmt.Errorf("error writing document to stdout: %w", err)
-		}
-	}
-	if err := os.WriteFile(r.Name, []byte(r.Content), r.Permissions); err != nil {
-		return fmt.Errorf("error writing document to file: %w", err)
-	}
-	return nil
-}
 func FindManifestFiles(path string) ([]string, error) {
 	files, err := FindFilesWithSuffixes(path, constants.ManifestSuffixes)
 
@@ -48,13 +27,6 @@ func FindManifestFiles(path string) ([]string, error) {
 	}
 
 	return files, nil
-}
-
-type ManifestFile struct {
-	Name      string
-	Extension string
-	Content   string
-	IsStdin   bool
 }
 
 func FindFilesWithSuffixes(directory string, suffixes []string) ([]string, error) {
@@ -148,27 +120,8 @@ func CopyFilesToDirectory(filesystem fs.FS, destinationDir string) error {
 		return closeErr
 	})
 }
-func ReadFiles(filenames []string) []*ManifestFile {
-	var files = []*ManifestFile{}
 
-	for _, filename := range filenames {
-		fileContent, err := os.ReadFile(filename)
-
-		if err != nil {
-			logging.Logger().Error("unable to read file", "filename", filename)
-			continue
-		}
-		files = append(files, &ManifestFile{
-			Name:      filename,
-			Extension: strings.ToLower(filepath.Ext(filename)),
-			Content:   string(fileContent),
-			IsStdin:   false,
-		})
-	}
-	return files
-}
-
-func detectFiletype(content []byte) (string, error) {
+func DetectFiletype(content []byte) (string, error) {
 	trimmed := bytes.TrimLeft(content, " \t\r\n")
 	if len(trimmed) == 0 {
 		return "", errors.New("unable to detect filetype: Empty file content")
@@ -181,31 +134,4 @@ func detectFiletype(content []byte) (string, error) {
 	default:
 		return constants.ManifestSuffixYaml, nil
 	}
-}
-
-func ReadFilesFromStdin() ([]*ManifestFile, error) {
-	log := logging.Logger()
-
-	content, err := io.ReadAll(os.Stdin)
-	if err != nil {
-		return nil, err
-	}
-	files := bytes.Split(content, []byte("\n---\n"))
-
-	var manifestFiles []*ManifestFile
-
-	for i, fileContent := range files {
-		ext, detectFiletypeErr := detectFiletype(fileContent)
-		if detectFiletypeErr != nil {
-			log.Error(detectFiletypeErr.Error(), "reason", "skipping")
-			continue
-		}
-		manifestFiles = append(manifestFiles, &ManifestFile{
-			Name:      fmt.Sprintf("stdin_%d", i),
-			Extension: ext,
-			Content:   string(fileContent),
-			IsStdin:   true,
-		})
-	}
-	return manifestFiles, nil
 }
