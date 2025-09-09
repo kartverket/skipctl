@@ -2,12 +2,9 @@ package manifest
 
 import (
 	"fmt"
-	"io"
-	"os"
 
 	"github.com/google/go-jsonnet/formatter"
 	"github.com/kartverket/skipctl/pkg/constants"
-	"github.com/kartverket/skipctl/pkg/utils"
 	"go.yaml.in/yaml/v4"
 )
 
@@ -17,55 +14,28 @@ func formatJsonnet(file *Document) error {
 		return err
 	}
 
-	if !file.FromStdin {
-		fileInfo, fileInfoErr := os.Stat(file.Name)
-		if fileInfoErr != nil {
-			return fileInfoErr
-		}
-		if err = os.WriteFile(file.Name, []byte(formatted), fileInfo.Mode().Perm()); err != nil {
-			return err
-		}
-	} else {
-		_, err = io.WriteString(os.Stdout, formatted)
-		if err != nil {
-			return err
-		}
+	if werr := file.Write(formatted); werr != nil {
+		return werr
 	}
 
 	return nil
 }
 
-func formatYaml(file *Document) error {
-	if file.FromStdin {
-		var out any
-		if err := yaml.Unmarshal([]byte(file.Content), &out); err != nil {
-			return err
-		}
-		formattedYaml, err := yaml.Marshal(out)
-		if err != nil {
-			return err
-		}
-		if _, err = os.Stdout.Write(formattedYaml); err != nil {
-			return err
-		}
-		return nil
+func formatYaml(d *Document) error {
+	var out any
+	if err := yaml.Unmarshal([]byte(d.Content), &out); err != nil {
+		return err
 	}
 
-	raw, err := utils.UnmarshalYamlFromFile(file.Name)
-	if err != nil {
-		return err
+	formattedYaml, merr := yaml.Marshal(out)
+	if merr != nil {
+		return merr
 	}
-	formattedYaml, err := yaml.Marshal(raw)
-	if err != nil {
-		return err
+
+	if werr := d.Write(string(formattedYaml)); werr != nil {
+		return werr
 	}
-	fileInfo, err := os.Stat(file.Name)
-	if err != nil {
-		return err
-	}
-	if err = os.WriteFile(file.Name, formattedYaml, fileInfo.Mode().Perm()); err != nil {
-		return err
-	}
+
 	return nil
 }
 func FormatManifest(file *Document) error {

@@ -26,10 +26,12 @@ func (r *Document) Write(content string) error {
 		if _, err := io.WriteString(os.Stdout, r.Content); err != nil {
 			return fmt.Errorf("error writing document to stdout: %w", err)
 		}
+		return nil
 	}
 	if err := os.WriteFile(r.Name, []byte(r.Content), r.Permissions); err != nil {
 		return fmt.Errorf("error writing document to file: %w", err)
 	}
+
 	return nil
 }
 
