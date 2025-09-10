@@ -1,6 +1,8 @@
 package manifest
 
 import (
+	"path/filepath"
+
 	"github.com/google/go-jsonnet"
 	"github.com/kartverket/skipctl/pkg/constants"
 )
@@ -38,6 +40,10 @@ func (v *Validator) validateJsonnet(file *Document) (ValidateResult, error) {
 	// There is a memory corruption bug that leads to segfaults if we reuse the same VM for multiple evaluations.
 	// if there is a syntax error within the Jsonnet file, the VM gets corrupted and cannot be used again.
 	vm := jsonnet.MakeVM()
+	dir := filepath.Dir(file.Name)
+	vm.Importer(&jsonnet.FileImporter{
+		JPaths: []string{dir},
+	})
 
 	content, err := vm.EvaluateAnonymousSnippet(file.Name, file.Content)
 	if err != nil {
