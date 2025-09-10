@@ -7,7 +7,8 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestValidateManifestValidJsonnetManifest(t *testing.T) {
+func TestValidateManifestJsonnetValid(t *testing.T) {
+	// The syntax and content is valid.
 	validJsonnetManifest := `
 {
   apiVersion: "skiperator.kartverket.no/v1alpha1",
@@ -29,7 +30,6 @@ func TestValidateManifestValidJsonnetManifest(t *testing.T) {
 
 	tmp := t.TempDir()
 	filename := writeContentToTmpDir(tmp, validJsonnetManifest, "valid.jsonnet")
-
 	result, err := NewValidator(tmp).ValidateManifest(filename)
 
 	require.NoError(t, err, "ValidateManifest should not return an error for valid Jsonnet input")
@@ -39,18 +39,24 @@ func TestValidateManifestValidJsonnetManifest(t *testing.T) {
 	assert.Equal(t, 1, result.ValidCount, "unexpected result.ValidCount")
 }
 
-func TestValidateManifestValidJsonnet(t *testing.T) {
+func TestValidateManifestJsonnetInvalid(t *testing.T) {
+	// The syntax is valid but the spec is missing port. This manifest is invalid.
 	validJsonnet := `
 {
-host: "localhost",
-port: 8080,
-ingress: [],
+  apiVersion: "skiperator.kartverket.no/v1alpha1",
+  kind: "Application",
+  metadata: {
+    name: "valid-manifest",
+    namespace: "devex",
+  },
+  spec: {
+    image: "kartverket/example",
+  },
 }
 `
 
 	tmp := t.TempDir()
 	filename := writeContentToTmpDir(tmp, validJsonnet, "valid.jsonnet")
-
 	result, err := NewValidator(tmp).ValidateManifest(filename)
 
 	require.NoError(t, err, "ValidateManifest should not return an error for valid Jsonnet input")
@@ -60,18 +66,25 @@ ingress: [],
 	assert.Equal(t, 0, result.ValidCount, "unexpected result.ValidCount")
 }
 
-func TestValidateManifestInvalidJsonnet(t *testing.T) {
+func TestValidateManifestJsonnetSyntaxError(t *testing.T) {
+	// This document contains syntax errors and should fail validation
 	invalidJsonnet := `
-{
-host: localhost
-port: 8080,
-ingress = []
+	{
+  apiVersion: "skiperator.kartverket.no/v1alpha1",
+  kind: "Application",
+  metadata:
+    name: "valid-manifest",
+    namespace: "devex"
+  },
+  spec: {
+    image: "kartverket/example",
+    port: 8080,
+  },
 }
 `
 
 	tmp := t.TempDir()
 	filename := writeContentToTmpDir(tmp, invalidJsonnet, "invalid.jsonnet")
-
 	result, err := NewValidator(tmp).ValidateManifest(filename)
 
 	require.Error(t, err, "expected error for invalid Jsonnet input")
@@ -82,7 +95,8 @@ ingress = []
 	assert.Equal(t, 0, result.ValidCount, "unexpected result.ValidCount")
 }
 
-func TestValidateManifestValidYamlManifest(t *testing.T) {
+func TestValidateManifestYamlValid(t *testing.T) {
+	// this is a valid manifest
 	validYamlManifest := `
 apiVersion: skiperator.kartverket.no/v1alpha1
 kind: Application
@@ -99,7 +113,6 @@ spec:
 
 	tmp := t.TempDir()
 	filename := writeContentToTmpDir(tmp, validYamlManifest, "valid.yaml")
-
 	result, err := NewValidator(tmp).ValidateManifest(filename)
 
 	require.NoError(t, err, "ValidateManifest should not return an error for valid yaml input")
@@ -109,15 +122,20 @@ spec:
 	assert.Equal(t, 1, result.ValidCount, "unexpected result.ValidCount")
 }
 
-func TestValidateManifestValidYaml(t *testing.T) {
+func TestValidateManifestYamlInvalid(t *testing.T) {
+	// this is valid yaml syntax but spec is missing port field, should fail validation
 	validYaml := `
 apiVersion: skiperator.kartverket.no/v1alpha1
 kind: Application
+metadata:
+  name: valid-manifest
+  namespace: devex
+spec:
+  image: "kartverket/example"
 `
 
 	tmp := t.TempDir()
 	filename := writeContentToTmpDir(tmp, validYaml, "valid.yaml")
-
 	result, err := NewValidator(tmp).ValidateManifest(filename)
 
 	require.NoError(t, err, "expected no error for valid Yaml input")
@@ -128,18 +146,20 @@ kind: Application
 	assert.Equal(t, 0, result.ValidCount, "unexpected result.ValidCount")
 }
 
-func TestValidateManifestInvalidYaml(t *testing.T) {
+func TestValidateManifestYamlSyntaxError(t *testing.T) {
+	// This document has syntax errors, should fail validation
 	invalidYaml := `
-application:
-		host: localhost
-port: 8080
-	ingress
-}
+	apiVersion: skiperator.kartverket.no/v1alpha1
+kind: Application
+metadata
+  			name: valid-manifest
+  namespace: devex
+spec:
+  image: "kartverket/example"
 `
 
 	tmp := t.TempDir()
 	filename := writeContentToTmpDir(tmp, invalidYaml, "invalid.yaml")
-
 	result, err := NewValidator(tmp).ValidateManifest(filename)
 
 	require.Error(t, err, "expected error for invalid Yaml input")

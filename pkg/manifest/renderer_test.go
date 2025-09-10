@@ -1,19 +1,10 @@
 package manifest
 
 import (
-	"os"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 )
-
-func writeContentToTmpDir(dir string, content string, filename string) string {
-	path := dir + string(os.PathSeparator) + filename
-
-	os.WriteFile(path, []byte(content), 0644)
-
-	return path
-}
 
 func TestRenderManifestValidJsonnet(t *testing.T) {
 	validJsonnet := `
@@ -24,10 +15,8 @@ ingress: [],
 }
 `
 
-	tmp := t.TempDir()
-	filename := writeContentToTmpDir(tmp, validJsonnet, "valid.jsonnet")
-
-	res := NewRenderer().RenderManifest(filename)
+	doc := newTestDocument(validJsonnet, "valid.jsonnet")
+	res := NewRenderer().RenderManifest(doc)
 	require.NoError(t, res, "expected no error for valid Jsonnet input")
 }
 
@@ -40,10 +29,8 @@ ingress = []
 }
 `
 
-	tmp := t.TempDir()
-	filename := writeContentToTmpDir(tmp, invalidJsonnet, "invalid.jsonnet")
-
-	res := NewRenderer().RenderManifest(filename)
+	doc := newTestDocument(invalidJsonnet, "invalid.jsonnet")
+	res := NewRenderer().RenderManifest(doc)
 	require.Error(t, res, "expected error for invalid Jsonnet input")
 }
 
@@ -56,10 +43,8 @@ application:
     - item
 `
 
-	tmp := t.TempDir()
-	filename := writeContentToTmpDir(tmp, validYaml, "valid.yaml")
-
-	res := NewRenderer().RenderManifest(filename)
+	doc := newTestDocument(validYaml, "valid.yaml")
+	res := NewRenderer().RenderManifest(doc)
 	require.NoError(t, res, "expected no error for valid Yaml input")
 }
 
@@ -72,9 +57,7 @@ port: 8080
 }
 `
 
-	tmp := t.TempDir()
-	filename := writeContentToTmpDir(tmp, invalidYaml, "invalid.yaml")
-
-	res := NewRenderer().RenderManifest(filename)
+	doc := newTestDocument(invalidYaml, "invalid.yaml")
+	res := NewRenderer().RenderManifest(doc)
 	require.Error(t, res, "expected error for invalid Yaml input")
 }
