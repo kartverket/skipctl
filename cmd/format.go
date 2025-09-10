@@ -21,7 +21,8 @@ Supported formats are: %s.
 Any errors will be printed to stderr. Returns 0 if all input files are formatted
 correctly, otherwise return code 1 is used to indicate failure.`,
 		strings.Join(constants.ManifestSuffixes, ", ")),
-	Run: runFormat,
+	Run:  runFormat,
+	Args: cobra.RangeArgs(0, 1),
 }
 
 func runFormat(_ *cobra.Command, args []string) {
