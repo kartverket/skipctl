@@ -1,6 +1,8 @@
 package utils
 
 import (
+	"bytes"
+	"errors"
 	"fmt"
 	"io"
 	"io/fs"
@@ -117,4 +119,19 @@ func CopyFilesToDirectory(filesystem fs.FS, destinationDir string) error {
 		}
 		return closeErr
 	})
+}
+
+func DetectFiletype(content []byte) (string, error) {
+	trimmed := bytes.TrimLeft(content, " \t\r\n")
+	if len(trimmed) == 0 {
+		return "", errors.New("unable to detect filetype: Empty file content")
+	}
+	firstChar := trimmed[0]
+
+	switch firstChar {
+	case '{', '[':
+		return constants.ManifestSuffixJsonnet, nil
+	default:
+		return constants.ManifestSuffixYaml, nil
+	}
 }

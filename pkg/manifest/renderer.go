@@ -2,9 +2,6 @@ package manifest
 
 import (
 	"log/slog"
-	"os"
-	"path/filepath"
-	"strings"
 
 	"github.com/google/go-jsonnet"
 	"go.yaml.in/yaml/v4"
@@ -25,21 +22,18 @@ func NewRenderer() *Renderer {
 	}
 }
 
-func (r *Renderer) RenderManifest(filename string) error {
-	extension := strings.ToLower(filepath.Ext(filename))
-
-	switch extension {
+func (r *Renderer) RenderManifest(file *Document) error {
+	switch file.Extension {
 	case constants.ManifestSuffixJsonnet:
-		return r.renderJsonnet(filename)
+		return r.renderJsonnet(file)
 	case constants.ManifestSuffixYaml, constants.ManifestSuffixYml:
-		return r.renderYaml(filename)
+		return r.renderYaml(file)
 	}
-
 	return nil
 }
 
-func (r *Renderer) renderJsonnet(filename string) error {
-	result, err := r.jsonnet.EvaluateFile(filename)
+func (r *Renderer) renderJsonnet(file *Document) error {
+	result, err := r.jsonnet.EvaluateAnonymousSnippet(file.Name, file.Content)
 
 	if err != nil {
 		return err
@@ -49,21 +43,15 @@ func (r *Renderer) renderJsonnet(filename string) error {
 	return nil
 }
 
-func (r *Renderer) renderYaml(filename string) error {
-	fileContents, err := os.ReadFile(filename)
-	if err != nil {
-		return err
-	}
-
+func (r *Renderer) renderYaml(file *Document) error {
 	var output any
 
-	err = yaml.Unmarshal(fileContents, &output)
+	err := yaml.Unmarshal([]byte(file.Content), &output)
 	if err != nil {
 		return err
 	}
 
-	r.rawOutput.Info("---")
-	r.rawOutput.Info(string(fileContents))
+	r.rawOutput.Info(file.Content)
 
 	return nil
 }
