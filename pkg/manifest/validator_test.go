@@ -33,10 +33,10 @@ func TestValidateManifestValidJsonnetManifest(t *testing.T) {
 	result, err := NewValidator(tmp).ValidateManifest(filename)
 
 	require.NoError(t, err, "ValidateManifest should not return an error for valid Jsonnet input")
-	assert.Equal(t, 0, result.ErrorCount)
-	assert.Equal(t, 0, result.InvalidCount)
-	assert.Equal(t, 0, result.SkippedCount)
-	assert.Equal(t, 1, result.ValidCount)
+	assert.Equal(t, 0, result.ErrorCount, "unexpected result.ErrorCount")
+	assert.Equal(t, 0, result.InvalidCount, "unexpected result.InvalidCount")
+	assert.Equal(t, 0, result.SkippedCount, "unexpected result.SkippedCount")
+	assert.Equal(t, 1, result.ValidCount, "unexpected result.ValidCount")
 }
 
 func TestValidateManifestValidJsonnet(t *testing.T) {
@@ -54,10 +54,10 @@ ingress: [],
 	result, err := NewValidator(tmp).ValidateManifest(filename)
 
 	require.NoError(t, err, "ValidateManifest should not return an error for valid Jsonnet input")
-	assert.Equal(t, 0, result.ErrorCount)
-	assert.Equal(t, 1, result.InvalidCount)
-	assert.Equal(t, 0, result.SkippedCount)
-	assert.Equal(t, 0, result.ValidCount)
+	assert.Equal(t, 0, result.ErrorCount, "unexpected result.ErrorCount")
+	assert.Equal(t, 1, result.InvalidCount, "unexpected result.InvalidCount")
+	assert.Equal(t, 0, result.SkippedCount, "unexpected result.SkippedCount")
+	assert.Equal(t, 0, result.ValidCount, "unexpected result.ValidCount")
 }
 
 func TestValidateManifestInvalidJsonnet(t *testing.T) {
@@ -76,10 +76,10 @@ ingress = []
 
 	require.Error(t, err, "expected error for invalid Jsonnet input")
 
-	assert.Equal(t, 1, result.ErrorCount)
-	assert.Equal(t, 0, result.InvalidCount)
-	assert.Equal(t, 0, result.SkippedCount)
-	assert.Equal(t, 0, result.ValidCount)
+	assert.Equal(t, 1, result.ErrorCount, "unexpected result.ErrorCount")
+	assert.Equal(t, 0, result.InvalidCount, "unexpected result.InvalidCount")
+	assert.Equal(t, 0, result.SkippedCount, "unexpected result.SkippedCount")
+	assert.Equal(t, 0, result.ValidCount, "unexpected result.ValidCount")
 }
 
 func TestValidateManifestValidYamlManifest(t *testing.T) {
@@ -103,19 +103,16 @@ spec:
 	result, err := NewValidator(tmp).ValidateManifest(filename)
 
 	require.NoError(t, err, "ValidateManifest should not return an error for valid yaml input")
-	assert.Equal(t, 0, result.ErrorCount)
-	assert.Equal(t, 0, result.InvalidCount)
-	assert.Equal(t, 0, result.SkippedCount)
-	assert.Equal(t, 1, result.ValidCount)
+	assert.Equal(t, 0, result.ErrorCount, "unexpected result.ErrorCount")
+	assert.Equal(t, 0, result.InvalidCount, "unexpected result.InvalidCount")
+	assert.Equal(t, 0, result.SkippedCount, "unexpected result.SkippedCount")
+	assert.Equal(t, 1, result.ValidCount, "unexpected result.ValidCount")
 }
 
 func TestValidateManifestValidYaml(t *testing.T) {
 	validYaml := `
-application:
-  host: localhost
-  port: 8080
-  ingress:
-    - item
+apiVersion: skiperator.kartverket.no/v1alpha1
+kind: Application
 `
 
 	tmp := t.TempDir()
@@ -125,10 +122,10 @@ application:
 
 	require.NoError(t, err, "expected no error for valid Yaml input")
 
-	assert.Equal(t, 0, result.ErrorCount)
-	assert.Equal(t, 1, result.InvalidCount)
-	assert.Equal(t, 0, result.SkippedCount)
-	assert.Equal(t, 0, result.ValidCount)
+	assert.Equal(t, 0, result.ErrorCount, "unexpected result.ErrorCount")
+	assert.Equal(t, 1, result.InvalidCount, "unexpected result.InvalidCount")
+	assert.Equal(t, 0, result.SkippedCount, "unexpected result.SkippedCount")
+	assert.Equal(t, 0, result.ValidCount, "unexpected result.ValidCount")
 }
 
 func TestValidateManifestInvalidYaml(t *testing.T) {
@@ -147,8 +144,8 @@ port: 8080
 
 	require.Error(t, err, "expected error for invalid Yaml input")
 
-	assert.Equal(t, 1, result.ErrorCount)
-	assert.Equal(t, 0, result.InvalidCount)
-	assert.Equal(t, 0, result.SkippedCount)
-	assert.Equal(t, 0, result.ValidCount)
+	assert.Equal(t, 1, result.ErrorCount, "unexpected result.ErrorCount")
+	assert.Equal(t, 0, result.InvalidCount, "unexpected result.InvalidCount")
+	assert.Equal(t, 0, result.SkippedCount, "unexpected result.SkippedCount")
+	assert.Equal(t, 0, result.ValidCount, "unexpected result.ValidCount")
 }
