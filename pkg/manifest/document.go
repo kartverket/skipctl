@@ -31,7 +31,6 @@ func (r *Document) Write(content string) error {
 	if err := os.WriteFile(r.Name, []byte(r.Content), r.Permissions); err != nil {
 		return fmt.Errorf("error writing document to file: %w", err)
 	}
-	logging.Logger().Info("permissions", "value", r.Permissions)
 	return nil
 }
 
@@ -47,7 +46,7 @@ func FromFiles(filenames []string) ([]*Document, error) {
 		}
 		finfo, ferr := os.Stat(filename)
 		if ferr != nil {
-			return nil, fmt.Errorf("unable to get file into %s: %w", filename, &ferr)
+			return nil, fmt.Errorf("unable to get file info %s %w", filename, ferr)
 		}
 		files = append(files, &Document{
 			Name:        filename,
