@@ -31,11 +31,11 @@ func (r *Document) Write(content string) error {
 	if err := os.WriteFile(r.Name, []byte(r.Content), r.Permissions); err != nil {
 		return fmt.Errorf("error writing document to file: %w", err)
 	}
-
+	logging.Logger().Info("permissions", "value", r.Permissions)
 	return nil
 }
 
-func FromFiles(filenames []string) []*Document {
+func FromFiles(filenames []string) ([]*Document, error) {
 	var files = []*Document{}
 
 	for _, filename := range filenames {
@@ -45,14 +45,19 @@ func FromFiles(filenames []string) []*Document {
 			logging.Logger().Error("unable to read file", "filename", filename)
 			continue
 		}
+		finfo, ferr := os.Stat(filename)
+		if ferr != nil {
+			return nil, fmt.Errorf("unable to get file into %s: %w", filename, &ferr)
+		}
 		files = append(files, &Document{
-			Name:      filename,
-			Extension: strings.ToLower(filepath.Ext(filename)),
-			Content:   string(fileContent),
-			FromStdin: false,
+			Name:        filename,
+			Extension:   strings.ToLower(filepath.Ext(filename)),
+			Permissions: finfo.Mode().Perm(),
+			Content:     string(fileContent),
+			FromStdin:   false,
 		})
 	}
-	return files
+	return files, nil
 }
 func FromStdin() ([]*Document, error) {
 	log := logging.Logger()

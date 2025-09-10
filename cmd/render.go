@@ -39,7 +39,7 @@ func runRender(_ *cobra.Command, args []string) {
 		var filenames []string
 		filenames, err = utils.FindFilesWithSuffixes(path, constants.ManifestSuffixes)
 		if err == nil {
-			manifestFiles = manifest.FromFiles(filenames)
+			manifestFiles, err = manifest.FromFiles(filenames)
 		}
 	}
 
