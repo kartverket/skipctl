@@ -29,7 +29,7 @@ func TestValidateManifestJsonnetValid(t *testing.T) {
 `
 
 	tmp := t.TempDir()
-	filename := writeContentToTmpDir(tmp, validJsonnetManifest, "valid.jsonnet")
+	filename, _ := writeContentToTmpDir(tmp, validJsonnetManifest, "valid.jsonnet")
 	result, err := NewValidator(tmp).ValidateManifest(filename)
 
 	require.NoError(t, err, "ValidateManifest should not return an error for valid Jsonnet input")
@@ -56,7 +56,7 @@ func TestValidateManifestJsonnetInvalid(t *testing.T) {
 `
 
 	tmp := t.TempDir()
-	filename := writeContentToTmpDir(tmp, validJsonnet, "valid.jsonnet")
+	filename, _ := writeContentToTmpDir(tmp, validJsonnet, "valid.jsonnet")
 	result, err := NewValidator(tmp).ValidateManifest(filename)
 
 	require.NoError(t, err, "ValidateManifest should not return an error for valid Jsonnet input")
@@ -84,7 +84,7 @@ func TestValidateManifestJsonnetSyntaxError(t *testing.T) {
 `
 
 	tmp := t.TempDir()
-	filename := writeContentToTmpDir(tmp, invalidJsonnet, "invalid.jsonnet")
+	filename, _ := writeContentToTmpDir(tmp, invalidJsonnet, "invalid.jsonnet")
 	result, err := NewValidator(tmp).ValidateManifest(filename)
 
 	require.Error(t, err, "expected error for invalid Jsonnet input")
@@ -112,7 +112,7 @@ spec:
 `
 
 	tmp := t.TempDir()
-	filename := writeContentToTmpDir(tmp, validYamlManifest, "valid.yaml")
+	filename, _ := writeContentToTmpDir(tmp, validYamlManifest, "valid.yaml")
 	result, err := NewValidator(tmp).ValidateManifest(filename)
 
 	require.NoError(t, err, "ValidateManifest should not return an error for valid yaml input")
@@ -135,7 +135,7 @@ spec:
 `
 
 	tmp := t.TempDir()
-	filename := writeContentToTmpDir(tmp, validYaml, "valid.yaml")
+	filename, _ := writeContentToTmpDir(tmp, validYaml, "valid.yaml")
 	result, err := NewValidator(tmp).ValidateManifest(filename)
 
 	require.NoError(t, err, "expected no error for valid Yaml input")
@@ -159,7 +159,7 @@ spec:
 `
 
 	tmp := t.TempDir()
-	filename := writeContentToTmpDir(tmp, invalidYaml, "invalid.yaml")
+	filename, _ := writeContentToTmpDir(tmp, invalidYaml, "invalid.yaml")
 	result, err := NewValidator(tmp).ValidateManifest(filename)
 
 	require.Error(t, err, "expected error for invalid Yaml input")
