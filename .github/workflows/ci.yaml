@@ -2,7 +2,7 @@ name: compile+test
 on:
   push:
     branches:
-      - "**"
+      - '**'
   pull_request:
 jobs:
   compile-and-test:
