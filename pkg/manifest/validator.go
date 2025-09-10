@@ -1,61 +1,76 @@
 package manifest
 
 import (
-	"path/filepath"
-
 	"github.com/google/go-jsonnet"
-
 	"github.com/kartverket/skipctl/pkg/constants"
-	"github.com/kartverket/skipctl/pkg/utils"
 )
 
 type Validator struct {
 	k8s *K8sValidator
+	res *ValidateResult
 }
 
 func NewValidator(tempDir string) *Validator {
 	return &Validator{
 		k8s: NewK8sValidator(tempDir),
+		res: &ValidateResult{},
 	}
 }
 
-func (v *Validator) ValidateManifest(filename string) (ValidateResult, error) {
-	extension := filepath.Ext(filename)
+var validateResult = &ValidateResult{}
 
-	switch extension {
+func (v *Validator) ValidateManifest(file *Document) error {
+	switch file.Extension {
 	case constants.ManifestSuffixJsonnet:
-		return v.validateJsonnet(filename)
+		if jerr := v.handleValidateJsonnet(file); jerr != nil {
+			return jerr
+		}
+		return nil
 	case constants.ManifestSuffixYaml, constants.ManifestSuffixYml:
-		return v.validateYaml(filename)
+		if yerr := v.handleValidateYaml(file); yerr != nil {
+			return yerr
+		}
+		return nil
 	}
-
-	return ValidateResult{
-		SkippedCount: 1,
-	}, nil
+	return nil
 }
-
-func (v *Validator) validateJsonnet(filename string) (ValidateResult, error) {
+func (v *Validator) validateJsonnet(file *Document) (ValidateResult, error) {
 	// There is a memory corruption bug that leads to segfaults if we reuse the same VM for multiple evaluations.
 	// if there is a syntax error within the Jsonnet file, the VM gets corrupted and cannot be used again.
 	vm := jsonnet.MakeVM()
 
-	content, err := vm.EvaluateFile(filename)
+	content, err := vm.EvaluateAnonymousSnippet(file.Name, file.Content)
 	if err != nil {
 		return ValidateResult{
 			ErrorCount: 1,
 		}, err
 	}
 
-	return v.k8s.validateK8sSchema(filename, content)
+	return v.k8s.validateK8sSchema(file.Name, content)
 }
 
-func (v *Validator) validateYaml(filename string) (ValidateResult, error) {
-	fileContents, err := utils.MarshalYamlFromFile(filename)
-	if err != nil {
-		return ValidateResult{
-			ErrorCount: 1,
-		}, err
+func (v *Validator) handleValidateJsonnet(d *Document) error {
+	result, jerr := v.validateJsonnet(d)
+	if jerr != nil {
+		return jerr
 	}
-
-	return v.k8s.validateK8sSchema(filename, string(fileContents))
+	countValidateRes(&result)
+	return nil
+}
+func (v *Validator) validateYaml(file *Document) (ValidateResult, error) {
+	return v.k8s.validateK8sSchema(file.Name, file.Content)
+}
+func (v *Validator) handleValidateYaml(d *Document) error {
+	result, jerr := v.validateYaml(d)
+	if jerr != nil {
+		return jerr
+	}
+	countValidateRes(&result)
+	return nil
+}
+func countValidateRes(result *ValidateResult) {
+	validateResult.ErrorCount += result.ErrorCount
+	validateResult.InvalidCount += result.InvalidCount
+	validateResult.SkippedCount += result.SkippedCount
+	validateResult.ValidCount += result.ValidCount
 }

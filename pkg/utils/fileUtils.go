@@ -62,19 +62,6 @@ func UnmarshalYamlFromFile(filename string) (any, error) {
 	return output, nil
 }
 
-func MarshalYamlFromFile(filename string) ([]byte, error) {
-	fileContents, err := UnmarshalYamlFromFile(filename)
-	if err != nil {
-		return nil, err
-	}
-
-	marshalled, err := yaml.Marshal(fileContents)
-	if err != nil {
-		return nil, err
-	}
-	return marshalled, nil
-}
-
 // CreateTempDirectory creates a temporary directory with a given name in a unique location.
 func CreateTempDirectory(name string) (string, error) {
 	tempDir, err := os.MkdirTemp("", fmt.Sprintf("skipctl-%s-*", name))

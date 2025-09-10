@@ -11,10 +11,9 @@ import (
 type Processor struct {
 	log *slog.Logger
 }
-
+type ProcessorFunc struct {
+}
 type FileToErrorFunc func(*Document) error
-
-type StringToValidateResultFunc func(string) (ValidateResult, error)
 
 func NewDocumentProcessor() *Processor {
 	return &Processor{
@@ -38,26 +37,17 @@ func (p *Processor) ProcessDocuments(files []*Document, process FileToErrorFunc)
 	}
 }
 
-func (p *Processor) ProcessValidationManifests(files []string, process StringToValidateResultFunc) error {
-	var validCount, invalidCount, errorCount, skippedCount int
-
+func (p *Processor) ProcessValidationManifests(files []*Document, process FileToErrorFunc) error {
 	for _, file := range files {
-		summary, validationErr := process(file)
+		validationErr := process(file)
 		if validationErr != nil {
 			p.log.Error("validation failed", "file", file, "error", validationErr.Error())
 		}
-
-		validCount += summary.ValidCount
-		invalidCount += summary.InvalidCount
-		errorCount += summary.ErrorCount
-		skippedCount += summary.SkippedCount
 	}
+	totalResources := validateResult.ErrorCount + validateResult.ValidCount + validateResult.InvalidCount + validateResult.SkippedCount
+	p.log.Info("validation completed", "totalResources", totalResources, "valid", validateResult.ValidCount, "invalid", validateResult.InvalidCount, "errors", validateResult.ErrorCount, "skipped", validateResult.SkippedCount)
 
-	totalResources := validCount + invalidCount + errorCount + skippedCount
-
-	p.log.Info("validation completed", "totalResources", totalResources, "valid", validCount, "invalid", invalidCount, "errors", errorCount, "skipped", skippedCount)
-
-	if errorCount > 0 || invalidCount > 0 {
+	if validateResult.ErrorCount > 0 || validateResult.InvalidCount > 0 {
 		return errors.New("validation failed")
 	}
 

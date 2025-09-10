@@ -25,21 +25,35 @@ var (
 	}
 )
 
-func runValidate(_ *cobra.Command, _ []string) error {
+func runValidate(_ *cobra.Command, args []string) error {
 	var err error
+	var manifestFiles []*manifest.Document
+	if isStdin(args) {
+		manifestFiles, err = manifest.FromStdin()
+	} else {
+		var filenames []string
+		filenames, err = utils.FindFilesWithSuffixes(path, constants.ManifestSuffixes)
+		if err == nil {
+			manifestFiles, err = manifest.FromFiles(filenames)
+		}
+	}
+
+	if err != nil {
+		log.Error("Error collecting files", "error", err.Error())
+		os.Exit(1)
+	}
+	if len(manifestFiles) == 0 {
+		log.Info("No manifests found.")
+		return err
+	}
+
 	tempDir, err = utils.CreateTempDirectory("schemas")
 	if err != nil {
 		log.Error("could not create temporary directory for schema files", "error", err)
 		return err
 	}
-
-	files, err := utils.FindManifestFiles(path)
-	if err != nil {
-		log.Error(err.Error())
-		return err
-	}
 	processor := manifest.NewDocumentProcessor()
-	err = processor.ProcessValidationManifests(files, manifest.NewValidator(tempDir).ValidateManifest)
+	err = processor.ProcessValidationManifests(manifestFiles, manifest.NewValidator(tempDir).ValidateManifest)
 
 	// Cobra does not call the PostRun or PersistentPostRun functions if the program exits with an error (os.Exit(>0))
 	// Reported in https://github.com/spf13/cobra/issues/1893

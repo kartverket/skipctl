@@ -10,6 +10,7 @@ import (
 
 	"github.com/kartverket/skipctl/pkg/logging"
 	"github.com/kartverket/skipctl/pkg/utils"
+	"go.yaml.in/yaml/v4"
 )
 
 type Document struct {
@@ -83,4 +84,11 @@ func FromStdin() ([]*Document, error) {
 		})
 	}
 	return manifestFiles, nil
+}
+func MarshalYamlFromDocument(file *Document) ([]byte, error) {
+	marshalled, err := yaml.Marshal(file.Content)
+	if err != nil {
+		return nil, err
+	}
+	return marshalled, nil
 }
