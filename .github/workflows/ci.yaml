@@ -2,7 +2,7 @@ name: compile+test
 on:
   push:
     branches:
-      - '**'
+      - "**"
   pull_request:
 jobs:
   compile-and-test:
@@ -20,6 +20,9 @@ jobs:
             ${{ runner.os }}-go-
       - name: Checkout code
         uses: actions/checkout@v5
+      - name: Print go.sum
+        run: cat go.sum
+
       - name: Install Go
         uses: actions/setup-go@v5
         with:
