@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"os"
 	"strings"
 
 	"github.com/kartverket/skipctl/pkg/constants"
@@ -20,18 +21,34 @@ Supported formats are: %s.
 Any errors will be printed to stderr. Returns 0 if all input files are formatted
 correctly, otherwise return code 1 is used to indicate failure.`,
 		strings.Join(constants.ManifestSuffixes, ", ")),
-	Run: runFormat,
+	Run:  runFormat,
+	Args: cobra.RangeArgs(0, 1),
 }
 
-func runFormat(_ *cobra.Command, _ []string) {
-	files, err := utils.FindManifestFiles(path)
+func runFormat(_ *cobra.Command, args []string) {
+	var manifestFiles []*manifest.Document
+	var err error
+
+	if isStdin(args) {
+		manifestFiles, err = manifest.FromStdin()
+	} else {
+		var filenames []string
+		filenames, err = utils.FindFilesWithSuffixes(path, constants.ManifestSuffixes)
+		if err == nil {
+			manifestFiles, err = manifest.FromFiles(filenames)
+		}
+	}
 	if err != nil {
-		log.Error(err.Error())
+		log.Error("Error collecting files", "error", err.Error())
+		os.Exit(1)
+	}
+	if len(manifestFiles) == 0 {
+		log.Info("No manifests found.")
 		return
 	}
 
-	processor := manifest.NewManifestProcessor()
-	processor.ProcessManifests(files, manifest.FormatManifest)
+	processor := manifest.NewDocumentProcessor()
+	processor.ProcessDocuments(manifestFiles, manifest.FormatManifest)
 }
 func init() {
 	manifestCmd.AddCommand(formatCmd)

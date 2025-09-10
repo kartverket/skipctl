@@ -12,24 +12,24 @@ type Processor struct {
 	log *slog.Logger
 }
 
-type StringToErrorFunc func(string) error
+type FileToErrorFunc func(*Document) error
 
 type StringToValidateResultFunc func(string) (ValidateResult, error)
 
-func NewManifestProcessor() *Processor {
+func NewDocumentProcessor() *Processor {
 	return &Processor{
 		log: logging.Logger(),
 	}
 }
 
-func (p *Processor) ProcessManifests(files []string, process StringToErrorFunc) {
+func (p *Processor) ProcessDocuments(files []*Document, process FileToErrorFunc) {
 	failed := false
 
 	for _, file := range files {
 		err := process(file)
 
 		if err != nil {
-			p.log.Error("failed", "file", file, "error", err.Error())
+			p.log.Error("failed", "file", file.Name, "error", err.Error())
 			failed = true
 		}
 	}

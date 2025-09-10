@@ -2,67 +2,49 @@ package manifest
 
 import (
 	"fmt"
-	"os"
-	"path/filepath"
-	"strings"
 
 	"github.com/google/go-jsonnet/formatter"
 	"github.com/kartverket/skipctl/pkg/constants"
-	"github.com/kartverket/skipctl/pkg/utils"
 	"go.yaml.in/yaml/v4"
 )
 
-func formatJsonnet(filename string) error {
-	rawContents, err := os.ReadFile(filename)
+func formatJsonnet(file *Document) error {
+	formatted, err := formatter.Format(file.Name, file.Content, formatter.DefaultOptions())
 	if err != nil {
 		return err
 	}
 
-	formatted, err := formatter.Format(filename, string(rawContents), formatter.DefaultOptions())
-	if err != nil {
-		return err
-	}
-
-	fileInfo, err := os.Stat(filename)
-	if err != nil {
-		return err
-	}
-
-	if err = os.WriteFile(filename, []byte(formatted), fileInfo.Mode().Perm()); err != nil {
-		return err
+	if werr := file.Write(formatted); werr != nil {
+		return werr
 	}
 
 	return nil
 }
 
-func formatYaml(filename string) error {
-	raw, err := utils.UnmarshalYamlFromFile(filename)
-	if err != nil {
+func formatYaml(d *Document) error {
+	var out any
+	if err := yaml.Unmarshal([]byte(d.Content), &out); err != nil {
 		return err
 	}
 
-	formattedYaml, err := yaml.Marshal(raw)
-	if err != nil {
-		return err
+	formattedYaml, merr := yaml.Marshal(out)
+	if merr != nil {
+		return merr
 	}
 
-	fileInfo, err := os.Stat(filename)
-	if err != nil {
-		return err
+	if werr := d.Write(string(formattedYaml)); werr != nil {
+		return werr
 	}
 
-	if err = os.WriteFile(filename, formattedYaml, fileInfo.Mode().Perm()); err != nil {
-		return err
-	}
 	return nil
 }
-func FormatManifest(filename string) error {
-	switch strings.ToLower(filepath.Ext(filename)) {
+func FormatManifest(file *Document) error {
+	switch file.Extension {
 	case constants.ManifestSuffixJsonnet:
-		return formatJsonnet(filename)
+		return formatJsonnet(file)
 	case constants.ManifestSuffixYaml, constants.ManifestSuffixYml:
-		return formatYaml(filename)
+		return formatYaml(file)
 	default:
-		return fmt.Errorf("invalid file format in file %s", filename)
+		return fmt.Errorf("invalid file format in file %s", file.Name)
 	}
 }
