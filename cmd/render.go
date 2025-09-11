@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"fmt"
-	"os"
 	"strings"
 
 	"github.com/kartverket/skipctl/pkg/constants"
@@ -25,11 +24,13 @@ Supported formats are: %s.
 Any valid output will be printed raw to stdout, error messages to stderr. Returns 0 if all input is rendered
 correctly, otherwise return code 1 is used to indicate failure.`,
 		strings.Join(constants.ManifestSuffixes, ", ")),
-	Run:  runRender,
-	Args: cobra.RangeArgs(0, 1),
+	RunE:          runRender,
+	Args:          cobra.RangeArgs(0, 1),
+	SilenceErrors: true,
+	SilenceUsage:  true,
 }
 
-func runRender(_ *cobra.Command, args []string) {
+func runRender(_ *cobra.Command, args []string) error {
 	var manifestFiles []*manifest.Document
 	var err error
 
@@ -45,19 +46,25 @@ func runRender(_ *cobra.Command, args []string) {
 
 	if err != nil {
 		log.Error("Error collecting files", "error", err.Error())
-		os.Exit(1)
+		return err
 	}
 	if len(manifestFiles) == 0 {
 		log.Info("No manifests found.")
-		return
+		return nil
 	}
 
 	processor := manifest.NewDocumentProcessor()
 
-	processor.ProcessDocuments(
+	err = processor.ProcessDocuments(
 		manifestFiles,
 		renderer.RenderManifest,
 	)
+
+	if err != nil {
+		log.Error("processing error", "error", err)
+	}
+
+	return err
 }
 
 func init() {

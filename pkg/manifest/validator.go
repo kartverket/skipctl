@@ -1,61 +1,76 @@
 package manifest
 
 import (
-	"path/filepath"
-
 	"github.com/google/go-jsonnet"
-
 	"github.com/kartverket/skipctl/pkg/constants"
-	"github.com/kartverket/skipctl/pkg/utils"
 )
 
 type Validator struct {
 	k8s *K8sValidator
+	res *ValidateResult
 }
 
 func NewValidator(tempDir string) *Validator {
 	return &Validator{
 		k8s: NewK8sValidator(tempDir),
+		res: &ValidateResult{},
 	}
 }
 
-func (v *Validator) ValidateManifest(filename string) (ValidateResult, error) {
-	extension := filepath.Ext(filename)
-
-	switch extension {
+func (v *Validator) ValidateManifest(file *Document) error {
+	switch file.Extension {
 	case constants.ManifestSuffixJsonnet:
-		return v.validateJsonnet(filename)
+		if jerr := v.validateJsonnet(file); jerr != nil {
+			return jerr
+		}
+		return nil
 	case constants.ManifestSuffixYaml, constants.ManifestSuffixYml:
-		return v.validateYaml(filename)
+		if yerr := v.validateYaml(file); yerr != nil {
+			return yerr
+		}
+		return nil
 	}
-
-	return ValidateResult{
-		SkippedCount: 1,
-	}, nil
+	return nil
 }
-
-func (v *Validator) validateJsonnet(filename string) (ValidateResult, error) {
+func (v *Validator) validateJsonnet(file *Document) error {
 	// There is a memory corruption bug that leads to segfaults if we reuse the same VM for multiple evaluations.
 	// if there is a syntax error within the Jsonnet file, the VM gets corrupted and cannot be used again.
 	vm := jsonnet.MakeVM()
 
-	content, err := vm.EvaluateFile(filename)
+	node, err := jsonnet.SnippetToAST(file.Name, file.Content)
 	if err != nil {
-		return ValidateResult{
-			ErrorCount: 1,
-		}, err
+		v.res.ErrorCount++
+		return err
 	}
 
-	return v.k8s.validateK8sSchema(filename, content)
+	content, err := vm.Evaluate(node)
+	if err != nil {
+		v.res.ErrorCount++
+		return err
+	}
+	res, k8err := v.k8s.validateK8sSchema(file.Name, content)
+	if k8err != nil {
+		return k8err
+	}
+	v.countValidateRes(&res)
+	return nil
 }
 
-func (v *Validator) validateYaml(filename string) (ValidateResult, error) {
-	fileContents, err := utils.MarshalYamlFromFile(filename)
-	if err != nil {
-		return ValidateResult{
-			ErrorCount: 1,
-		}, err
+func (v *Validator) validateYaml(d *Document) error {
+	result, jerr := v.k8s.validateK8sSchema(d.Name, d.Content)
+	if jerr != nil {
+		return jerr
 	}
+	v.countValidateRes(&result)
+	return nil
+}
+func (v *Validator) countValidateRes(result *ValidateResult) {
+	v.res.ErrorCount += result.ErrorCount
+	v.res.InvalidCount += result.InvalidCount
+	v.res.SkippedCount += result.SkippedCount
+	v.res.ValidCount += result.ValidCount
+}
 
-	return v.k8s.validateK8sSchema(filename, string(fileContents))
+func (v *Validator) GetResults() *ValidateResult {
+	return v.res
 }

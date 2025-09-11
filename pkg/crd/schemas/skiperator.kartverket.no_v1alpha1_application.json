@@ -1,4 +1,5 @@
 {
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "description": "Application\n\nRoot object for Application resource. An application resource is a resource for easily managing a Dockerized container within the context of a Kartverket cluster.\nThis allows product teams to avoid the need to set up networking on the cluster, as well as a lot of out of the box security features.",
   "properties": {
     "apiVersion": {
@@ -67,8 +68,7 @@
                               "type": "string"
                             }
                           },
-                          "type": "object",
-                          "additionalProperties": false
+                          "type": "object"
                         },
                         "type": "array"
                       }
@@ -76,8 +76,7 @@
                     "required": [
                       "application"
                     ],
-                    "type": "object",
-                    "additionalProperties": false
+                    "type": "object"
                   },
                   "type": "array"
                 }
@@ -85,8 +84,7 @@
               "required": [
                 "rules"
               ],
-              "type": "object",
-              "additionalProperties": false
+              "type": "object"
             },
             "outbound": {
               "description": "Outbound specifies egress rules. Which apps on the cluster and the\ninternet is the Application allowed to send requests to?",
@@ -133,8 +131,7 @@
                             "port",
                             "protocol"
                           ],
-                          "type": "object",
-                          "additionalProperties": false
+                          "type": "object"
                         },
                         "type": "array"
                       }
@@ -142,8 +139,7 @@
                     "required": [
                       "host"
                     ],
-                    "type": "object",
-                    "additionalProperties": false
+                    "type": "object"
                   },
                   "type": "array"
                 },
@@ -194,8 +190,7 @@
                               "type": "string"
                             }
                           },
-                          "type": "object",
-                          "additionalProperties": false
+                          "type": "object"
                         },
                         "type": "array"
                       }
@@ -203,18 +198,15 @@
                     "required": [
                       "application"
                     ],
-                    "type": "object",
-                    "additionalProperties": false
+                    "type": "object"
                   },
                   "type": "array"
                 }
               },
-              "type": "object",
-              "additionalProperties": false
+              "type": "object"
             }
           },
-          "type": "object",
-          "additionalProperties": false
+          "type": "object"
         },
         "additionalPorts": {
           "description": "An optional list of extra port to expose on a pod level basis,\nfor example so Instana or other APM tools can reach it",
@@ -242,8 +234,7 @@
               "port",
               "protocol"
             ],
-            "type": "object",
-            "additionalProperties": false
+            "type": "object"
           },
           "type": "array"
         },
@@ -273,8 +264,7 @@
               "type": "array"
             }
           },
-          "type": "object",
-          "additionalProperties": false
+          "type": "object"
         },
         "command": {
           "description": "Override the command set in the Dockerfile. Usually only used when debugging\nor running third-party containers where you don't have control over the Dockerfile",
@@ -325,8 +315,7 @@
                       "key"
                     ],
                     "type": "object",
-                    "x-kubernetes-map-type": "atomic",
-                    "additionalProperties": false
+                    "x-kubernetes-map-type": "atomic"
                   },
                   "fieldRef": {
                     "description": "Selects a field of the pod: supports metadata.name, metadata.namespace, `metadata.labels['<KEY>']`, `metadata.annotations['<KEY>']`,\nspec.nodeName, spec.serviceAccountName, status.hostIP, status.podIP, status.podIPs.",
@@ -344,8 +333,7 @@
                       "fieldPath"
                     ],
                     "type": "object",
-                    "x-kubernetes-map-type": "atomic",
-                    "additionalProperties": false
+                    "x-kubernetes-map-type": "atomic"
                   },
                   "resourceFieldRef": {
                     "description": "Selects a resource of the container: only resources limits and requests\n(limits.cpu, limits.memory, limits.ephemeral-storage, requests.cpu, requests.memory and requests.ephemeral-storage) are currently supported.",
@@ -376,8 +364,7 @@
                       "resource"
                     ],
                     "type": "object",
-                    "x-kubernetes-map-type": "atomic",
-                    "additionalProperties": false
+                    "x-kubernetes-map-type": "atomic"
                   },
                   "secretKeyRef": {
                     "description": "Selects a key of a secret in the pod's namespace",
@@ -400,19 +387,16 @@
                       "key"
                     ],
                     "type": "object",
-                    "x-kubernetes-map-type": "atomic",
-                    "additionalProperties": false
+                    "x-kubernetes-map-type": "atomic"
                   }
                 },
-                "type": "object",
-                "additionalProperties": false
+                "type": "object"
               }
             },
             "required": [
               "name"
             ],
-            "type": "object",
-            "additionalProperties": false
+            "type": "object"
           },
           "type": "array"
         },
@@ -429,8 +413,7 @@
                 "type": "string"
               }
             },
-            "type": "object",
-            "additionalProperties": false
+            "type": "object"
           },
           "type": "array"
         },
@@ -463,8 +446,7 @@
             "required": [
               "mountPath"
             ],
-            "type": "object",
-            "additionalProperties": false
+            "type": "object"
           },
           "type": "array"
         },
@@ -482,8 +464,7 @@
               "required": [
                 "serviceAccount"
               ],
-              "type": "object",
-              "additionalProperties": false
+              "type": "object"
             },
             "cloudSqlProxy": {
               "description": "CloudSQL is used to deploy a CloudSQL proxy sidecar in the pod.\nThis is useful for connecting to CloudSQL databases that require Cloud SQL Auth Proxy.",
@@ -515,12 +496,10 @@
                 "ip",
                 "serviceAccount"
               ],
-              "type": "object",
-              "additionalProperties": false
+              "type": "object"
             }
           },
-          "type": "object",
-          "additionalProperties": false
+          "type": "object"
         },
         "idporten": {
           "description": "Settings for IDPorten integration with Digitaliseringsdirektoratet",
@@ -618,8 +597,7 @@
                       "claim",
                       "header"
                     ],
-                    "type": "object",
-                    "additionalProperties": false
+                    "type": "object"
                   },
                   "maxItems": 10,
                   "type": "array"
@@ -649,8 +627,7 @@
               "required": [
                 "enabled"
               ],
-              "type": "object",
-              "additionalProperties": false
+              "type": "object"
             },
             "scopes": {
               "description": "Register different oauth2 Scopes on your client.\nYou will not be able to add a scope to your client that conflicts with the client's IntegrationType.\nFor example, you can not add a scope that is limited to the IntegrationType `krr` of IntegrationType `idporten`, and vice versa.\n\nDefault for IntegrationType `krr` = (\"krr:global/kontaktinformasjon.read\", \"krr:global/digitalpost.read\")\nDefault for IntegrationType `idporten` = (\"openid\", \"profile\")\nIntegrationType `api_klient` have no Default, checkout Digdir documentation.",
@@ -669,8 +646,7 @@
           "required": [
             "enabled"
           ],
-          "type": "object",
-          "additionalProperties": false
+          "type": "object"
         },
         "image": {
           "description": "The image the application will run. This image will be added to a Deployment resource",
@@ -696,7 +672,7 @@
           "description": "IstioSettings are used to configure istio specific resources such as telemetry. Currently, adjusting sampling\ninterval for tracing is the only supported option.\nBy default, tracing is enabled with a random sampling percentage of 10%.",
           "properties": {
             "retries": {
-              "description": "Retries is configurable automatic retries for requests towards the application.\nBy default requests falling under: \"connect-failure,refused-stream,unavailable,cancelled,5xx\" will be retried.",
+              "description": "Retries is configurable automatic retries for requests towards the application.\nBy default requests falling under: \"connect-failure,refused-stream,unavailable,cancelled\" will be retried.",
               "properties": {
                 "attempts": {
                   "description": "Attempts is the number of retries to be allowed for a given request before giving up. The interval between retries will be determined automatically (25ms+).\nDefault is 2",
@@ -710,7 +686,7 @@
                   "type": "string"
                 },
                 "retryOnHttpResponseCodes": {
-                  "description": "RetryOnHttpResponseCodes HTTP response codes that should trigger a retry. A typical value is [503].\nYou may also use 5xx and retriable-4xx (only 409).",
+                  "description": "RetryOnHttpResponseCodes HTTP response codes that should trigger a retry. A typical value is [503].\nYou may also use 5xx and retriable-4xx (only 409).\nmixed types are allowed such as [503, \"retriable-4xx\"]",
                   "items": {
                     "anyOf": [
                       {
@@ -753,8 +729,7 @@
                   "type": "array"
                 }
               },
-              "type": "object",
-              "additionalProperties": false
+              "type": "object"
             },
             "telemetry": {
               "default": {
@@ -784,18 +759,15 @@
                         "type": "integer"
                       }
                     },
-                    "type": "object",
-                    "additionalProperties": false
+                    "type": "object"
                   },
                   "type": "array"
                 }
               },
-              "type": "object",
-              "additionalProperties": false
+              "type": "object"
             }
           },
-          "type": "object",
-          "additionalProperties": false
+          "type": "object"
         },
         "labels": {
           "additionalProperties": {
@@ -858,8 +830,7 @@
             "path",
             "port"
           ],
-          "type": "object",
-          "additionalProperties": false
+          "type": "object"
         },
         "maskinporten": {
           "description": "Settings for Maskinporten integration with Digitaliseringsdirektoratet",
@@ -914,8 +885,7 @@
                       "claim",
                       "header"
                     ],
-                    "type": "object",
-                    "additionalProperties": false
+                    "type": "object"
                   },
                   "maxItems": 10,
                   "type": "array"
@@ -945,8 +915,7 @@
               "required": [
                 "enabled"
               ],
-              "type": "object",
-              "additionalProperties": false
+              "type": "object"
             },
             "scopes": {
               "description": "Schema to configure Maskinporten clients with consumed scopes and/or exposed scopes.",
@@ -963,8 +932,7 @@
                     "required": [
                       "name"
                     ],
-                    "type": "object",
-                    "additionalProperties": false
+                    "type": "object"
                   },
                   "type": "array"
                 },
@@ -1007,8 +975,7 @@
                           "required": [
                             "orgno"
                           ],
-                          "type": "object",
-                          "additionalProperties": false
+                          "type": "object"
                         },
                         "type": "array"
                       },
@@ -1025,7 +992,7 @@
                       },
                       "name": {
                         "description": "The actual subscope combined with `Product`.\nEnsure that `<Product><Name>` matches `Pattern`.",
-                        "pattern": "^([a-z\u00e6\u00f8\u00e50-9]+\\/?)+(\\:[a-z\u00e6\u00f8\u00e50-9]+)*[a-z\u00e6\u00f8\u00e50-9]+(\\.[a-z\u00e6\u00f8\u00e50-9]+)*$",
+                        "pattern": "^([a-zæøå0-9]+\\/?)+(\\:[a-zæøå0-9]+)*[a-zæøå0-9]+(\\.[a-zæøå0-9]+)*$",
                         "type": "string"
                       },
                       "product": {
@@ -1060,21 +1027,18 @@
                         "message": "scopes.exposes[].separator must be set to \"/\" when scopes.exposes[].delegationSource is set",
                         "rule": "!has(self.delegationSource) || (has(self.separator) && self.separator == \"/\")"
                       }
-                    ],
-                    "additionalProperties": false
+                    ]
                   },
                   "type": "array"
                 }
               },
-              "type": "object",
-              "additionalProperties": false
+              "type": "object"
             }
           },
           "required": [
             "enabled"
           ],
-          "type": "object",
-          "additionalProperties": false
+          "type": "object"
         },
         "podSettings": {
           "description": "PodSettings are used to apply specific settings to the Pod Template used by Skiperator to create Deployments. This allows you to set\nthings like annotations on the Pod to change the behaviour of sidecars, and set relevant Pod options such as TerminationGracePeriodSeconds.",
@@ -1098,8 +1062,7 @@
               "type": "integer"
             }
           },
-          "type": "object",
-          "additionalProperties": false
+          "type": "object"
         },
         "port": {
           "description": "The port the deployment exposes",
@@ -1159,8 +1122,7 @@
           "required": [
             "port"
           ],
-          "type": "object",
-          "additionalProperties": false
+          "type": "object"
         },
         "readiness": {
           "description": "Readiness probes define a resource that returns 200 OK when the app is running\nas intended. Kubernetes will wait until the resource returns 200 OK before\nmarking the pod as Running and progressing with the deployment strategy.\nReadiness is optional, but when provided, path and port are required",
@@ -1216,8 +1178,7 @@
             "path",
             "port"
           ],
-          "type": "object",
-          "additionalProperties": false
+          "type": "object"
         },
         "redirectToHTTPS": {
           "default": true,
@@ -1274,8 +1235,7 @@
               "type": "object"
             }
           },
-          "type": "object",
-          "additionalProperties": false
+          "type": "object"
         },
         "startup": {
           "description": "Kubernetes uses startup probes to know when a container application has started.\nIf such a probe is configured, it disables liveness and readiness checks until it\nsucceeds, making sure those probes don't interfere with the application startup.\nThis can be used to adopt liveness checks on slow starting containers, avoiding them\ngetting killed by Kubernetes before they are up and running.\nStartup is optional, but when provided, path and port are required",
@@ -1331,8 +1291,7 @@
             "path",
             "port"
           ],
-          "type": "object",
-          "additionalProperties": false
+          "type": "object"
         },
         "strategy": {
           "description": "Defines an alternative strategy for the Kubernetes deployment. This is useful when\nthe default strategy, RollingUpdate, is not usable. Setting type to\nRecreate will take down all the pods before starting new pods, whereas the\ndefault of RollingUpdate will try to start the new pods before taking down the\nold ones.\n\nValid values are: RollingUpdate, Recreate. Default is RollingUpdate",
@@ -1347,8 +1306,7 @@
               "type": "string"
             }
           },
-          "type": "object",
-          "additionalProperties": false
+          "type": "object"
         },
         "team": {
           "description": "Team specifies the team who owns this particular app.\nUsually sourced from the namespace label.",
@@ -1359,8 +1317,7 @@
         "image",
         "port"
       ],
-      "type": "object",
-      "additionalProperties": false
+      "type": "object"
     },
     "status": {
       "description": "SkiperatorStatus\n\nA status field shown on a Skiperator resource which contains information regarding deployment of the resource.",
@@ -1419,8 +1376,7 @@
               "status",
               "type"
             ],
-            "type": "object",
-            "additionalProperties": false
+            "type": "object"
           },
           "type": "array"
         },
@@ -1446,8 +1402,7 @@
               "status",
               "timestamp"
             ],
-            "type": "object",
-            "additionalProperties": false
+            "type": "object"
           },
           "type": "object"
         },
@@ -1472,8 +1427,7 @@
             "status",
             "timestamp"
           ],
-          "type": "object",
-          "additionalProperties": false
+          "type": "object"
         }
       },
       "required": [
@@ -1482,9 +1436,15 @@
         "subresources",
         "summary"
       ],
-      "type": "object",
-      "additionalProperties": false
+      "type": "object"
     }
   },
-  "type": "object"
+  "type": "object",
+  "x-kubernetes-group-version-kind": [
+    {
+      "group": "skiperator.kartverket.no",
+      "kind": "Application",
+      "version": "v1alpha1"
+    }
+  ]
 }

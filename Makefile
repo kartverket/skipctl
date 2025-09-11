@@ -25,6 +25,7 @@ proto-lint:
 generate:
 	rm -rf ./pkg/api
 	go run github.com/bufbuild/buf/cmd/buf generate proto
+	go generate ./...
 	$(MAKE) fmt
 
 .PHONY: debug

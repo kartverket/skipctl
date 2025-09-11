@@ -1,6 +1,7 @@
 package manifest
 
 import (
+	"fmt"
 	"log/slog"
 
 	"github.com/google/go-jsonnet"
@@ -11,14 +12,16 @@ import (
 )
 
 type Renderer struct {
-	jsonnet   *jsonnet.VM
-	rawOutput *slog.Logger
+	jsonnet    *jsonnet.VM
+	rawOutput  *slog.Logger
+	isFirstDoc bool
 }
 
 func NewRenderer() *Renderer {
 	return &Renderer{
-		jsonnet:   jsonnet.MakeVM(),
-		rawOutput: logging.RawLogger(),
+		jsonnet:    jsonnet.MakeVM(),
+		rawOutput:  logging.RawLogger(),
+		isFirstDoc: true,
 	}
 }
 
@@ -33,11 +36,16 @@ func (r *Renderer) RenderManifest(file *Document) error {
 }
 
 func (r *Renderer) renderJsonnet(file *Document) error {
-	result, err := r.jsonnet.EvaluateAnonymousSnippet(file.Name, file.Content)
-
+	node, err := jsonnet.SnippetToAST(file.Name, file.Content)
 	if err != nil {
-		return err
+		return fmt.Errorf("parse jsonnet %q: %w", file.Name, err)
 	}
+
+	result, err := r.jsonnet.Evaluate(node)
+	if err != nil {
+		return fmt.Errorf("evaluate jsonnet %q: %w", file.Name, err)
+	}
+
 	r.rawOutput.Info(result)
 
 	return nil
@@ -50,6 +58,10 @@ func (r *Renderer) renderYaml(file *Document) error {
 	if err != nil {
 		return err
 	}
+	if !r.isFirstDoc {
+		r.rawOutput.Info("---")
+	}
+	r.isFirstDoc = false
 
 	r.rawOutput.Info(file.Content)
 

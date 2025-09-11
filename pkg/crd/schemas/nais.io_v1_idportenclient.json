@@ -1,0 +1,210 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "description": "IDPortenClient is the Schema for the IDPortenClients API",
+  "properties": {
+    "apiVersion": {
+      "description": "APIVersion defines the versioned schema of this representation of an object.\nServers should convert recognized schemas to the latest internal value, and\nmay reject unrecognized values.\nMore info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
+      "type": "string"
+    },
+    "kind": {
+      "description": "Kind is a string value representing the REST resource this object represents.\nServers may infer this from the endpoint the client submits requests to.\nCannot be updated.\nIn CamelCase.\nMore info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds",
+      "type": "string"
+    },
+    "metadata": {
+      "type": "object"
+    },
+    "spec": {
+      "description": "IDPortenClientSpec defines the desired state of IDPortenClient",
+      "properties": {
+        "accessTokenLifetime": {
+          "description": "AccessTokenLifetime is the maximum lifetime in seconds for the returned access_token from ID-porten.",
+          "maximum": 3600,
+          "minimum": 1,
+          "type": "integer"
+        },
+        "clientName": {
+          "description": "ClientName is the client name to be registered at DigDir.\nIt is shown during login for user-centric flows, and is otherwise a human-readable way to differentiate between clients at DigDir's self-service portal.",
+          "type": "string"
+        },
+        "clientURI": {
+          "description": "ClientURI is the URL to the client to be used at DigDir when displaying a 'back' button or on errors",
+          "pattern": "^(https:\\/\\/)|(http:\\/\\/localhost\\:).+$",
+          "type": "string"
+        },
+        "frontchannelLogoutURI": {
+          "description": "FrontchannelLogoutURI is the URL that ID-porten sends a requests to whenever a logout is triggered by another application using the same session",
+          "pattern": "^(https:\\/\\/)|(http:\\/\\/localhost\\:).+$",
+          "type": "string"
+        },
+        "integrationType": {
+          "default": "idporten",
+          "description": "IntegrationType sets the integration type for your client.\nThe integration type restricts which scopes you can register on your client.\nThe integration type is immutable, and can only be set on creation of the IDPortenClient.\nIf you need to change the integration type, you should either create a new IDPortenClient or delete and recreate the existing one.",
+          "enum": [
+            "krr",
+            "idporten",
+            "api_klient"
+          ],
+          "type": "string",
+          "x-kubernetes-validations": [
+            {
+              "message": "integrationType is immutable; delete and recreate the IDPortenClient to change integrationType",
+              "rule": "self == oldSelf"
+            }
+          ]
+        },
+        "postLogoutRedirectURIs": {
+          "description": "PostLogoutRedirectURI is a list of valid URIs that ID-porten may redirect to after logout",
+          "items": {
+            "pattern": "^(https:\\/\\/)|(http:\\/\\/localhost\\:).+$",
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "redirectURI": {
+          "description": "RedirectURI is the redirect URI to be registered at DigDir.\nDeprecated, prefer RedirectURIs.",
+          "pattern": "^(https:\\/\\/)|(http:\\/\\/localhost\\:).+$",
+          "type": "string"
+        },
+        "redirectURIs": {
+          "description": "RedirectURIs is the list of redirect URIs to be registered at DigDir.",
+          "items": {
+            "pattern": "^(https:\\/\\/)|(http:\\/\\/localhost\\:).+$",
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "scopes": {
+          "description": "Register different oauth2 Scopes on your client.\nYou will not be able to add a scope to your client that conflicts with the client's IntegrationType.\nFor example, you can not add a scope that is limited to the IntegrationType `krr` of integrationType `idporten`, and vice versa.\n\nDefault for IntegrationType `krr` = (\"krr:global/kontaktinformasjon.read\", \"krr:global/digitalpost.read\")\nDefault for IntegrationType `idporten` = (\"openid\", \"profile\")\nIntegrationType `api_klient` have no Default, checkout Digdir documentation.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "secretName": {
+          "description": "SecretName is the name of the resulting Secret resource to be created",
+          "type": "string"
+        },
+        "sessionLifetime": {
+          "description": "SessionLifetime is the maximum session lifetime in seconds for a logged in end-user for this client.",
+          "maximum": 28800,
+          "minimum": 3600,
+          "type": "integer"
+        },
+        "ssoDisabled": {
+          "description": "SSODisabled controls the SSO behavior for this client.",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "secretName"
+      ],
+      "type": "object"
+    },
+    "status": {
+      "description": "DigdiratorStatus defines the observed state of Current Client",
+      "properties": {
+        "clientID": {
+          "description": "ClientID is the corresponding client ID for this client at Digdir",
+          "type": "string"
+        },
+        "conditions": {
+          "description": "Conditions is the list of details for the current state of this API Resource.",
+          "items": {
+            "description": "Condition contains details for one aspect of the current state of this API Resource.",
+            "properties": {
+              "lastTransitionTime": {
+                "description": "lastTransitionTime is the last time the condition transitioned from one status to another.\nThis should be when the underlying condition changed.  If that is not known, then using the time when the API field changed is acceptable.",
+                "format": "date-time",
+                "type": "string"
+              },
+              "message": {
+                "description": "message is a human readable message indicating details about the transition.\nThis may be an empty string.",
+                "maxLength": 32768,
+                "type": "string"
+              },
+              "observedGeneration": {
+                "description": "observedGeneration represents the .metadata.generation that the condition was set based upon.\nFor instance, if .metadata.generation is currently 12, but the .status.conditions[x].observedGeneration is 9, the condition is out of date\nwith respect to the current state of the instance.",
+                "format": "int64",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "reason": {
+                "description": "reason contains a programmatic identifier indicating the reason for the condition's last transition.\nProducers of specific condition types may define expected values and meanings for this field,\nand whether the values are considered a guaranteed API.\nThe value should be a CamelCase string.\nThis field may not be empty.",
+                "maxLength": 1024,
+                "minLength": 1,
+                "pattern": "^[A-Za-z]([A-Za-z0-9_,:]*[A-Za-z0-9_])?$",
+                "type": "string"
+              },
+              "status": {
+                "description": "status of the condition, one of True, False, Unknown.",
+                "enum": [
+                  "True",
+                  "False",
+                  "Unknown"
+                ],
+                "type": "string"
+              },
+              "type": {
+                "description": "type of condition in CamelCase or in foo.example.com/CamelCase.",
+                "maxLength": 316,
+                "pattern": "^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*/)?(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])$",
+                "type": "string"
+              }
+            },
+            "required": [
+              "lastTransitionTime",
+              "message",
+              "reason",
+              "status",
+              "type"
+            ],
+            "type": "object"
+          },
+          "type": "array"
+        },
+        "correlationID": {
+          "description": "CorrelationID is the ID referencing the processing transaction last performed on this resource",
+          "type": "string"
+        },
+        "keyIDs": {
+          "description": "KeyIDs is the list of key IDs for valid JWKs registered for the client at Digdir",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "observedGeneration": {
+          "description": "ObservedGeneration is the generation most recently observed by Digdirator.",
+          "format": "int64",
+          "type": "integer"
+        },
+        "synchronizationHash": {
+          "description": "SynchronizationHash is the hash of the Instance object",
+          "type": "string"
+        },
+        "synchronizationSecretName": {
+          "description": "SynchronizationSecretName is the SecretName set in the last successful synchronization",
+          "type": "string"
+        },
+        "synchronizationState": {
+          "description": "SynchronizationState denotes the last known state of the Instance during synchronization",
+          "type": "string"
+        },
+        "synchronizationTime": {
+          "description": "SynchronizationTime is the last time the Status subresource was updated",
+          "format": "date-time",
+          "type": "string"
+        }
+      },
+      "type": "object"
+    }
+  },
+  "type": "object",
+  "x-kubernetes-group-version-kind": [
+    {
+      "group": "nais.io",
+      "kind": "IDPortenClient",
+      "version": "v1"
+    }
+  ]
+}

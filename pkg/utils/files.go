@@ -1,3 +1,4 @@
+//nolint:revive // the package name is intentional
 package utils
 
 import (
@@ -12,7 +13,6 @@ import (
 	"strings"
 
 	"github.com/kartverket/skipctl/pkg/constants"
-	"go.yaml.in/yaml/v4"
 )
 
 func FindManifestFiles(path string) ([]string, error) {
@@ -45,34 +45,6 @@ func FindFilesWithSuffixes(directory string, suffixes []string) ([]string, error
 		return nil
 	})
 	return files, err
-}
-
-func UnmarshalYamlFromFile(filename string) (any, error) {
-	fileContents, err := os.ReadFile(filename)
-	if err != nil {
-		return nil, err
-	}
-
-	var output any
-
-	err = yaml.Unmarshal(fileContents, &output)
-	if err != nil {
-		return nil, err
-	}
-	return output, nil
-}
-
-func MarshalYamlFromFile(filename string) ([]byte, error) {
-	fileContents, err := UnmarshalYamlFromFile(filename)
-	if err != nil {
-		return nil, err
-	}
-
-	marshalled, err := yaml.Marshal(fileContents)
-	if err != nil {
-		return nil, err
-	}
-	return marshalled, nil
 }
 
 // CreateTempDirectory creates a temporary directory with a given name in a unique location.
@@ -126,6 +98,20 @@ func DetectFiletype(content []byte) (string, error) {
 	if len(trimmed) == 0 {
 		return "", errors.New("unable to detect filetype: Empty file content")
 	}
+
+	jsonnetPrefixes := [][]byte{
+		[]byte("local "),
+		[]byte("import "),
+		[]byte("importstr "),
+		[]byte("importbin "),
+		[]byte("function"),
+	}
+	for _, p := range jsonnetPrefixes {
+		if bytes.HasPrefix(trimmed, p) {
+			return constants.ManifestSuffixJsonnet, nil
+		}
+	}
+
 	firstChar := trimmed[0]
 
 	switch firstChar {
