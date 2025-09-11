@@ -1,6 +1,7 @@
 package manifest
 
 import (
+	"fmt"
 	"log/slog"
 
 	"github.com/google/go-jsonnet"
@@ -33,11 +34,16 @@ func (r *Renderer) RenderManifest(file *Document) error {
 }
 
 func (r *Renderer) renderJsonnet(file *Document) error {
-	result, err := r.jsonnet.EvaluateAnonymousSnippet(file.Name, file.Content)
-
+	node, err := jsonnet.SnippetToAST(file.Name, file.Content)
 	if err != nil {
-		return err
+		return fmt.Errorf("parse jsonnet %q: %w", file.Name, err)
 	}
+
+	result, err := r.jsonnet.Evaluate(node)
+	if err != nil {
+		return fmt.Errorf("evaluate jsonnet %q: %w", file.Name, err)
+	}
+
 	r.rawOutput.Info(result)
 
 	return nil
