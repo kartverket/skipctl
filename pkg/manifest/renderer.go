@@ -1,8 +1,8 @@
 package manifest
 
 import (
+	"fmt"
 	"log/slog"
-	"path/filepath"
 
 	"github.com/google/go-jsonnet"
 	"go.yaml.in/yaml/v4"
@@ -36,16 +36,16 @@ func (r *Renderer) RenderManifest(file *Document) error {
 }
 
 func (r *Renderer) renderJsonnet(file *Document) error {
-	dir := filepath.Dir(file.Name)
-	r.jsonnet.Importer(&jsonnet.FileImporter{
-		JPaths: []string{dir},
-	})
-
-	result, err := r.jsonnet.EvaluateAnonymousSnippet(file.Name, file.Content)
-
+	node, err := jsonnet.SnippetToAST(file.Name, file.Content)
 	if err != nil {
-		return err
+		return fmt.Errorf("parse jsonnet %q: %w", file.Name, err)
 	}
+
+	result, err := r.jsonnet.Evaluate(node)
+	if err != nil {
+		return fmt.Errorf("evaluate jsonnet %q: %w", file.Name, err)
+	}
+
 	r.rawOutput.Info(result)
 
 	return nil

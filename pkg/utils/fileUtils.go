@@ -113,6 +113,20 @@ func DetectFiletype(content []byte) (string, error) {
 	if len(trimmed) == 0 {
 		return "", errors.New("unable to detect filetype: Empty file content")
 	}
+
+	jsonnetPrefixes := [][]byte{
+		[]byte("local "),
+		[]byte("import "),
+		[]byte("importstr "),
+		[]byte("importbin "),
+		[]byte("function"),
+	}
+	for _, p := range jsonnetPrefixes {
+		if bytes.HasPrefix(trimmed, p) {
+			return constants.ManifestSuffixJsonnet, nil
+		}
+	}
+
 	firstChar := trimmed[0]
 
 	switch firstChar {
