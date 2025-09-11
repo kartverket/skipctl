@@ -1,10 +1,22 @@
 package manifest
 
 import (
+	"bytes"
 	"testing"
 
+	"github.com/kartverket/skipctl/pkg/logging"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
+
+func newRendererWithLogger() (*Renderer, *bytes.Buffer) {
+	var buf bytes.Buffer
+	logger := logging.NewRawLoggerTo(&buf)
+	renderer := NewRenderer(logger)
+
+	return renderer, &buf
+
+}
 
 func TestRenderManifestValidJsonnet(t *testing.T) {
 	validJsonnet := `
@@ -14,10 +26,20 @@ port: 8080,
 ingress: [],
 }
 `
+	expected := `{
+   "host": "localhost",
+   "ingress": [ ],
+   "port": 8080
+}
+`
 
 	doc := newTestDocument(validJsonnet, "valid.jsonnet")
-	res := NewRenderer().RenderManifest(doc)
-	require.NoError(t, res, "expected no error for valid Jsonnet input")
+	renderer, buf := newRendererWithLogger()
+	err := renderer.RenderManifest(doc)
+	got := buf.String()
+
+	require.NoError(t, err, "expected no error for valid Jsonnet input")
+	assert.Equal(t, expected, got, "rendered json did not match expected")
 }
 
 func TestRenderManifestInvalidJsonnet(t *testing.T) {
@@ -35,19 +57,21 @@ ingress = []
 }
 
 func TestRenderManifestValidYaml(t *testing.T) {
-	validYaml := `
+	inputYaml := `
 application:
   host: localhost
   port: 8080
-  ingress:
-    - item
+  spec:
+    access-policies:
+      enabled: true
 `
+	doc := newTestDocument(inputYaml, "input.yaml")
+	renderer, buf := newRendererWithLogger()
+	renderer.RenderManifest(doc)
+	got := buf.String()
 
-	doc := newTestDocument(validYaml, "valid.yaml")
-	res := NewRenderer().RenderManifest(doc)
-	require.NoError(t, res, "expected no error for valid Yaml input")
+	assert.EqualValues(t, inputYaml, got, "bruh")
 }
-
 func TestRenderManifestInvalidYaml(t *testing.T) {
 	invalidYaml := `
 application:
