@@ -15,7 +15,6 @@ func newRendererWithLogger() (*Renderer, *bytes.Buffer) {
 	renderer := NewRenderer(logger)
 
 	return renderer, &buf
-
 }
 
 func TestRenderManifestValidJsonnet(t *testing.T) {
@@ -70,7 +69,7 @@ application:
 	renderer.RenderManifest(doc)
 	got := buf.String()
 
-	assert.EqualValues(t, inputYaml, got, "bruh")
+	assert.YAMLEq(t, inputYaml, got, "bruh")
 }
 func TestRenderManifestInvalidYaml(t *testing.T) {
 	invalidYaml := `
