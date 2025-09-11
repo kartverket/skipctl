@@ -11,8 +11,7 @@ import (
 type Processor struct {
 	log *slog.Logger
 }
-type ProcessorFunc struct {
-}
+
 type FileToErrorFunc func(*Document) error
 
 func NewDocumentProcessor() *Processor {
@@ -41,7 +40,7 @@ func (p *Processor) ProcessValidationManifests(files []*Document, process FileTo
 	for _, file := range files {
 		validationErr := process(file)
 		if validationErr != nil {
-			p.log.Error("validation failed", "file", file, "error", validationErr.Error())
+			p.log.Error("validation failed", "file", file.Name, "error", validationErr.Error())
 		}
 	}
 	totalResources := validateResult.ErrorCount + validateResult.ValidCount + validateResult.InvalidCount + validateResult.SkippedCount
