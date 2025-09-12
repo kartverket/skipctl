@@ -27,6 +27,7 @@ correctly, otherwise return code 1 is used to indicate failure.`,
 	RunE:          runRender,
 	Args:          cobra.RangeArgs(0, 1),
 	SilenceErrors: true,
+	SilenceUsage:  true,
 }
 
 func runRender(_ *cobra.Command, args []string) error {

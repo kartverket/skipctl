@@ -23,6 +23,7 @@ correctly, otherwise return code 1 is used to indicate failure.`,
 	RunE:          runFormat,
 	Args:          cobra.RangeArgs(0, 1),
 	SilenceErrors: true,
+	SilenceUsage:  true,
 }
 
 func runFormat(_ *cobra.Command, args []string) error {
