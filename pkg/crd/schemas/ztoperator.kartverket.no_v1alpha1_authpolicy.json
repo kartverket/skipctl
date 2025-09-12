@@ -1,0 +1,336 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "description": "AuthPolicy is the Schema for the authpolicies API.",
+  "properties": {
+    "apiVersion": {
+      "description": "APIVersion defines the versioned schema of this representation of an object.\nServers should convert recognized schemas to the latest internal value, and\nmay reject unrecognized values.\nMore info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
+      "type": "string"
+    },
+    "kind": {
+      "description": "Kind is a string value representing the REST resource this object represents.\nServers may infer this from the endpoint the client submits requests to.\nCannot be updated.\nIn CamelCase.\nMore info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds",
+      "type": "string"
+    },
+    "metadata": {
+      "type": "object"
+    },
+    "spec": {
+      "description": "AuthPolicySpec defines the desired state of AuthPolicy.",
+      "properties": {
+        "acceptedResources": {
+          "description": "AcceptedResources is used as a validation field following [RFC8707](https://datatracker.ietf.org/doc/html/rfc8707).\nIt defines accepted audience resource indicators in the JWT token.\n\n\nEach resource indicator must be a valid URI, and the indicator must be present as the `aud` claim in the JWT token.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array",
+          "x-kubernetes-list-type": "set"
+        },
+        "audience": {
+          "description": "Audience defines the accepted audience (`aud`) values in the JWT.\nAt least one of the listed audience values must be present in the token's `aud` claim for validation to succeed.",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "authRules": {
+          "description": "AuthRules defines rules for allowing HTTP requests based on conditions\nthat must be met based on JWT claims.\n\n\nAPI endpoints not covered by AuthRules and/or IgnoreAuthRules requires an authenticated JWT by default.",
+          "items": {
+            "description": "RequestAuthRule defines a rule for controlling access to HTTP requests using JWT authentication.",
+            "properties": {
+              "denyRedirect": {
+                "description": "DenyRedirect specifies whether a denied request should trigger auto-login (if configured) or not when it is denied due to missing or invalid authentication.\nDefaults to false, meaning auto-login will be triggered (if configured).",
+                "type": "boolean"
+              },
+              "methods": {
+                "description": "Methods specifies HTTP methods that applies for the defined paths.\nIf omitted, all methods are permitted.\n\n\nAllowed methods:\n- GET\n- POST\n- PUT\n- PATCH\n- DELETE\n- HEAD\n- OPTIONS\n- TRACE\n- CONNECT",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array",
+                "x-kubernetes-list-type": "set"
+              },
+              "paths": {
+                "description": "Paths specify a set of URI paths that this rule applies to.\nEach path must be a valid URI path, starting with '/' and not ending with '/'.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array",
+                "x-kubernetes-list-type": "set"
+              },
+              "when": {
+                "description": "When defines additional conditions based on JWT claims that must be met.\n\n\nThe request is permitted if at least one of the specified conditions is satisfied.",
+                "items": {
+                  "description": "Condition represents a rule that evaluates JWT claims to determine access control.\n\n\nThis type allows defining conditions that check whether a specific claim in\nthe JWT token contains one of the expected values.\n\n\nIf multiple conditions are specified, all must be met (AND logic) for the request to be allowed.",
+                  "properties": {
+                    "claim": {
+                      "description": "Claim specifies the name of the JWT claim to check.",
+                      "type": "string"
+                    },
+                    "values": {
+                      "description": "Values specifies a list of allowed values for the claim.\nIf the claim in the JWT contains any of these values (OR logic), the condition is met.",
+                      "items": {
+                        "type": "string"
+                      },
+                      "type": "array",
+                      "x-kubernetes-list-type": "set"
+                    }
+                  },
+                  "required": [
+                    "claim",
+                    "values"
+                  ],
+                  "type": "object"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "paths"
+            ],
+            "type": "object"
+          },
+          "type": "array"
+        },
+        "autoLogin": {
+          "description": "AutoLogin specifies the required configuration needed to log in users.",
+          "properties": {
+            "enabled": {
+              "description": "Whether to enable auto login.\nIf enabled, users accessing authenticated endpoints will be redirected to log in towards the configured identity provider.",
+              "type": "boolean"
+            },
+            "loginPath": {
+              "description": "LoginPath specifies a list of URI paths that should trigger the auto-login behavior.\nWhen a request matches any of these paths, the user will be redirected to log in if not already authenticated.",
+              "pattern": "^/.*$",
+              "type": "string"
+            },
+            "logoutPath": {
+              "description": "LogoutPath specifies which URI to redirect the user to when signing out.\nThis will end the session for the application, but not end the session towards the configured identity provider.\nThis feature will hopefully soon be available in later releases of Istio, ref. [envoy/envoyproxy](https://github.com/envoyproxy/envoy/commit/c12fefc11f7adc9cd404287eb674ba838c2c8bd0).",
+              "type": "string"
+            },
+            "redirectPath": {
+              "description": "RedirectPath specifies which path to redirect the user to after completing the OIDC flow.",
+              "type": "string"
+            },
+            "scopes": {
+              "description": "Scopes specifies the OAuth2 scopes used during authorization code flow.",
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            }
+          },
+          "required": [
+            "enabled",
+            "logoutPath",
+            "redirectPath",
+            "scopes"
+          ],
+          "type": "object"
+        },
+        "enabled": {
+          "description": "Whether to enable JWT validation.\nIf enabled, incoming JWTs will be validated against the issuer specified in the app registration and the generated audience.",
+          "type": "boolean"
+        },
+        "forwardJwt": {
+          "description": "If set to `true`, the original token will be kept for the upstream request. Defaults to `true`.",
+          "type": "boolean"
+        },
+        "ignoreAuthRules": {
+          "description": "IgnoreAuthRules defines request matchers for HTTP requests that do not require JWT authentication.\n\n\nAPI endpoints not covered by AuthRules or IgnoreAuthRules require an authenticated JWT by default.",
+          "items": {
+            "description": "RequestMatcher defines paths and methods to match incoming HTTP requests.",
+            "properties": {
+              "methods": {
+                "description": "Methods specifies HTTP methods that applies for the defined paths.\nIf omitted, all methods are permitted.\n\n\nAllowed methods:\n- GET\n- POST\n- PUT\n- PATCH\n- DELETE\n- HEAD\n- OPTIONS\n- TRACE\n- CONNECT",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array",
+                "x-kubernetes-list-type": "set"
+              },
+              "paths": {
+                "description": "Paths specify a set of URI paths that this rule applies to.\nEach path must be a valid URI path, starting with '/' and not ending with '/'.",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array",
+                "x-kubernetes-list-type": "set"
+              }
+            },
+            "required": [
+              "paths"
+            ],
+            "type": "object"
+          },
+          "type": "array"
+        },
+        "oAuthCredentials": {
+          "description": "OAuthCredentials specifies a reference to a kubernetes secret in the same namespace holding OAuth credentials used for authentication.",
+          "properties": {
+            "clientIDKey": {
+              "description": "ClientIDKey specifies the data key to access the client ID.",
+              "type": "string"
+            },
+            "clientSecretKey": {
+              "description": "ClientSecretKey specifies the data key to access the client secret.",
+              "type": "string"
+            },
+            "secretRef": {
+              "description": "SecretRef specifies the name of the kubernetes secret.",
+              "type": "string"
+            }
+          },
+          "required": [
+            "clientIDKey",
+            "clientSecretKey",
+            "secretRef"
+          ],
+          "type": "object"
+        },
+        "outputClaimToHeaders": {
+          "description": "OutputClaimsToHeaders specifies a list of operations to copy the claim to HTTP headers on a successfully verified token.\nThe header specified in each operation in the list must be unique. Nested claims of type string/int/bool is supported as well.\nIf the claim is an object or array, it will be added to the header as a base64-encoded JSON string.",
+          "items": {
+            "description": "ClaimToHeader specifies a list of operations to copy the claim to HTTP headers on a successfully verified token.\nThe header specified in each operation in the list must be unique. Nested claims of type string/int/bool is supported as well.",
+            "properties": {
+              "claim": {
+                "description": "Claim specifies the name of the claim in the JWT token that will be copied to the header.",
+                "maxLength": 128,
+                "pattern": "^[a-zA-Z0-9-._]+$",
+                "type": "string"
+              },
+              "header": {
+                "description": "Header specifies the name of the HTTP header to which the claim value will be copied.",
+                "maxLength": 64,
+                "pattern": "^[a-zA-Z0-9-]+$",
+                "type": "string"
+              }
+            },
+            "required": [
+              "claim",
+              "header"
+            ],
+            "type": "object"
+          },
+          "type": "array"
+        },
+        "selector": {
+          "description": "The Selector specifies which workload the defined auth policy should be applied to.",
+          "properties": {
+            "matchLabels": {
+              "additionalProperties": {
+                "type": "string"
+              },
+              "description": "One or more labels that indicate a specific set of pods/VMs\non which a policy should be applied. The scope of label search is restricted to\nthe configuration namespace in which the resource is present.",
+              "maxProperties": 4096,
+              "type": "object",
+              "x-kubernetes-validations": [
+                {
+                  "message": "wildcard not allowed in label key match",
+                  "rule": "self.all(key, !key.contains('*'))"
+                },
+                {
+                  "message": "key must not be empty",
+                  "rule": "self.all(key, key.size() != 0)"
+                }
+              ]
+            }
+          },
+          "type": "object"
+        },
+        "wellKnownURI": {
+          "description": "WellKnownURI specifies the URi to the identity provider's discovery document (also known as well-known endpoint).",
+          "type": "string"
+        }
+      },
+      "required": [
+        "enabled",
+        "selector",
+        "wellKnownURI"
+      ],
+      "type": "object"
+    },
+    "status": {
+      "description": "AuthPolicyStatus defines the observed state of AuthPolicy.",
+      "properties": {
+        "conditions": {
+          "items": {
+            "description": "Condition contains details for one aspect of the current state of this API Resource.\n---\nThis struct is intended for direct use as an array at the field path .status.conditions.  For example,\n\n\n\ttype FooStatus struct{\n\t    // Represents the observations of a foo's current state.\n\t    // Known .status.conditions.type are: \"Available\", \"Progressing\", and \"Degraded\"\n\t    // +patchMergeKey=type\n\t    // +patchStrategy=merge\n\t    // +listType=map\n\t    // +listMapKey=type\n\t    Conditions []metav1.Condition `json:\"conditions,omitempty\" patchStrategy:\"merge\" patchMergeKey:\"type\" protobuf:\"bytes,1,rep,name=conditions\"`\n\n\n\t    // other fields\n\t}",
+            "properties": {
+              "lastTransitionTime": {
+                "description": "lastTransitionTime is the last time the condition transitioned from one status to another.\nThis should be when the underlying condition changed.  If that is not known, then using the time when the API field changed is acceptable.",
+                "format": "date-time",
+                "type": "string"
+              },
+              "message": {
+                "description": "message is a human readable message indicating details about the transition.\nThis may be an empty string.",
+                "maxLength": 32768,
+                "type": "string"
+              },
+              "observedGeneration": {
+                "description": "observedGeneration represents the .metadata.generation that the condition was set based upon.\nFor instance, if .metadata.generation is currently 12, but the .status.conditions[x].observedGeneration is 9, the condition is out of date\nwith respect to the current state of the instance.",
+                "format": "int64",
+                "minimum": 0,
+                "type": "integer"
+              },
+              "reason": {
+                "description": "reason contains a programmatic identifier indicating the reason for the condition's last transition.\nProducers of specific condition types may define expected values and meanings for this field,\nand whether the values are considered a guaranteed API.\nThe value should be a CamelCase string.\nThis field may not be empty.",
+                "maxLength": 1024,
+                "minLength": 1,
+                "pattern": "^[A-Za-z]([A-Za-z0-9_,:]*[A-Za-z0-9_])?$",
+                "type": "string"
+              },
+              "status": {
+                "description": "status of the condition, one of True, False, Unknown.",
+                "enum": [
+                  "True",
+                  "False",
+                  "Unknown"
+                ],
+                "type": "string"
+              },
+              "type": {
+                "description": "type of condition in CamelCase or in foo.example.com/CamelCase.\n---\nMany .condition.type values are consistent across resources like Available, but because arbitrary conditions can be\nuseful (see .node.status.conditions), the ability to deconflict is important.\nThe regex it matches is (dns1123SubdomainFmt/)?(qualifiedNameFmt)",
+                "maxLength": 316,
+                "pattern": "^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*/)?(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])$",
+                "type": "string"
+              }
+            },
+            "required": [
+              "lastTransitionTime",
+              "message",
+              "reason",
+              "status",
+              "type"
+            ],
+            "type": "object"
+          },
+          "type": "array"
+        },
+        "message": {
+          "type": "string"
+        },
+        "observedGeneration": {
+          "format": "int64",
+          "type": "integer"
+        },
+        "phase": {
+          "type": "string"
+        },
+        "ready": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "ready"
+      ],
+      "type": "object"
+    }
+  },
+  "type": "object",
+  "x-kubernetes-group-version-kind": [
+    {
+      "group": "ztoperator.kartverket.no",
+      "kind": "AuthPolicy",
+      "version": "v1alpha1"
+    }
+  ]
+}

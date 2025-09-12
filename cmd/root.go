@@ -5,6 +5,7 @@ import (
 	"log/slog"
 	"os"
 
+	"github.com/kartverket/skipctl/pkg/crd"
 	"github.com/kartverket/skipctl/pkg/logging"
 	"github.com/spf13/cobra"
 )
@@ -22,10 +23,20 @@ var rootCmd = &cobra.Command{
 }
 
 func Execute(version, hash string) {
-	rootCmd.SetVersionTemplate(fmt.Sprintf("skipctl %s (%s)\n", version, hash))
-
-	err := rootCmd.Execute()
+	schemasText := "Supported schemas:\n"
+	schemas, err := crd.ListSchemas()
 	if err != nil {
+		slog.Error("could not list schemas", "error", err)
+		os.Exit(1)
+	}
+	for _, schema := range schemas {
+		schemasText += fmt.Sprintf(" - %s\n", schema)
+	}
+
+	rootCmd.SetVersionTemplate(fmt.Sprintf("skipctl %s (%s)\n\n%s", version, hash, schemasText))
+
+	execErr := rootCmd.Execute()
+	if execErr != nil {
 		os.Exit(1)
 	}
 }

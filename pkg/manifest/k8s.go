@@ -1,7 +1,6 @@
 package manifest
 
 import (
-	"embed"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -9,13 +8,11 @@ import (
 	"os"
 	"strings"
 
+	"github.com/kartverket/skipctl/pkg/crd"
 	"github.com/kartverket/skipctl/pkg/logging"
 	"github.com/kartverket/skipctl/pkg/utils"
 	"github.com/yannh/kubeconform/pkg/validator"
 )
-
-//go:embed schemas/*.json
-var embeddedSchemas embed.FS
 
 type K8sValidator struct {
 	log       *slog.Logger
@@ -127,16 +124,24 @@ func (k8 *K8sValidator) processValidationResults(filename string, results []vali
 func initValidator(tempDir string) validator.Validator {
 	log := logging.Logger()
 
-	err := utils.CopyFilesToDirectory(embeddedSchemas, tempDir)
+	extraSchemaLoc, extraSchemaSpecified := os.LookupEnv("SKIPCTL_EXTRA_SCHEMA_LOCATION")
+
+	err := utils.CopyFilesToDirectory(crd.Schemas, tempDir)
 	if err != nil {
 		log.Error("Failed to copy embedded schema files", "error", err)
 		os.Exit(1)
 	}
 
-	crdPath := tempDir + "/schemas" + "/{{ .ResourceKind }}_{{ .ResourceAPIVersion }}.json"
-	crdCatalogURL := "https://raw.githubusercontent.com/datreeio/CRDs-catalog/main/{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}.json"
+	crdPath := tempDir + "/schemas" + "/{{ .Group }}_{{ .ResourceAPIVersion }}_{{ .ResourceKind }}.json"
+	schemaLocations := []string{
+		"https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master/{{ .NormalizedKubernetesVersion }}-standalone{{ .StrictSuffix }}/{{ .ResourceKind }}{{ .KindSuffix }}.json",
+		crdPath,
+	}
 
-	schemaLocations := []string{"default", crdPath, crdCatalogURL}
+	if extraSchemaSpecified && len(extraSchemaLoc) > 0 {
+		log.Info("User have specified an extra schema location", "location", extraSchemaLoc)
+		schemaLocations = append(schemaLocations, extraSchemaLoc)
+	}
 
 	v, err := validator.New(schemaLocations, validator.Opts{Strict: true})
 	if err != nil {

@@ -1,4 +1,5 @@
 {
+  "$schema": "http://json-schema.org/draft-07/schema#",
   "description": "AzureAdApplication is the Schema for the AzureAdApplications API",
   "properties": {
     "apiVersion": {
@@ -42,14 +43,12 @@
                     "type": "string"
                   }
                 },
-                "type": "object",
-                "additionalProperties": false
+                "type": "object"
               },
               "type": "array"
             }
           },
-          "type": "object",
-          "additionalProperties": false
+          "type": "object"
         },
         "groupMembershipClaims": {
           "description": "GroupMemberShipClaims controls the type of groups that are emitted in claims.\nSee https://learn.microsoft.com/en-us/entra/identity-platform/reference-app-manifest#groupmembershipclaims-attribute",
@@ -101,15 +100,13 @@
                     "type": "array"
                   }
                 },
-                "type": "object",
-                "additionalProperties": false
+                "type": "object"
               }
             },
             "required": [
               "application"
             ],
-            "type": "object",
-            "additionalProperties": false
+            "type": "object"
           },
           "type": "array"
         },
@@ -122,8 +119,7 @@
                 "type": "string"
               }
             },
-            "type": "object",
-            "additionalProperties": false
+            "type": "object"
           },
           "type": "array"
         },
@@ -151,8 +147,7 @@
       "required": [
         "secretName"
       ],
-      "type": "object",
-      "additionalProperties": false
+      "type": "object"
     },
     "status": {
       "description": "AzureAdApplicationStatus defines the observed state of AzureAdApplication",
@@ -209,8 +204,7 @@
                     "required": [
                       "application"
                     ],
-                    "type": "object",
-                    "additionalProperties": false
+                    "type": "object"
                   },
                   "clientId": {
                     "description": "Client ID is the actual client ID of the application found in Azure AD, if it exists.",
@@ -225,8 +219,7 @@
                     "type": "string"
                   }
                 },
-                "type": "object",
-                "additionalProperties": false
+                "type": "object"
               },
               "type": "array"
             },
@@ -257,8 +250,7 @@
                     "required": [
                       "application"
                     ],
-                    "type": "object",
-                    "additionalProperties": false
+                    "type": "object"
                   },
                   "clientId": {
                     "description": "Client ID is the actual client ID of the application found in Azure AD, if it exists.",
@@ -273,8 +265,7 @@
                     "type": "string"
                   }
                 },
-                "type": "object",
-                "additionalProperties": false
+                "type": "object"
               },
               "type": "array"
             },
@@ -283,8 +274,7 @@
               "type": "integer"
             }
           },
-          "type": "object",
-          "additionalProperties": false
+          "type": "object"
         },
         "servicePrincipalId": {
           "description": "ServicePrincipalId is the Azure applications service principal object ID",
@@ -321,9 +311,15 @@
           "type": "string"
         }
       },
-      "type": "object",
-      "additionalProperties": false
+      "type": "object"
     }
   },
-  "type": "object"
+  "type": "object",
+  "x-kubernetes-group-version-kind": [
+    {
+      "group": "nais.io",
+      "kind": "AzureAdApplication",
+      "version": "v1"
+    }
+  ]
 }
