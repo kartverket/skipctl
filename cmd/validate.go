@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"strings"
@@ -18,6 +19,7 @@ var (
 		Short: "Validate manifest files against well-known Kubernetes schemas",
 		Long:  fmt.Sprintf("Recursively validates %s files in the specified path", strings.Join(constants.ManifestSuffixes, ", ")),
 		RunE:  runValidate,
+		Args:  cobra.RangeArgs(0, 1),
 		// SilenceErrors and SilenceUsage are set to true to prevent Cobra from printing errors and usage messages automatically.
 		// This allows for custom error handling and logging within the command's execution logic.
 		SilenceErrors: true,
@@ -25,21 +27,47 @@ var (
 	}
 )
 
-func runValidate(_ *cobra.Command, _ []string) error {
+func runValidate(_ *cobra.Command, args []string) error {
 	var err error
+	var manifestFiles []*manifest.Document
+	if isStdin(args) {
+		manifestFiles, err = manifest.FromStdin()
+	} else {
+		var filenames []string
+		filenames, err = utils.FindFilesWithSuffixes(path, constants.ManifestSuffixes)
+		if err == nil {
+			manifestFiles, err = manifest.FromFiles(filenames)
+		}
+	}
+
+	if err != nil {
+		log.Error("Error collecting files", "error", err.Error())
+		os.Exit(1)
+	}
+	if len(manifestFiles) == 0 {
+		log.Info("No manifests found.")
+		return err
+	}
+
 	tempDir, err = utils.CreateTempDirectory("schemas")
 	if err != nil {
 		log.Error("could not create temporary directory for schema files", "error", err)
 		return err
 	}
 
-	files, err := utils.FindManifestFiles(path)
-	if err != nil {
-		log.Error(err.Error())
-		return err
-	}
 	processor := manifest.NewDocumentProcessor()
-	err = processor.ProcessValidationManifests(files, manifest.NewValidator(tempDir).ValidateManifest)
+	validator := manifest.NewValidator(tempDir)
+
+	err = processor.ProcessDocuments(manifestFiles, validator.ValidateManifest)
+
+	if err != nil {
+		log.Error("processing error", "error", err)
+	}
+
+	result := validator.GetResults()
+	totalResources := result.GetTotalResources()
+
+	log.Info("validation completed", "totalResources", totalResources, "valid", result.ValidCount, "invalid", result.InvalidCount, "errors", result.ErrorCount, "skipped", result.SkippedCount)
 
 	// Cobra does not call the PostRun or PersistentPostRun functions if the program exits with an error (os.Exit(>0))
 	// Reported in https://github.com/spf13/cobra/issues/1893
@@ -49,7 +77,11 @@ func runValidate(_ *cobra.Command, _ []string) error {
 	// when the command  completes, regardless of whether it completes successfully or with an error.
 	cobra.OnFinalize(cleanUp)
 
-	return err
+	if result.HasValidationFailed() {
+		return errors.New("validation failed")
+	}
+
+	return nil
 }
 
 func init() {

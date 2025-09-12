@@ -29,6 +29,14 @@ type ValidateResult struct {
 	SkippedCount int
 }
 
+func (vr *ValidateResult) GetTotalResources() int {
+	return vr.ErrorCount + vr.ValidCount + vr.InvalidCount + vr.SkippedCount
+}
+
+func (vr *ValidateResult) HasValidationFailed() bool {
+	return vr.ErrorCount > 0 || vr.InvalidCount > 0
+}
+
 // isJSONArray checks if the content is a JSON array.
 func isJSONArray(content string) bool {
 	return strings.HasPrefix(content, "[") && strings.HasSuffix(content, "]")

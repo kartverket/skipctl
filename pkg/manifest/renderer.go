@@ -12,14 +12,16 @@ import (
 )
 
 type Renderer struct {
-	jsonnet   *jsonnet.VM
-	rawOutput *slog.Logger
+	jsonnet    *jsonnet.VM
+	rawOutput  *slog.Logger
+	isFirstDoc bool
 }
 
 func NewRenderer() *Renderer {
 	return &Renderer{
-		jsonnet:   jsonnet.MakeVM(),
-		rawOutput: logging.RawLogger(),
+		jsonnet:    jsonnet.MakeVM(),
+		rawOutput:  logging.RawLogger(),
+		isFirstDoc: true,
 	}
 }
 
@@ -56,6 +58,10 @@ func (r *Renderer) renderYaml(file *Document) error {
 	if err != nil {
 		return err
 	}
+	if !r.isFirstDoc {
+		r.rawOutput.Info("---")
+	}
+	r.isFirstDoc = false
 
 	r.rawOutput.Info(file.Content)
 
