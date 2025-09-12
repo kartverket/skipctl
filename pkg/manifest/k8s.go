@@ -130,7 +130,7 @@ func initValidator(tempDir string) validator.Validator {
 		os.Exit(1)
 	}
 
-	crdPath := tempDir + "/schemas" + "/{{ .Group }}_{{ .ResourceKind }}_{{ .ResourceAPIVersion }}.json"
+	crdPath := tempDir + "/schemas" + "/{{ .Group }}_{{ .ResourceAPIVersion }}_{{ .ResourceKind }}.json"
 	schemaLocations := []string{"default", crdPath}
 
 	v, err := validator.New(schemaLocations, validator.Opts{Strict: true})
