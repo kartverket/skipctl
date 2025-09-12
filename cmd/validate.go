@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"strings"
@@ -53,8 +54,16 @@ func runValidate(_ *cobra.Command, args []string) error {
 		log.Error("could not create temporary directory for schema files", "error", err)
 		return err
 	}
+
 	processor := manifest.NewDocumentProcessor()
-	err = processor.ProcessValidationManifests(manifestFiles, manifest.NewValidator(tempDir).ValidateManifest)
+	validator := manifest.NewValidator(tempDir)
+
+	_ = processor.ProcessDocuments(manifestFiles, validator.ValidateManifest)
+
+	result := validator.GetResults()
+	totalResources := result.GetTotalResoueces()
+
+	log.Info("validation completed", "totalResources", totalResources, "valid", result.ValidCount, "invalid", result.InvalidCount, "errors", result.ErrorCount, "skipped", result.SkippedCount)
 
 	// Cobra does not call the PostRun or PersistentPostRun functions if the program exits with an error (os.Exit(>0))
 	// Reported in https://github.com/spf13/cobra/issues/1893
@@ -64,7 +73,11 @@ func runValidate(_ *cobra.Command, args []string) error {
 	// when the command  completes, regardless of whether it completes successfully or with an error.
 	cobra.OnFinalize(cleanUp)
 
-	return err
+	if result.HasValidationFailed() {
+		return errors.New("validation failed")
+	}
+
+	return nil
 }
 
 func init() {

@@ -3,7 +3,6 @@ package manifest
 import (
 	"errors"
 	"log/slog"
-	"os"
 
 	"github.com/kartverket/skipctl/pkg/logging"
 )
@@ -20,7 +19,7 @@ func NewDocumentProcessor() *Processor {
 	}
 }
 
-func (p *Processor) ProcessDocuments(files []*Document, process FileToErrorFunc) {
+func (p *Processor) ProcessDocuments(files []*Document, process FileToErrorFunc) error {
 	failed := false
 
 	for _, file := range files {
@@ -32,23 +31,7 @@ func (p *Processor) ProcessDocuments(files []*Document, process FileToErrorFunc)
 		}
 	}
 	if failed {
-		os.Exit(1)
+		return errors.New("error while processing documents")
 	}
-}
-
-func (p *Processor) ProcessValidationManifests(files []*Document, process FileToErrorFunc) error {
-	for _, file := range files {
-		validationErr := process(file)
-		if validationErr != nil {
-			p.log.Error("validation failed", "file", file.Name, "error", validationErr.Error())
-		}
-	}
-	totalResources := validateResult.ErrorCount + validateResult.ValidCount + validateResult.InvalidCount + validateResult.SkippedCount
-	p.log.Info("validation completed", "totalResources", totalResources, "valid", validateResult.ValidCount, "invalid", validateResult.InvalidCount, "errors", validateResult.ErrorCount, "skipped", validateResult.SkippedCount)
-
-	if validateResult.ErrorCount > 0 || validateResult.InvalidCount > 0 {
-		return errors.New("validation failed")
-	}
-
 	return nil
 }

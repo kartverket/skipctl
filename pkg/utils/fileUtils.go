@@ -12,7 +12,6 @@ import (
 	"strings"
 
 	"github.com/kartverket/skipctl/pkg/constants"
-	"go.yaml.in/yaml/v4"
 )
 
 func FindManifestFiles(path string) ([]string, error) {
@@ -45,21 +44,6 @@ func FindFilesWithSuffixes(directory string, suffixes []string) ([]string, error
 		return nil
 	})
 	return files, err
-}
-
-func UnmarshalYamlFromFile(filename string) (any, error) {
-	fileContents, err := os.ReadFile(filename)
-	if err != nil {
-		return nil, err
-	}
-
-	var output any
-
-	err = yaml.Unmarshal(fileContents, &output)
-	if err != nil {
-		return nil, err
-	}
-	return output, nil
 }
 
 // CreateTempDirectory creates a temporary directory with a given name in a unique location.

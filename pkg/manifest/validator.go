@@ -17,8 +17,6 @@ func NewValidator(tempDir string) *Validator {
 	}
 }
 
-var validateResult = &ValidateResult{}
-
 func (v *Validator) ValidateManifest(file *Document) error {
 	switch file.Extension {
 	case constants.ManifestSuffixJsonnet:
@@ -27,7 +25,7 @@ func (v *Validator) ValidateManifest(file *Document) error {
 		}
 		return nil
 	case constants.ManifestSuffixYaml, constants.ManifestSuffixYml:
-		if yerr := v.handleValidateYaml(file); yerr != nil {
+		if yerr := v.validateYaml(file); yerr != nil {
 			return yerr
 		}
 		return nil
@@ -39,7 +37,13 @@ func (v *Validator) validateJsonnet(file *Document) error {
 	// if there is a syntax error within the Jsonnet file, the VM gets corrupted and cannot be used again.
 	vm := jsonnet.MakeVM()
 
-	content, err := vm.EvaluateAnonymousSnippet(file.Name, file.Content)
+	node, err := jsonnet.SnippetToAST(file.Name, file.Content)
+	if err != nil {
+		v.res.ErrorCount++
+		return err
+	}
+
+	content, err := vm.Evaluate(node)
 	if err != nil {
 		v.res.ErrorCount++
 		return err
@@ -52,19 +56,8 @@ func (v *Validator) validateJsonnet(file *Document) error {
 	return nil
 }
 
-// func (v *Validator) handleValidateJsonnet(d *Document) error {
-// jerr := v.validateJsonnet(d)
-// if jerr != nil {
-// return jerr
-// }
-// v.countValidateRes(&result)
-// return nil
-// }
-func (v *Validator) validateYaml(file *Document) (ValidateResult, error) {
-	return v.k8s.validateK8sSchema(file.Name, file.Content)
-}
-func (v *Validator) handleValidateYaml(d *Document) error {
-	result, jerr := v.validateYaml(d)
+func (v *Validator) validateYaml(d *Document) error {
+	result, jerr := v.k8s.validateK8sSchema(d.Name, d.Content)
 	if jerr != nil {
 		return jerr
 	}
@@ -76,4 +69,8 @@ func (v *Validator) countValidateRes(result *ValidateResult) {
 	v.res.InvalidCount += result.InvalidCount
 	v.res.SkippedCount += result.SkippedCount
 	v.res.ValidCount += result.ValidCount
+}
+
+func (v *Validator) GetResults() *ValidateResult {
+	return v.res
 }
