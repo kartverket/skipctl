@@ -124,6 +124,8 @@ func (k8 *K8sValidator) processValidationResults(filename string, results []vali
 func initValidator(tempDir string) validator.Validator {
 	log := logging.Logger()
 
+	extraSchemaLoc, extraSchemaSpecified := os.LookupEnv("SKIPCTL_EXTRA_SCHEMA_LOCATION")
+
 	err := utils.CopyFilesToDirectory(crd.Schemas, tempDir)
 	if err != nil {
 		log.Error("Failed to copy embedded schema files", "error", err)
@@ -134,6 +136,11 @@ func initValidator(tempDir string) validator.Validator {
 	schemaLocations := []string{
 		"https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master/{{ .NormalizedKubernetesVersion }}-standalone{{ .StrictSuffix }}/{{ .ResourceKind }}{{ .KindSuffix }}.json",
 		crdPath,
+	}
+
+	if extraSchemaSpecified && len(extraSchemaLoc) > 0 {
+		log.Info("User have specified an extra schema location", "location", extraSchemaLoc)
+		schemaLocations = append(schemaLocations, extraSchemaLoc)
 	}
 
 	v, err := validator.New(schemaLocations, validator.Opts{Strict: true})
