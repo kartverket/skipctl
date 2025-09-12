@@ -60,6 +60,10 @@ func runRender(_ *cobra.Command, args []string) error {
 		renderer.RenderManifest,
 	)
 
+	if err != nil {
+		log.Error("processing error", "error", err)
+	}
+
 	return err
 }
 

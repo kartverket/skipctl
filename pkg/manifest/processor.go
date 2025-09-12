@@ -2,6 +2,7 @@ package manifest
 
 import (
 	"errors"
+	"fmt"
 	"log/slog"
 
 	"github.com/kartverket/skipctl/pkg/logging"
@@ -21,17 +22,18 @@ func NewDocumentProcessor() *Processor {
 
 func (p *Processor) ProcessDocuments(files []*Document, process FileToErrorFunc) error {
 	failed := false
+	errs := []error{}
 
 	for _, file := range files {
 		err := process(file)
 
 		if err != nil {
-			p.log.Error("failed", "file", file.Name, "error", err.Error())
+			errs = append(errs, fmt.Errorf(" error while processing document %s: %w ", file.Name, err))
 			failed = true
 		}
 	}
 	if failed {
-		return errors.New("error while processing documents")
+		return errors.Join(errs...)
 	}
 	return nil
 }

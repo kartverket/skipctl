@@ -51,6 +51,10 @@ func runFormat(_ *cobra.Command, args []string) error {
 	processor := manifest.NewDocumentProcessor()
 	err = processor.ProcessDocuments(manifestFiles, manifest.FormatManifest)
 
+	if err != nil {
+		log.Error("processing error", "error", err)
+	}
+
 	return err
 }
 func init() {

@@ -29,7 +29,7 @@ type ValidateResult struct {
 	SkippedCount int
 }
 
-func (vr *ValidateResult) GetTotalResoueces() int {
+func (vr *ValidateResult) GetTotalResources() int {
 	return vr.ErrorCount + vr.ValidCount + vr.InvalidCount + vr.SkippedCount
 }
 

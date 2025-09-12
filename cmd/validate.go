@@ -58,10 +58,14 @@ func runValidate(_ *cobra.Command, args []string) error {
 	processor := manifest.NewDocumentProcessor()
 	validator := manifest.NewValidator(tempDir)
 
-	_ = processor.ProcessDocuments(manifestFiles, validator.ValidateManifest)
+	err = processor.ProcessDocuments(manifestFiles, validator.ValidateManifest)
+
+	if err != nil {
+		log.Error("processing error", "error", err)
+	}
 
 	result := validator.GetResults()
-	totalResources := result.GetTotalResoueces()
+	totalResources := result.GetTotalResources()
 
 	log.Info("validation completed", "totalResources", totalResources, "valid", result.ValidCount, "invalid", result.InvalidCount, "errors", result.ErrorCount, "skipped", result.SkippedCount)
 
