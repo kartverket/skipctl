@@ -131,7 +131,10 @@ func initValidator(tempDir string) validator.Validator {
 	}
 
 	crdPath := tempDir + "/schemas" + "/{{ .Group }}_{{ .ResourceAPIVersion }}_{{ .ResourceKind }}.json"
-	schemaLocations := []string{"default", crdPath}
+	schemaLocations := []string{
+		"https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master/{{ .NormalizedKubernetesVersion }}-standalone{{ .StrictSuffix }}/{{ .ResourceKind }}{{ .KindSuffix }}.json",
+		crdPath,
+	}
 
 	v, err := validator.New(schemaLocations, validator.Opts{Strict: true})
 	if err != nil {
