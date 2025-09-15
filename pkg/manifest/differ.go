@@ -48,15 +48,11 @@ func (d *Differ) DiffManifest(file *Document) error {
 	}
 	prevRendered := d.renderBuffer.String()
 
-	// diff the manifest outputs
-	diff, err := utils.Diff(prevRendered, rendered)
-	if err != nil {
-		return err
-	}
+	diff := utils.Diff(prevRendered, rendered)
 
 	if diff != "" {
 		d.logger.Info("diff", "file", file.Name, "commit_hash", d.prevHash)
-		d.rawOutput.Info(diff + "\n")
+		d.rawOutput.Info(diff)
 	}
 
 	return nil
