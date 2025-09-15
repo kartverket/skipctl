@@ -19,11 +19,13 @@ func newRendererWithLogger() (*Renderer, *bytes.Buffer) {
 
 func TestRenderManifestValidJsonnet(t *testing.T) {
 	validJsonnet := `
+local port = 8080;
 {
 host: "localhost",
-port: 8080,
+port: port,
 ingress: [],
 }
+`
 `
 	expected := `{
    "host": "localhost",
