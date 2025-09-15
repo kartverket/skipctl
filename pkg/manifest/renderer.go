@@ -17,11 +17,19 @@ type Renderer struct {
 	isFirstDoc bool
 }
 
-func NewRenderer() *Renderer {
+func NewRenderer(loggers ...*slog.Logger) *Renderer {
+	var logger *slog.Logger
+	if len(loggers) > 0 && loggers[0] != nil {
+		logger = loggers[0]
+	} else {
+		logger = logging.RawLogger()
+	}
 	return &Renderer{
-		jsonnet:    jsonnet.MakeVM(),
-		rawOutput:  logging.RawLogger(),
+		jsonnet: jsonnet.MakeVM(),
+
 		isFirstDoc: true,
+
+		rawOutput: logger,
 	}
 }
 

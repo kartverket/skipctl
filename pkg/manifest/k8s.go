@@ -86,6 +86,7 @@ func (k8 *K8sValidator) validateResourceArray(filename string, resources []json.
 func (k8 *K8sValidator) processValidationResults(filename string, results []validator.Result) (ValidateResult, error) {
 	// Initialize counters for each status
 	var validCount, invalidCount, errorCount, skippedCount int
+	var err error
 
 	for _, result := range results {
 		switch result.Status {
@@ -94,13 +95,11 @@ func (k8 *K8sValidator) processValidationResults(filename string, results []vali
 
 		case validator.Invalid:
 			invalidCount++
-
-			k8.log.Error("file is invalid", "filename", filename, "errors", result.ValidationErrors)
+			err = fmt.Errorf("file is invalid: filename=%s, errors=%v", filename, result.ValidationErrors)
 
 		case validator.Error:
 			errorCount++
-
-			k8.log.Error("error processing resource", "filename", filename, "error", result.Err.Error())
+			err = fmt.Errorf("error processing file: filename=%s, errors=%v", filename, result.Err.Error())
 
 		case validator.Skipped:
 			skippedCount++
@@ -110,12 +109,16 @@ func (k8 *K8sValidator) processValidationResults(filename string, results []vali
 		}
 	}
 
+	if err != nil {
+		k8.log.Error(err.Error())
+	}
+
 	return ValidateResult{
 		ValidCount:   validCount,
 		InvalidCount: invalidCount,
 		ErrorCount:   errorCount,
 		SkippedCount: skippedCount,
-	}, nil
+	}, err
 }
 
 // initValidator initializes the Kubernetes schema validator.
