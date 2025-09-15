@@ -1,4 +1,4 @@
 {
   test: 'hello',
-  number: 12 + 6,
+  number: 15 + 6,
 }

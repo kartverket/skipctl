@@ -10,6 +10,10 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var (
+	commitHash string
+)
+
 var diffCmd = &cobra.Command{
 	Use:   "diff",
 	Short: "Diff manifest",
@@ -41,10 +45,16 @@ func runDiff(_ *cobra.Command, _ []string) error {
 		return nil
 	}
 	processor := manifest.NewDocumentProcessor()
-	err = processor.ProcessDocuments(manifestFiles, manifest.DiffDocuments)
+
+	differ := manifest.NewDiffer(commitHash)
+
+	err = processor.ProcessDocuments(manifestFiles, differ.DiffManifest)
 	if err != nil {
 		log.Error("processing error", "error", err)
 	}
 	return err
 }
-func init()
+func init() {
+	diffCmd.Flags().StringVar(&commitHash, "hash", "HEAD", "Commit hash to diff against (default HEAD)")
+	manifestCmd.AddCommand(diffCmd)
+}

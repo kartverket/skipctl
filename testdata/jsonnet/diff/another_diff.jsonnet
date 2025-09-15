@@ -7,4 +7,10 @@
       'cycling',
     ] + ['reading'],
   },
+} + {
+  person+: {
+    hobbies+: [
+      'swimming',
+    ],
+  },
 }

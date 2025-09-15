@@ -22,13 +22,13 @@ type Document struct {
 }
 
 func (d *Document) FromPrevHash(hash string) (*Document, error) {
-	cmd := exec.Command("git", "show", fmt.Sprintf("HEAD:%s", d.Name))
+	cmd := exec.Command("git", "show", fmt.Sprintf("%s:%s", hash, d.Name))
 	var out bytes.Buffer
 	var stderr bytes.Buffer
 	cmd.Stdout = &out
 	cmd.Stderr = &stderr
 	if err := cmd.Run(); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("unable to read file from hash: file=%s commit_hash=%s", d.Name, hash)
 	}
 	return &Document{
 		Name:        d.Name,

@@ -2,12 +2,14 @@
 package utils
 
 import (
+	"bufio"
 	"bytes"
 	"errors"
 	"fmt"
 	"io"
 	"io/fs"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"slices"
 	"strings"
@@ -120,4 +122,72 @@ func DetectFiletype(content []byte) (string, error) {
 	default:
 		return constants.ManifestSuffixYaml, nil
 	}
+}
+func Diff(previous, current string) (string, error) {
+	dir, err := os.MkdirTemp("", "godiff-*")
+	if err != nil {
+		return "", fmt.Errorf("create temp dir: %w", err)
+	}
+	defer os.RemoveAll(dir)
+
+	aPath := filepath.Join(dir, "a.txt")
+	bPath := filepath.Join(dir, "b.txt")
+
+	if err := os.WriteFile(aPath, []byte(previous), 0o600); err != nil {
+		return "", fmt.Errorf("write previous: %w", err)
+	}
+	if err := os.WriteFile(bPath, []byte(current), 0o600); err != nil {
+		return "", fmt.Errorf("write current: %w", err)
+	}
+
+	// -U0 => zero context lines
+	// -L labels => avoids temp paths in headers
+	cmd := exec.Command("diff", "-U0", "-L", "previous", "-L", "current", aPath, bPath)
+
+	var stdout, stderr bytes.Buffer
+	cmd.Stdout = &stdout
+	cmd.Stderr = &stderr
+
+	runErr := cmd.Run()
+
+	if runErr == nil {
+		return "", nil // no diff
+	}
+	var exitErr *exec.ExitError
+	if errors.As(runErr, &exitErr) {
+		if exitErr.ExitCode() == 1 {
+			// Differences found: post-process like `sed '1,/^@@/d'`
+			out := stripUntilFirstHunk(stdout.String())
+			return out, nil
+		}
+		return "", fmt.Errorf("diff failed (exit %d): %s", exitErr.ExitCode(), strings.TrimSpace(stderr.String()))
+	}
+	if errors.Is(runErr, exec.ErrNotFound) {
+		return "", fmt.Errorf("system 'diff' not found in PATH")
+	}
+	return "", fmt.Errorf("running diff: %w", runErr)
+}
+
+// stripUntilFirstHunk removes everything before and including the first line
+// that starts with "@@", similar to: sed '1,/^@@/d'
+func stripUntilFirstHunk(s string) string {
+	scanner := bufio.NewScanner(strings.NewReader(s))
+	var b strings.Builder
+	seenHunk := false
+	for scanner.Scan() {
+		line := scanner.Text()
+		if !seenHunk {
+			if strings.HasPrefix(line, "@@") {
+				seenHunk = true
+				continue
+			}
+			continue
+		}
+		b.WriteString(line)
+		b.WriteByte('\n')
+	}
+	if err := scanner.Err(); err != nil {
+		return s
+	}
+	return strings.TrimRight(b.String(), "\n")
 }
