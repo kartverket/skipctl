@@ -170,7 +170,7 @@ spec:
 	hasError := result.HasValidationFailed()
 
 	// require.Error(t, err, "expected error for invalid Yaml input")
-	assert.True(t, hasError, "expected error for inavlid yaml")
+	assert.True(t, hasError, "expected error for invalid yaml")
 	assert.Equal(t, 1, result.ErrorCount, "unexpected result.ErrorCount")
 	assert.Equal(t, 0, result.InvalidCount, "unexpected result.InvalidCount")
 	assert.Equal(t, 0, result.SkippedCount, "unexpected result.SkippedCount")

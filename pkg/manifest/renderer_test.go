@@ -68,10 +68,12 @@ application:
 `
 	doc := newTestDocument(inputYaml, "input.yaml")
 	renderer, buf := newRendererWithLogger()
-	renderer.RenderManifest(doc)
+	err := renderer.RenderManifest(doc)
 	got := buf.String()
 
-	assert.YAMLEq(t, inputYaml, got, "bruh")
+	require.NoError(t, err, "expected no error for valid yaml input")
+
+	assert.YAMLEq(t, inputYaml, got, "expected same yaml output as input")
 }
 func TestRenderManifestInvalidYaml(t *testing.T) {
 	invalidYaml := `
