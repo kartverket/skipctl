@@ -26,7 +26,6 @@ port: port,
 ingress: [],
 }
 `
-`
 	expected := `{
    "host": "localhost",
    "ingress": [ ],

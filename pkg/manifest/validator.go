@@ -49,20 +49,15 @@ func (v *Validator) validateJsonnet(file *Document) error {
 		return err
 	}
 	res, k8err := v.k8s.validateK8sSchema(file.Name, content)
-	if k8err != nil {
-		return k8err
-	}
+
 	v.countValidateRes(&res)
-	return nil
+	return k8err
 }
 
 func (v *Validator) validateYaml(d *Document) error {
 	result, jerr := v.k8s.validateK8sSchema(d.Name, d.Content)
-	if jerr != nil {
-		return jerr
-	}
 	v.countValidateRes(&result)
-	return nil
+	return jerr
 }
 func (v *Validator) countValidateRes(result *ValidateResult) {
 	v.res.ErrorCount += result.ErrorCount

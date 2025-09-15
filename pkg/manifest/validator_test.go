@@ -61,7 +61,7 @@ func TestValidateManifestJsonnetInvalid(t *testing.T) {
 	err := validator.ValidateManifest(doc)
 	result := validator.GetResults()
 
-	require.NoError(t, err, "ValidateManifest should not return an error for valid Jsonnet input")
+	require.Error(t, err, "ValidateManifest should return an error for invalid manifest")
 	assert.Equal(t, 0, result.ErrorCount, "unexpected result.ErrorCount")
 	assert.Equal(t, 1, result.InvalidCount, "unexpected result.InvalidCount")
 	assert.Equal(t, 0, result.SkippedCount, "unexpected result.SkippedCount")
@@ -143,7 +143,7 @@ spec:
 	err := validator.ValidateManifest(doc)
 	result := validator.GetResults()
 
-	require.NoError(t, err, "expected no error for valid Yaml input")
+	require.Error(t, err, "expected  error for invalid Yaml manifest")
 
 	assert.Equal(t, 0, result.ErrorCount, "unexpected result.ErrorCount")
 	assert.Equal(t, 1, result.InvalidCount, "unexpected result.InvalidCount")
@@ -165,11 +165,11 @@ spec:
 
 	doc := newTestDocument(invalidYaml, "invalid.yaml")
 	validator := NewValidator(t.TempDir())
-	_ = validator.ValidateManifest(doc) // TODO does not return error, why?
+	err := validator.ValidateManifest(doc) // TODO does not return error, why?
 	result := validator.GetResults()
 	hasError := result.HasValidationFailed()
 
-	// require.Error(t, err, "expected error for invalid Yaml input")
+	require.Error(t, err, "expected error for invalid Yaml input")
 	assert.True(t, hasError, "expected error for invalid yaml")
 	assert.Equal(t, 1, result.ErrorCount, "unexpected result.ErrorCount")
 	assert.Equal(t, 0, result.InvalidCount, "unexpected result.InvalidCount")
