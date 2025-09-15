@@ -124,6 +124,19 @@ func DetectFiletype(content []byte) (string, error) {
 }
 func Diff(a, b string) string {
 	dmp := diffmatchpatch.New()
-	diff := dmp.DiffMain(a, b, true)
-	return dmp.DiffPrettyText(diff)
+	diffs := dmp.DiffMain(a, b, true)
+
+	allEqual := true
+	for _, d := range diffs {
+		if d.Type != diffmatchpatch.DiffEqual {
+			allEqual = false
+			break
+		}
+	}
+	if allEqual {
+		return ""
+	}
+	dmp.DiffCleanupSemantic(diffs)
+
+	return dmp.DiffPrettyText(diffs)
 }
