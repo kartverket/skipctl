@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 
@@ -18,6 +19,24 @@ type Document struct {
 	Permissions os.FileMode
 	Content     string
 	FromStdin   bool
+}
+
+func (d *Document) FromPrevHash(hash string) (*Document, error) {
+	cmd := exec.Command("git", "show", fmt.Sprintf("HEAD:%s", d.Name))
+	var out bytes.Buffer
+	var stderr bytes.Buffer
+	cmd.Stdout = &out
+	cmd.Stderr = &stderr
+	if err := cmd.Run(); err != nil {
+		return nil, err
+	}
+	return &Document{
+		Name:        d.Name,
+		Extension:   d.Extension,
+		Permissions: d.Permissions,
+		Content:     out.String(),
+		FromStdin:   false,
+	}, nil
 }
 
 func (r *Document) Write(content string) error {
