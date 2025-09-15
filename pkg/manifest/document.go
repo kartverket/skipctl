@@ -39,15 +39,15 @@ func (d *Document) FromPrevHash(hash string) (*Document, error) {
 	}, nil
 }
 
-func (r *Document) Write(content string) error {
-	r.Content = content
-	if r.FromStdin {
-		if _, err := io.WriteString(os.Stdout, r.Content); err != nil {
+func (d *Document) Write(content string) error {
+	d.Content = content
+	if d.FromStdin {
+		if _, err := io.WriteString(os.Stdout, d.Content); err != nil {
 			return fmt.Errorf("error writing document to stdout: %w", err)
 		}
 		return nil
 	}
-	if err := os.WriteFile(r.Name, []byte(r.Content), r.Permissions); err != nil {
+	if err := os.WriteFile(d.Name, []byte(d.Content), d.Permissions); err != nil {
 		return fmt.Errorf("error writing document to file: %w", err)
 	}
 	return nil

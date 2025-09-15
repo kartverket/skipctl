@@ -163,7 +163,7 @@ func Diff(previous, current string) (string, error) {
 		return "", fmt.Errorf("diff failed (exit %d): %s", exitErr.ExitCode(), strings.TrimSpace(stderr.String()))
 	}
 	if errors.Is(runErr, exec.ErrNotFound) {
-		return "", fmt.Errorf("system 'diff' not found in PATH")
+		return "", errors.New("system 'diff' not found in PATH")
 	}
 	return "", fmt.Errorf("running diff: %w", runErr)
 }
