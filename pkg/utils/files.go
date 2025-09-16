@@ -122,21 +122,84 @@ func DetectFiletype(content []byte) (string, error) {
 		return constants.ManifestSuffixYaml, nil
 	}
 }
+
+const (
+	colorRed   = "\x1b[31m"
+	colorGreen = "\x1b[32m"
+	colorReset = "\x1b[0m"
+)
+
 func Diff(a, b string) string {
 	dmp := diffmatchpatch.New()
-	diffs := dmp.DiffMain(a, b, true)
 
-	allEqual := true
+	ar, br, lineArray := dmp.DiffLinesToRunes(a, b)
+	diffs := dmp.DiffMainRunes(ar, br, false)
+	diffs = dmp.DiffCleanupSemantic(diffs)
+	diffs = dmp.DiffCleanupEfficiency(diffs)
+	diffs = dmp.DiffCharsToLines(diffs, lineArray)
+
+	var out strings.Builder
+	lineA, lineB := 1, 1
+
 	for _, d := range diffs {
-		if d.Type != diffmatchpatch.DiffEqual {
-			allEqual = false
-			break
+		text := string(d.Text)
+		lines := splitKeepNL(text)
+
+		switch d.Type {
+		case diffmatchpatch.DiffEqual:
+			// Advance both cursors for each complete line consumed
+			for _, ln := range lines {
+				if strings.HasSuffix(ln, "\n") {
+					lineA++
+					lineB++
+				}
+			}
+
+		case diffmatchpatch.DiffDelete:
+			cur := lineA
+			for _, ln := range lines {
+				out.WriteString(colorRed)
+				out.WriteString(fmt.Sprintf("%d -", cur))
+				out.WriteString(ln)
+				out.WriteString(colorReset)
+				if strings.HasSuffix(ln, "\n") {
+					cur++
+				}
+			}
+			lineA = cur // advance only the left cursor
+
+		case diffmatchpatch.DiffInsert:
+			cur := lineB
+			for _, ln := range lines {
+				out.WriteString(colorGreen)
+				out.WriteString(fmt.Sprintf("%d +", cur))
+				out.WriteString(ln)
+				out.WriteString(colorReset)
+				if strings.HasSuffix(ln, "\n") {
+					cur++
+				}
+			}
+			lineB = cur // advance only the right cursor
 		}
 	}
-	if allEqual {
-		return ""
-	}
-	dmp.DiffCleanupSemantic(diffs)
+	return out.String()
+}
 
-	return dmp.DiffPrettyText(diffs)
+// splitKeepNL splits on '\n' and keeps newline characters at the end of each chunk.
+func splitKeepNL(s string) []string {
+	if s == "" {
+		return nil
+	}
+	var res []string
+	start := 0
+	for i := 0; i < len(s); i++ {
+		if s[i] == '\n' {
+			res = append(res, s[start:i+1])
+			start = i + 1
+		}
+	}
+	if start < len(s) {
+		res = append(res, s[start:])
+	}
+	return res
 }
