@@ -17,7 +17,7 @@ require (
 	go.yaml.in/yaml/v4 v4.0.0-rc.2
 	golang.org/x/oauth2 v0.31.0
 	google.golang.org/api v0.249.0
-	google.golang.org/grpc v1.75.0
+	google.golang.org/grpc v1.75.1
 	google.golang.org/protobuf v1.36.9
 )
 
