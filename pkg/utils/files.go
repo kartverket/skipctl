@@ -129,7 +129,7 @@ const (
 	colorReset = "\x1b[0m"
 )
 
-func Diff(a, b string, verbose bool) string {
+func Diff(a, b string, verbose bool) (string, bool) {
 	dmp := diffmatchpatch.New()
 
 	ar, br, lineArray := dmp.DiffLinesToRunes(a, b)
@@ -138,14 +138,18 @@ func Diff(a, b string, verbose bool) string {
 	diffs = dmp.DiffCleanupEfficiency(diffs)
 	diffs = dmp.DiffCharsToLines(diffs, lineArray)
 
+	allEqual := true
 	var out strings.Builder
 	lineA, lineB := 1, 1
 
 	for _, d := range diffs {
 		handleDiffChunk(&out, d, verbose, &lineA, &lineB)
+		if d.Type.String() != "Equal" {
+			allEqual = false
+		}
 	}
 
-	return out.String()
+	return out.String(), !allEqual
 }
 
 func handleDiffChunk(out *strings.Builder, d diffmatchpatch.Diff, verbose bool, lineA, lineB *int) {

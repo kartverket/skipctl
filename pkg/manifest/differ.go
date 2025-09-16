@@ -50,9 +50,9 @@ func (d *Differ) DiffManifest(file *Document) error {
 	}
 	prevRendered := d.renderBuffer.String()
 
-	diff := utils.Diff(prevRendered, rendered, d.verbose)
+	diff, hasDiff := utils.Diff(prevRendered, rendered, d.verbose)
 
-	if diff != "" {
+	if hasDiff {
 		d.logger.Info("diff", "file", file.Name, "commit_hash", d.prevHash)
 		d.rawOutput.Info(diff)
 	}
