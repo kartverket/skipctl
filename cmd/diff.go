@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"regexp"
 	"strings"
 
 	"github.com/kartverket/skipctl/pkg/constants"
@@ -45,6 +46,14 @@ func runDiff(_ *cobra.Command, _ []string) error {
 		log.Info("No manifests found.")
 		return nil
 	}
+	var reRef = regexp.MustCompile(`(?i)^(?:HEAD|[0-9a-f]{7,40})$`)
+
+	if !reRef.MatchString(commitHash) {
+		err := fmt.Errorf("invalid commit hash %s", commitHash)
+		log.Error(err.Error())
+		return err
+	}
+
 	processor := manifest.NewDocumentProcessor()
 
 	differ := manifest.NewDiffer(commitHash, verbose)

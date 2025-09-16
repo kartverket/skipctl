@@ -5,6 +5,7 @@ go 1.24.1
 require (
 	github.com/PumpkinSeed/slog-context v0.1.2
 	github.com/bufbuild/buf v1.57.0
+	github.com/go-git/go-git/v5 v5.16.2
 	github.com/google/go-jsonnet v0.21.0
 	github.com/grpc-ecosystem/go-grpc-middleware/providers/prometheus v1.1.0
 	github.com/oklog/run v1.2.0
@@ -69,7 +70,6 @@ require (
 	github.com/go-chi/chi/v5 v5.2.2 // indirect
 	github.com/go-git/gcfg v1.5.1-0.20230307220236-3a3c6141e376 // indirect
 	github.com/go-git/go-billy/v5 v5.6.2 // indirect
-	github.com/go-git/go-git/v5 v5.16.2 // indirect
 	github.com/go-logr/logr v1.4.3 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/gofrs/flock v0.12.1 // indirect
