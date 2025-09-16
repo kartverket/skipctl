@@ -49,9 +49,9 @@ func runDiff(_ *cobra.Command, _ []string) error {
 	var reRef = regexp.MustCompile(`(?i)^(?:HEAD|[0-9a-f]{7,40})$`)
 
 	if !reRef.MatchString(commitHash) {
-		err := fmt.Errorf("invalid commit hash %s", commitHash)
-		log.Error(err.Error())
-		return err
+		hashErr := fmt.Errorf("invalid commit hash %s", commitHash)
+		log.Error(hashErr.Error())
+		return hashErr
 	}
 
 	processor := manifest.NewDocumentProcessor()
