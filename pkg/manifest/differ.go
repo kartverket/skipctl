@@ -29,10 +29,15 @@ func NewDiffer(prevHash string, verbose bool) *Differ {
 	}
 }
 func (d *Differ) DiffManifest(file *Document) error {
-	prevFile, err := file.FromPrevHash(d.prevHash)
+	prevFile, err := file.FromPrevHashWithGoGit(d.prevHash)
 	if err != nil {
 		return err
 	}
+	// BELOW IS THE NORMAL THAT IS LOCATED IN document.go
+	// prevFile, err := file.FromPrevHash(d.prevHash)
+	// if err != nil {
+	// 	return err
+	// }
 
 	// render current manifest to buffer
 	d.renderBuffer.Reset()

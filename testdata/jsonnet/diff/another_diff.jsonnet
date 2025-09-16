@@ -9,7 +9,7 @@
 } + {
   person+: {
     hobbies+: [
-      'swimming',
+      'cycling',
     ],
   },
 }
