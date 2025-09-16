@@ -129,7 +129,7 @@ const (
 	colorReset = "\x1b[0m"
 )
 
-func Diff(a, b string) string {
+func Diff(a, b string, verbose bool) string {
 	dmp := diffmatchpatch.New()
 
 	ar, br, lineArray := dmp.DiffLinesToRunes(a, b)
@@ -142,47 +142,79 @@ func Diff(a, b string) string {
 	lineA, lineB := 1, 1
 
 	for _, d := range diffs {
-		text := string(d.Text)
-		lines := splitKeepNL(text)
+		handleDiffChunk(&out, d, verbose, &lineA, &lineB)
+	}
 
-		switch d.Type {
-		case diffmatchpatch.DiffEqual:
-			// Advance both cursors for each complete line consumed
-			for _, ln := range lines {
-				if strings.HasSuffix(ln, "\n") {
-					lineA++
-					lineB++
-				}
-			}
+	return out.String()
+}
 
-		case diffmatchpatch.DiffDelete:
-			cur := lineA
-			for _, ln := range lines {
-				out.WriteString(colorRed)
-				out.WriteString(fmt.Sprintf("%d -", cur))
-				out.WriteString(ln)
-				out.WriteString(colorReset)
-				if strings.HasSuffix(ln, "\n") {
-					cur++
-				}
-			}
-			lineA = cur // advance only the left cursor
+func handleDiffChunk(out *strings.Builder, d diffmatchpatch.Diff, verbose bool, lineA, lineB *int) {
+	lines := splitKeepNL(d.Text)
+	switch d.Type {
+	case diffmatchpatch.DiffEqual:
+		writeEqual(out, lines, verbose, lineA, lineB)
+	case diffmatchpatch.DiffDelete:
+		writeDelete(out, lines, lineA)
+	case diffmatchpatch.DiffInsert:
+		writeInsert(out, lines, lineB)
+	}
+}
 
-		case diffmatchpatch.DiffInsert:
-			cur := lineB
-			for _, ln := range lines {
-				out.WriteString(colorGreen)
-				out.WriteString(fmt.Sprintf("%d +", cur))
-				out.WriteString(ln)
-				out.WriteString(colorReset)
-				if strings.HasSuffix(ln, "\n") {
-					cur++
-				}
+func writeEqual(out *strings.Builder, lines []string, verbose bool, lineA, lineB *int) {
+	if verbose {
+		cur := *lineA
+		for _, ln := range lines {
+			fmt.Fprintf(out, "%d  ", cur)
+			out.WriteString(ln)
+			if strings.HasSuffix(ln, "\n") {
+				cur++
 			}
-			lineB = cur // advance only the right cursor
+		}
+		*lineA = cur
+		*lineB = cur
+		return
+	}
+	inc := countNewlines(lines)
+	*lineA += inc
+	*lineB += inc
+}
+
+func writeDelete(out *strings.Builder, lines []string, lineA *int) {
+	cur := *lineA
+	for _, ln := range lines {
+		out.WriteString(colorRed)
+		fmt.Fprintf(out, "%d -", cur)
+		out.WriteString(ln)
+		out.WriteString(colorReset)
+		if strings.HasSuffix(ln, "\n") {
+			cur++
 		}
 	}
-	return out.String()
+	*lineA = cur
+}
+
+func writeInsert(out *strings.Builder, lines []string, lineB *int) {
+	cur := *lineB
+	for _, ln := range lines {
+		out.WriteString(colorGreen)
+		fmt.Fprintf(out, "%d +", cur)
+		out.WriteString(ln)
+		out.WriteString(colorReset)
+		if strings.HasSuffix(ln, "\n") {
+			cur++
+		}
+	}
+	*lineB = cur
+}
+
+func countNewlines(lines []string) int {
+	n := 0
+	for _, ln := range lines {
+		if strings.HasSuffix(ln, "\n") {
+			n++
+		}
+	}
+	return n
 }
 
 // splitKeepNL splits on '\n' and keeps newline characters at the end of each chunk.
@@ -192,7 +224,7 @@ func splitKeepNL(s string) []string {
 	}
 	var res []string
 	start := 0
-	for i := 0; i < len(s); i++ {
+	for i := range s {
 		if s[i] == '\n' {
 			res = append(res, s[start:i+1])
 			start = i + 1

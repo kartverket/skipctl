@@ -12,17 +12,19 @@ type Differ struct {
 	renderer     *Renderer
 	rawOutput    *slog.Logger
 	prevHash     string
+	verbose      bool
 	renderBuffer *bytes.Buffer
 	logger       *slog.Logger
 }
 
-func NewDiffer(prevHash string) *Differ {
+func NewDiffer(prevHash string, verbose bool) *Differ {
 	buf := &bytes.Buffer{}
 	return &Differ{
 		renderer:     NewRenderer(logging.NewRawLoggerTo(buf)),
 		rawOutput:    logging.RawLogger(),
 		logger:       logging.Logger(),
 		prevHash:     prevHash,
+		verbose:      verbose,
 		renderBuffer: buf,
 	}
 }
@@ -48,7 +50,7 @@ func (d *Differ) DiffManifest(file *Document) error {
 	}
 	prevRendered := d.renderBuffer.String()
 
-	diff := utils.Diff(prevRendered, rendered)
+	diff := utils.Diff(prevRendered, rendered, d.verbose)
 
 	if diff != "" {
 		d.logger.Info("diff", "file", file.Name, "commit_hash", d.prevHash)

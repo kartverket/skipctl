@@ -12,6 +12,7 @@ import (
 
 var (
 	commitHash string
+	verbose    bool
 )
 
 var diffCmd = &cobra.Command{
@@ -46,7 +47,7 @@ func runDiff(_ *cobra.Command, _ []string) error {
 	}
 	processor := manifest.NewDocumentProcessor()
 
-	differ := manifest.NewDiffer(commitHash)
+	differ := manifest.NewDiffer(commitHash, verbose)
 
 	err = processor.ProcessDocuments(manifestFiles, differ.DiffManifest)
 	if err != nil {
@@ -54,7 +55,9 @@ func runDiff(_ *cobra.Command, _ []string) error {
 	}
 	return err
 }
+
 func init() {
 	diffCmd.Flags().StringVar(&commitHash, "hash", "HEAD", "Commit hash to diff against (default HEAD)")
+	diffCmd.Flags().BoolVarP(&verbose, "verbose", "v", false, "Include entire file contents with diffs")
 	manifestCmd.AddCommand(diffCmd)
 }
