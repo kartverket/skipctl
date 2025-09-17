@@ -12,8 +12,8 @@ import (
 )
 
 var (
-	commitHash string
-	verbose    bool
+	ref     string
+	verbose bool
 )
 
 var diffCmd = &cobra.Command{
@@ -46,17 +46,17 @@ func runDiff(_ *cobra.Command, _ []string) error {
 		log.Info("No manifests found.")
 		return nil
 	}
-	var reRef = regexp.MustCompile(`(?i)^(?:HEAD|[0-9a-f]{7,40})$`)
+	var reRef = regexp.MustCompile(`^(HEAD|[0-9a-fA-F]{7,40}|[A-Za-z0-9._/-]+)$`)
 
-	if !reRef.MatchString(commitHash) {
-		hashErr := fmt.Errorf("invalid commit hash %s", commitHash)
-		log.Error(hashErr.Error())
-		return hashErr
+	if !reRef.MatchString(ref) {
+		refErr := fmt.Errorf("invalid commit ref %s", ref)
+		log.Error(refErr.Error())
+		return refErr
 	}
 
 	processor := manifest.NewDocumentProcessor()
 
-	differ := manifest.NewDiffer(commitHash, verbose)
+	differ := manifest.NewDiffer(ref, verbose)
 
 	err = processor.ProcessDocuments(manifestFiles, differ.DiffManifest)
 	if err != nil {
@@ -66,7 +66,7 @@ func runDiff(_ *cobra.Command, _ []string) error {
 }
 
 func init() {
-	diffCmd.Flags().StringVar(&commitHash, "hash", "HEAD", "Commit hash to diff against (default HEAD)")
+	diffCmd.Flags().StringVar(&ref, "ref", "HEAD", "git ref to diff against, use commit hash or branch name (default HEAD)")
 	diffCmd.Flags().BoolVarP(&verbose, "verbose", "v", false, "Include entire file contents with diffs")
 	manifestCmd.AddCommand(diffCmd)
 }

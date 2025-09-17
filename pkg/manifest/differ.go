@@ -11,33 +11,28 @@ import (
 type Differ struct {
 	renderer     *Renderer
 	rawOutput    *slog.Logger
-	prevHash     string
+	ref          string
 	verbose      bool
 	renderBuffer *bytes.Buffer
 	logger       *slog.Logger
 }
 
-func NewDiffer(prevHash string, verbose bool) *Differ {
+func NewDiffer(ref string, verbose bool) *Differ {
 	buf := &bytes.Buffer{}
 	return &Differ{
 		renderer:     NewRenderer(logging.NewRawLoggerTo(buf)),
 		rawOutput:    logging.RawLogger(),
 		logger:       logging.Logger(),
-		prevHash:     prevHash,
+		ref:          ref,
 		verbose:      verbose,
 		renderBuffer: buf,
 	}
 }
 func (d *Differ) DiffManifest(file *Document) error {
-	prevFile, err := file.FromPrevHashWithGoGit(d.prevHash)
+	prevFile, err := file.FromRef(d.ref)
 	if err != nil {
 		return err
 	}
-	// BELOW IS THE NORMAL THAT IS LOCATED IN document.go
-	// prevFile, err := file.FromPrevHash(d.prevHash)
-	// if err != nil {
-	// 	return err
-	// }
 
 	// render current manifest to buffer
 	d.renderBuffer.Reset()
@@ -58,7 +53,7 @@ func (d *Differ) DiffManifest(file *Document) error {
 	diff, hasDiff := utils.Diff(prevRendered, rendered, d.verbose)
 
 	if hasDiff {
-		d.logger.Info("diff", "file", file.Name, "commit_hash", d.prevHash)
+		d.logger.Info("diff", "file", file.Name, "ref", d.ref)
 		d.rawOutput.Info(diff)
 	}
 
