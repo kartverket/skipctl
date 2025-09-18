@@ -1,3 +1,4 @@
+//nolint:revive // the package name is intentional
 package utils
 
 import (
