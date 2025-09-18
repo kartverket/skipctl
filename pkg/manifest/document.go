@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"strings"
 
@@ -22,19 +21,16 @@ type Document struct {
 }
 
 func (d *Document) FromRef(ref string) (*Document, error) {
-	cmd := exec.Command("git", "show", fmt.Sprintf("%s:%s", ref, d.Name))
-	var out bytes.Buffer
-	var stderr bytes.Buffer
-	cmd.Stdout = &out
-	cmd.Stderr = &stderr
-	if err := cmd.Run(); err != nil {
-		return nil, fmt.Errorf("unable to read file from ref: file=%s ref=%s", d.Name, ref)
+	content, err := utils.GetFileContentFromRef(d.Name, ref)
+	if err != nil {
+		return nil, err
 	}
+
 	return &Document{
 		Name:        d.Name,
 		Extension:   d.Extension,
 		Permissions: d.Permissions,
-		Content:     out.String(),
+		Content:     *content,
 		FromStdin:   false,
 	}, nil
 }
