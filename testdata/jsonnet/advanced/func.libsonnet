@@ -23,6 +23,7 @@ function(
       readiness: {
         path: '/health',
         port: port,
+        variant: ingress,
       },
       resources: {
         requests: {
