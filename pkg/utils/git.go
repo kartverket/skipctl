@@ -1,4 +1,4 @@
-//nolint:revive // the package name is intentional
+//revive:disable-next-line var-naming
 package utils
 
 import (
