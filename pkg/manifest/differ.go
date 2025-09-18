@@ -52,10 +52,12 @@ func (d *Differ) DiffManifest(file *Document) error {
 
 	diff, hasChanges := utils.Diff(prevRendered, rendered)
 
-	if hasChanges {
-		d.logger.Info("diff", "file", file.Name, "ref", d.ref)
-		d.rawOutput.Info(utils.DiffsToPrettyPrint(diff, d.verbose))
+	if !hasChanges {
+		return nil
 	}
+
+	d.logger.Info("diff", "file", file.Name, "ref", d.ref)
+	d.rawOutput.Info(utils.DiffsToPrettyPrint(diff, d.verbose))
 
 	return nil
 }
