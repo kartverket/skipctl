@@ -4,6 +4,7 @@ function(
   name='backend',
   clientId,
   port,
+  ingress,
 ) [
   {
     apiVersion: 'skiperator.kartverket.no/v1alpha1',
@@ -11,6 +12,7 @@ function(
     metadata: {
       name: name,
     },
+    variant: ingress,
     spec: {
       image: version,
       port: port,
