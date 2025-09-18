@@ -3,8 +3,6 @@ package utils
 import (
 	"fmt"
 	"strings"
-
-	"github.com/sergi/go-diff/diffmatchpatch"
 )
 
 const (
@@ -13,113 +11,99 @@ const (
 	colorReset = "\x1b[0m"
 )
 
-func Diff(a, b string, verbose bool) (string, bool) {
-	dmp := diffmatchpatch.New()
+var diffSymbolMap = map[string]string{
+	"Equals":    " ",
+	"Insertion": "+",
+	"Deletion":  "-",
+}
 
-	ar, br, lineArray := dmp.DiffLinesToRunes(a, b)
-	diffs := dmp.DiffMainRunes(ar, br, false)
-	diffs = dmp.DiffCleanupSemantic(diffs)
-	diffs = dmp.DiffCleanupEfficiency(diffs)
-	diffs = dmp.DiffCharsToLines(diffs, lineArray)
+var diffColorMap = map[string]string{
+	"Equals":    colorReset,
+	"Insertion": colorGreen,
+	"Deletion":  colorRed,
+}
 
-	allEqual := true
-	var out strings.Builder
-	lineA, lineB := 1, 1
+type ManifestDiff struct {
+	Type string
+	Text string
+	Line int
+}
 
-	for _, d := range diffs {
-		handleDiffChunk(&out, d, verbose, &lineA, &lineB)
-		if d.Type.String() != "Equal" {
-			allEqual = false
+func Diff(a, b string) ([]*ManifestDiff, bool) {
+	// Split input into lines
+	linesA := strings.Split(a, "\n")
+	linesB := strings.Split(b, "\n")
+
+	maxLen := max(len(linesA), len(linesB))
+
+	diffs := []*ManifestDiff{}
+	hasDiff := false
+
+	for i := range maxLen {
+		var lineA, lineB string
+		if i < len(linesA) {
+			lineA = linesA[i]
+		}
+		if i < len(linesB) {
+			lineB = linesB[i]
+		}
+		switch {
+		case i >= len(linesA):
+			diffs = append(diffs, &ManifestDiff{
+				Type: "Insertion",
+				Text: lineB,
+				Line: i,
+			})
+			hasDiff = true
+		case i >= len(linesB):
+			diffs = append(diffs, &ManifestDiff{
+				Type: "Deletion",
+				Text: lineA,
+				Line: i,
+			})
+			hasDiff = true
+		case lineA != lineB:
+			diffs = append(diffs, &ManifestDiff{
+				Type: "Deletion",
+				Text: lineA,
+				Line: i,
+			})
+
+			diffs = append(diffs, &ManifestDiff{
+				Type: "Insertion",
+				Text: lineB,
+				Line: i,
+			})
+			hasDiff = true
+		default:
+			diffs = append(diffs, &ManifestDiff{
+				Type: "Equals",
+				Text: lineA,
+				Line: i,
+			})
 		}
 	}
 
-	return out.String(), !allEqual
+	return diffs, hasDiff
 }
 
-func handleDiffChunk(out *strings.Builder, d diffmatchpatch.Diff, verbose bool, lineA, lineB *int) {
-	lines := splitKeepNL(d.Text)
-	switch d.Type {
-	case diffmatchpatch.DiffEqual:
-		writeEqual(out, lines, verbose, lineA, lineB)
-	case diffmatchpatch.DiffDelete:
-		writeDelete(out, lines, lineA)
-	case diffmatchpatch.DiffInsert:
-		writeInsert(out, lines, lineB)
-	}
-}
+func DiffsToPrettyPrint(diffs []*ManifestDiff, verbose bool) string {
+	var out strings.Builder
+	outputDiffs := []*ManifestDiff{}
 
-func writeEqual(out *strings.Builder, lines []string, verbose bool, lineA, lineB *int) {
-	if verbose {
-		cur := *lineA
-		for _, ln := range lines {
-			fmt.Fprintf(out, "%d  ", cur)
-			out.WriteString(ln)
-			if strings.HasSuffix(ln, "\n") {
-				cur++
+	if !verbose {
+		for _, d := range diffs {
+			if d.Type != "Equals" {
+				outputDiffs = append(outputDiffs, d)
 			}
 		}
-		*lineA = cur
-		*lineB = cur
-		return
+	} else {
+		outputDiffs = diffs
 	}
-	inc := countNewlines(lines)
-	*lineA += inc
-	*lineB += inc
-}
 
-func writeDelete(out *strings.Builder, lines []string, lineA *int) {
-	cur := *lineA
-	for _, ln := range lines {
-		out.WriteString(colorRed)
-		fmt.Fprintf(out, "%d -", cur)
-		out.WriteString(ln)
-		out.WriteString(colorReset)
-		if strings.HasSuffix(ln, "\n") {
-			cur++
-		}
+	for _, d := range outputDiffs {
+		out.WriteString(fmt.Sprintf("%s%d %s %s\n", diffColorMap[d.Type], d.Line, diffSymbolMap[d.Type], d.Text))
 	}
-	*lineA = cur
-}
 
-func writeInsert(out *strings.Builder, lines []string, lineB *int) {
-	cur := *lineB
-	for _, ln := range lines {
-		out.WriteString(colorGreen)
-		fmt.Fprintf(out, "%d +", cur)
-		out.WriteString(ln)
-		out.WriteString(colorReset)
-		if strings.HasSuffix(ln, "\n") {
-			cur++
-		}
-	}
-	*lineB = cur
-}
-
-func countNewlines(lines []string) int {
-	n := 0
-	for _, ln := range lines {
-		if strings.HasSuffix(ln, "\n") {
-			n++
-		}
-	}
-	return n
-}
-
-// splitKeepNL splits on '\n' and keeps newline characters at the end of each chunk.
-func splitKeepNL(s string) []string {
-	if s == "" {
-		return nil
-	}
-	var res []string
-	start := 0
-	for i := range s {
-		if s[i] == '\n' {
-			res = append(res, s[start:i+1])
-			start = i + 1
-		}
-	}
-	if start < len(s) {
-		res = append(res, s[start:])
-	}
-	return res
+	return out.String()
 }

@@ -50,11 +50,11 @@ func (d *Differ) DiffManifest(file *Document) error {
 	}
 	prevRendered := d.renderBuffer.String()
 
-	diff, hasDiff := utils.Diff(prevRendered, rendered, d.verbose)
+	diff, hasChanges := utils.Diff(prevRendered, rendered)
 
-	if hasDiff {
+	if hasChanges {
 		d.logger.Info("diff", "file", file.Name, "ref", d.ref)
-		d.rawOutput.Info(diff)
+		d.rawOutput.Info(utils.DiffsToPrettyPrint(diff, d.verbose))
 	}
 
 	return nil
