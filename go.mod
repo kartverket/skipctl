@@ -12,7 +12,6 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus-community/pro-bing v0.7.0
 	github.com/prometheus/client_golang v1.23.2
-	github.com/sergi/go-diff v1.3.2-0.20230802210424-5b0b94c5c0d3
 	github.com/spf13/cobra v1.10.1
 	github.com/stretchr/testify v1.11.1
 	github.com/yannh/kubeconform v0.7.0
@@ -113,6 +112,7 @@ require (
 	github.com/santhosh-tekuri/jsonschema/v6 v6.0.1 // indirect
 	github.com/segmentio/asm v1.2.0 // indirect
 	github.com/segmentio/encoding v0.5.3 // indirect
+	github.com/sergi/go-diff v1.3.2-0.20230802210424-5b0b94c5c0d3 // indirect
 	github.com/sirupsen/logrus v1.9.3 // indirect
 	github.com/skeema/knownhosts v1.3.1 // indirect
 	github.com/spf13/pflag v1.0.9 // indirect
