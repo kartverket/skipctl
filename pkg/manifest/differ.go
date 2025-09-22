@@ -60,24 +60,19 @@ func (d *Differ) DiffManifest(file *Document) error {
 	if !hasChanges {
 		return nil
 	}
-	// need access to the filename and ref inside the differ somehow
-	for i := range diffs {
-		diffs[i].FileName = file.Name
-		diffs[i].Ref = d.ref
-	}
-	d.logger.Info("diff", "file", file.Name, "ref", d.ref)
 
 	outputDiffs := utils.FilterDiffs(diffs, d.verbosityLevel, d.chunkSize)
 
 	switch d.outputFormat {
 	case constants.DiffOutputPretty:
+		d.logger.Info("diff", "file", file.Name, "ref", d.ref)
 		d.rawOutput.Info(utils.DiffsToPrettyPrint(outputDiffs))
 		return nil
 	case constants.DiffOutputPatch:
-		d.rawOutput.Info(utils.DiffsToPatch(outputDiffs))
+		d.rawOutput.Info(utils.DiffsToPatch(outputDiffs, file.Name))
 		return nil
 	case constants.DiffOutputJSON:
-		d.rawOutput.Info(utils.DiffsToJSON(outputDiffs))
+		d.rawOutput.Info(utils.DiffsToJSON(outputDiffs, file.Name, d.ref))
 		return nil
 	default:
 		return nil

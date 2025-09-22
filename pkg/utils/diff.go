@@ -28,11 +28,15 @@ var diffColorMap = map[string]string{
 }
 
 type ManifestDiff struct {
-	Type     string `json:"type"`
-	Text     string `json:"text"`
-	Line     int    `json:"line"`
-	FileName string `json:"filename"`
-	Ref      string `json:"ref"`
+	Type string `json:"type"`
+	Text string `json:"text"`
+	Line int    `json:"line"`
+}
+
+type DiffJSONOutput struct {
+	File  string          `json:"file"`
+	Ref   string          `json:"ref"`
+	Diffs []*ManifestDiff `json:"diffs"`
 }
 
 func Diff(a, b string) ([]*ManifestDiff, bool) {
@@ -96,32 +100,27 @@ func Diff(a, b string) ([]*ManifestDiff, bool) {
 func DiffsToPrettyPrint(diffs []*ManifestDiff) string {
 	var out strings.Builder
 	for _, d := range diffs {
-		out.WriteString(fmt.Sprintf("%s%d %s %s\n", diffColorMap[d.Type], d.Line, diffSymbolMap[d.Type], d.Text))
+		out.WriteString(fmt.Sprintf("%s%d %s %s%s\n", diffColorMap[d.Type], d.Line, diffSymbolMap[d.Type], d.Text, colorReset))
 	}
 	return out.String()
 }
 
-func DiffsToJSON(diffs []*ManifestDiff) string {
-	// Marshal the filtered diffs to JSON
-	jsonBytes, err := json.MarshalIndent(diffs, "", "  ")
+func DiffsToJSON(diffs []*ManifestDiff, fileName string, ref string) string {
+	out := DiffJSONOutput{
+		File:  fileName,
+		Ref:   ref,
+		Diffs: diffs,
+	}
+	jsonBytes, err := json.MarshalIndent(out, "", "  ")
 	if err != nil {
-		// Return an error string if marshalling fails
 		return `{"error": "failed to marshal diffs to JSON"}`
 	}
 	return string(jsonBytes)
 }
 
-func DiffsToPatch(diffs []*ManifestDiff) string {
+func DiffsToPatch(diffs []*ManifestDiff, fileName string) string {
 	if len(diffs) == 0 {
 		return ""
-	}
-
-	// Determine filename (fallback).
-	var fileName string
-	for _, d := range diffs {
-		if fileName == "" && d.FileName != "" {
-			fileName = d.FileName
-		}
 	}
 
 	// Build stats for shortstat and unified header.
