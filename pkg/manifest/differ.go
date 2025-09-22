@@ -49,13 +49,15 @@ func (d *Differ) DiffManifest(file *Document) error {
 
 	// render previous manifest to buffer
 	d.renderBuffer.Reset()
+	d.renderer.SetImporter(NewGitImporter(d.ref))
 	err = d.renderer.RenderManifest(prevFile)
+	d.renderer.ResetImporter()
 	if err != nil {
 		return err
 	}
 	prevRendered := d.renderBuffer.String()
 
-	diffs, hasChanges := utils.Diff(prevRendered, rendered)
+	diffs, hasChanges := utils.DiffLCS(prevRendered, rendered)
 
 	if !hasChanges {
 		return nil

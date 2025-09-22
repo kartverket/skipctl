@@ -30,7 +30,7 @@ correctly, otherwise return code 1 is used to indicate failure.`,
 		strings.Join(constants.ManifestSuffixes, ", ")),
 	RunE:          runDiff,
 	SilenceErrors: true,
-	SilenceUsage:  false,
+	SilenceUsage:  true,
 }
 
 func runDiff(_ *cobra.Command, _ []string) error {

@@ -39,61 +39,85 @@ type DiffJSONOutput struct {
 	Diffs []*ManifestDiff `json:"diffs"`
 }
 
-func Diff(a, b string) ([]*ManifestDiff, bool) {
-	// Split input into lines
-	linesA := strings.Split(a, "\n")
-	linesB := strings.Split(b, "\n")
-
-	maxLen := max(len(linesA), len(linesB))
-
-	diffs := []*ManifestDiff{}
-	hasDiff := false
-
-	for i := range maxLen {
-		var lineA, lineB string
-		if i < len(linesA) {
-			lineA = linesA[i]
-		}
-		if i < len(linesB) {
-			lineB = linesB[i]
-		}
-		switch {
-		case i >= len(linesA):
-			diffs = append(diffs, &ManifestDiff{
-				Type: "Insertion",
-				Text: lineB,
-				Line: i,
-			})
-			hasDiff = true
-		case i >= len(linesB):
-			diffs = append(diffs, &ManifestDiff{
-				Type: "Deletion",
-				Text: lineA,
-				Line: i,
-			})
-			hasDiff = true
-		case lineA != lineB:
-			diffs = append(diffs, &ManifestDiff{
-				Type: "Deletion",
-				Text: lineA,
-				Line: i,
-			})
-
-			diffs = append(diffs, &ManifestDiff{
-				Type: "Insertion",
-				Text: lineB,
-				Line: i,
-			})
-			hasDiff = true
-		default:
-			diffs = append(diffs, &ManifestDiff{
-				Type: "Equals",
-				Text: lineA,
-				Line: i,
-			})
+func lcs(a, b []string) [][]int {
+	// Returns a 2D table of LCS lengths
+	m, n := len(a), len(b)
+	dp := make([][]int, m+1)
+	for i := range dp {
+		dp[i] = make([]int, n+1)
+	}
+	for i := m - 1; i >= 0; i-- {
+		for j := n - 1; j >= 0; j-- {
+			switch {
+			case a[i] == b[j]:
+				dp[i][j] = dp[i+1][j+1] + 1
+			case dp[i+1][j] >= dp[i][j+1]:
+				dp[i][j] = dp[i+1][j]
+			default:
+				dp[i][j] = dp[i][j+1]
+			}
 		}
 	}
 
+	return dp
+}
+
+func DiffLCS(a, b string) ([]*ManifestDiff, bool) {
+	linesA := strings.Split(a, "\n")
+	linesB := strings.Split(b, "\n")
+	dp := lcs(linesA, linesB)
+	i, j := 0, 0
+	diffs := []*ManifestDiff{}
+	hasDiff := false
+
+	for i < len(linesA) && j < len(linesB) {
+		switch {
+		case linesA[i] == linesB[j]:
+			diffs = append(diffs, &ManifestDiff{
+				Type: "Equals",
+				Text: linesA[i],
+				Line: i,
+			})
+			i++
+			j++
+		case dp[i+1][j] >= dp[i][j+1]:
+			diffs = append(diffs, &ManifestDiff{
+				Type: "Deletion",
+				Text: linesA[i],
+				Line: i,
+			})
+			hasDiff = true
+			i++
+		default:
+			diffs = append(diffs, &ManifestDiff{
+				Type: "Insertion",
+				Text: linesB[j],
+				Line: j,
+			})
+			hasDiff = true
+			j++
+		}
+	}
+
+	// Handle trailing insertions/deletions
+	for i < len(linesA) {
+		diffs = append(diffs, &ManifestDiff{
+			Type: "Deletion",
+			Text: linesA[i],
+			Line: i,
+		})
+		hasDiff = true
+		i++
+	}
+	for j < len(linesB) {
+		diffs = append(diffs, &ManifestDiff{
+			Type: "Insertion",
+			Text: linesB[j],
+			Line: j,
+		})
+		hasDiff = true
+		j++
+	}
 	return diffs, hasDiff
 }
 
