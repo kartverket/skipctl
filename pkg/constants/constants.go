@@ -30,6 +30,9 @@ const (
 	DiffVerbosityChunk   = "chunk"
 	DiffVerbosityFull    = "full"
 )
+const (
+	DefaultChunkSize = 3
+)
 
 const (
 	Equals     = "Equals"

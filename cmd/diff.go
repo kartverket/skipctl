@@ -70,7 +70,7 @@ func runDiff(_ *cobra.Command, _ []string) error {
 func init() {
 	diffCmd.Flags().StringVar(&ref, "ref", "HEAD", "git ref to diff against, use commit hash or branch name (default HEAD)")
 	diffCmd.Flags().StringVar(&verbosityLevel, "verbosity", constants.DiffVerbosityFull, "Include entire file contents with diffs")
-	diffCmd.Flags().IntVar(&chunkSize, "chunk-size", 3, "Number of lines to include above and below a diff line")
+	diffCmd.Flags().IntVar(&chunkSize, "chunk-size", constants.DefaultChunkSize, "Number of lines to include above and below a diff line")
 	diffCmd.Flags().StringVar(&diffOutputFormat, "diff-format", constants.DiffOutputPretty, "the output format of the diff (default pretty), allowed (pretty | patch | json)")
 	manifestCmd.AddCommand(diffCmd)
 }

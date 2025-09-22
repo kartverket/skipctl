@@ -186,12 +186,11 @@ func FilterDiffs(diffs []*ManifestDiff, verbosityLevel string, chunkSize int) []
 		return filterDiffsWithChunks(diffs, chunkSize)
 	case constants.DiffVerbosityMinimal:
 		return filterNonEqualDiffs(diffs)
-	default: // covers 3 and any other value
+	default:
 		return diffs
 	}
 }
 
-// Returns only diffs where Type != constants.Equals
 func filterNonEqualDiffs(diffs []*ManifestDiff) []*ManifestDiff {
 	outputDiffs := make([]*ManifestDiff, 0, len(diffs))
 	for _, d := range diffs {
