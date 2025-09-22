@@ -12,8 +12,9 @@ import (
 )
 
 var (
-	ref     string
-	verbose bool
+	ref              string
+	verbose          bool
+	diffOutputFormat string
 )
 
 var diffCmd = &cobra.Command{
@@ -56,7 +57,7 @@ func runDiff(_ *cobra.Command, _ []string) error {
 
 	processor := manifest.NewDocumentProcessor()
 
-	differ := manifest.NewDiffer(ref, verbose)
+	differ := manifest.NewDiffer(ref, verbose, diffOutputFormat)
 
 	err = processor.ProcessDocuments(manifestFiles, differ.DiffManifest)
 	if err != nil {
@@ -68,5 +69,6 @@ func runDiff(_ *cobra.Command, _ []string) error {
 func init() {
 	diffCmd.Flags().StringVar(&ref, "ref", "HEAD", "git ref to diff against, use commit hash or branch name (default HEAD)")
 	diffCmd.Flags().BoolVarP(&verbose, "verbose", "v", false, "Include entire file contents with diffs")
+	diffCmd.Flags().StringVar(&diffOutputFormat, "diff-format", "pretty", "the output format of the diff (default pretty), allowed (pretty | patch | json)")
 	manifestCmd.AddCommand(diffCmd)
 }

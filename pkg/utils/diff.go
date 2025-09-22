@@ -2,6 +2,7 @@
 package utils
 
 import (
+	"encoding/json"
 	"fmt"
 	"strings"
 )
@@ -88,23 +89,38 @@ func Diff(a, b string) ([]*ManifestDiff, bool) {
 	return diffs, hasDiff
 }
 
-func DiffsToPrettyPrint(diffs []*ManifestDiff, verbose bool) string {
-	var out strings.Builder
-	outputDiffs := []*ManifestDiff{}
-
-	if !verbose {
-		for _, d := range diffs {
-			if d.Type != "Equals" {
-				outputDiffs = append(outputDiffs, d)
-			}
-		}
-	} else {
-		outputDiffs = diffs
+func filterDiffs(diffs []*ManifestDiff, verbose bool) []*ManifestDiff {
+	if verbose {
+		return diffs
 	}
 
-	for _, d := range outputDiffs {
+	outputDiffs := []*ManifestDiff{}
+	for _, d := range diffs {
+		if d.Type != "Equals" {
+			outputDiffs = append(outputDiffs, d)
+		}
+	}
+	return outputDiffs
+}
+
+func DiffsToPrettyPrint(diffs []*ManifestDiff, verbose bool) string {
+	filteredDiffs := filterDiffs(diffs, verbose)
+
+	var out strings.Builder
+	for _, d := range filteredDiffs {
 		out.WriteString(fmt.Sprintf("%s%d %s %s\n", diffColorMap[d.Type], d.Line, diffSymbolMap[d.Type], d.Text))
 	}
-
 	return out.String()
+}
+
+func DiffsToJson(diffs []*ManifestDiff, verbose bool) string {
+	filteredDiffs := filterDiffs(diffs, verbose)
+
+	// Marshal the filtered diffs to JSON
+	jsonBytes, err := json.MarshalIndent(filteredDiffs, "", "  ")
+	if err != nil {
+		// Return an error string if marshalling fails
+		return `{"error": "failed to marshal diffs to JSON"}`
+	}
+	return string(jsonBytes)
 }

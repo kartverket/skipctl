@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"log/slog"
 
+	"github.com/kartverket/skipctl/pkg/constants"
 	"github.com/kartverket/skipctl/pkg/logging"
 	"github.com/kartverket/skipctl/pkg/utils"
 )
@@ -13,11 +14,12 @@ type Differ struct {
 	rawOutput    *slog.Logger
 	ref          string
 	verbose      bool
+	outputFormat string
 	renderBuffer *bytes.Buffer
 	logger       *slog.Logger
 }
 
-func NewDiffer(ref string, verbose bool) *Differ {
+func NewDiffer(ref string, verbose bool, outputFormat string) *Differ {
 	buf := &bytes.Buffer{}
 	return &Differ{
 		renderer:     NewRenderer(logging.NewRawLoggerTo(buf)),
@@ -25,6 +27,7 @@ func NewDiffer(ref string, verbose bool) *Differ {
 		logger:       logging.Logger(),
 		ref:          ref,
 		verbose:      verbose,
+		outputFormat: outputFormat,
 		renderBuffer: buf,
 	}
 }
@@ -57,7 +60,17 @@ func (d *Differ) DiffManifest(file *Document) error {
 	}
 
 	d.logger.Info("diff", "file", file.Name, "ref", d.ref)
-	d.rawOutput.Info(utils.DiffsToPrettyPrint(diff, d.verbose))
 
-	return nil
+	switch d.outputFormat {
+	case constants.DiffOutputPretty:
+		d.rawOutput.Info(utils.DiffsToPrettyPrint(diff, d.verbose))
+		return nil
+	case constants.DiffOutputPatch:
+		return nil
+	case constants.DiffOutputJson:
+		d.rawOutput.Info(utils.DiffsToJson(diff, d.verbose))
+		return nil
+	default:
+		return nil
+	}
 }

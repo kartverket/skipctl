@@ -19,6 +19,12 @@ const (
 	ManifestSuffixYml     = ".yml"
 )
 
+const (
+	DiffOutputJson   = "json"
+	DiffOutputPatch  = "patch"
+	DiffOutputPretty = "pretty"
+)
+
 var (
 	ManifestSuffixes = []string{ManifestSuffixJsonnet, ManifestSuffixYaml, ManifestSuffixYml}
 )
