@@ -10,25 +10,27 @@ import (
 )
 
 type Differ struct {
-	renderer     *Renderer
-	rawOutput    *slog.Logger
-	ref          string
-	verbose      bool
-	outputFormat string
-	renderBuffer *bytes.Buffer
-	logger       *slog.Logger
+	renderer       *Renderer
+	rawOutput      *slog.Logger
+	ref            string
+	verbosityLevel string
+	chunkSize      int
+	outputFormat   string
+	renderBuffer   *bytes.Buffer
+	logger         *slog.Logger
 }
 
-func NewDiffer(ref string, verbose bool, outputFormat string) *Differ {
+func NewDiffer(ref string, verbosityLevel string, outputFormat string, chunkSize int) *Differ {
 	buf := &bytes.Buffer{}
 	return &Differ{
-		renderer:     NewRenderer(logging.NewRawLoggerTo(buf)),
-		rawOutput:    logging.RawLogger(),
-		logger:       logging.Logger(),
-		ref:          ref,
-		verbose:      verbose,
-		outputFormat: outputFormat,
-		renderBuffer: buf,
+		renderer:       NewRenderer(logging.NewRawLoggerTo(buf)),
+		rawOutput:      logging.RawLogger(),
+		logger:         logging.Logger(),
+		ref:            ref,
+		verbosityLevel: verbosityLevel,
+		chunkSize:      chunkSize,
+		outputFormat:   outputFormat,
+		renderBuffer:   buf,
 	}
 }
 func (d *Differ) DiffManifest(file *Document) error {
@@ -65,15 +67,17 @@ func (d *Differ) DiffManifest(file *Document) error {
 	}
 	d.logger.Info("diff", "file", file.Name, "ref", d.ref)
 
+	outputDiffs := utils.FilterDiffs(diffs, d.verbosityLevel, d.chunkSize)
+
 	switch d.outputFormat {
 	case constants.DiffOutputPretty:
-		d.rawOutput.Info(utils.DiffsToPrettyPrint(diffs, d.verbose))
+		d.rawOutput.Info(utils.DiffsToPrettyPrint(outputDiffs))
 		return nil
 	case constants.DiffOutputPatch:
-		d.rawOutput.Info(utils.DiffsToPatch(diffs, d.verbose))
+		d.rawOutput.Info(utils.DiffsToPatch(outputDiffs))
 		return nil
 	case constants.DiffOutputJSON:
-		d.rawOutput.Info(utils.DiffsToJSON(diffs, d.verbose))
+		d.rawOutput.Info(utils.DiffsToJSON(outputDiffs))
 		return nil
 	default:
 		return nil

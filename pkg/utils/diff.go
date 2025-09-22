@@ -93,35 +93,17 @@ func Diff(a, b string) ([]*ManifestDiff, bool) {
 	return diffs, hasDiff
 }
 
-func filterDiffsVerbose(diffs []*ManifestDiff, verbose bool) []*ManifestDiff {
-	if verbose {
-		return diffs
-	}
-
-	outputDiffs := []*ManifestDiff{}
-	for _, d := range diffs {
-		if d.Type != constants.Equals {
-			outputDiffs = append(outputDiffs, d)
-		}
-	}
-	return outputDiffs
-}
-
-func DiffsToPrettyPrint(diffs []*ManifestDiff, verbose bool) string {
-	filteredDiffs := filterDiffsVerbose(diffs, verbose)
-
+func DiffsToPrettyPrint(diffs []*ManifestDiff) string {
 	var out strings.Builder
-	for _, d := range filteredDiffs {
+	for _, d := range diffs {
 		out.WriteString(fmt.Sprintf("%s%d %s %s\n", diffColorMap[d.Type], d.Line, diffSymbolMap[d.Type], d.Text))
 	}
 	return out.String()
 }
 
-func DiffsToJSON(diffs []*ManifestDiff, verbose bool) string {
-	filteredDiffs := filterDiffsVerbose(diffs, verbose)
-
+func DiffsToJSON(diffs []*ManifestDiff) string {
 	// Marshal the filtered diffs to JSON
-	jsonBytes, err := json.MarshalIndent(filteredDiffs, "", "  ")
+	jsonBytes, err := json.MarshalIndent(diffs, "", "  ")
 	if err != nil {
 		// Return an error string if marshalling fails
 		return `{"error": "failed to marshal diffs to JSON"}`
@@ -129,13 +111,7 @@ func DiffsToJSON(diffs []*ManifestDiff, verbose bool) string {
 	return string(jsonBytes)
 }
 
-func DiffsToPatch(diffs []*ManifestDiff, verbose bool) string {
-	filteredDiffs := filterDiffsVerbose(diffs, verbose)
-
-	// return diff as patch format
-	return makePatch(filteredDiffs)
-}
-func makePatch(diffs []*ManifestDiff) string {
+func DiffsToPatch(diffs []*ManifestDiff) string {
 	if len(diffs) == 0 {
 		return ""
 	}
@@ -201,4 +177,47 @@ func makePatch(diffs []*ManifestDiff) string {
 	}
 
 	return b.String()
+}
+func FilterDiffs(diffs []*ManifestDiff, verbosityLevel string, chunkSize int) []*ManifestDiff {
+	switch verbosityLevel {
+	case constants.DiffVerbosityFull:
+		return diffs
+	case constants.DiffVerbosityChunk:
+		return filterDiffsWithChunks(diffs, chunkSize)
+	case constants.DiffVerbosityMinimal:
+		return filterNonEqualDiffs(diffs)
+	default: // covers 3 and any other value
+		return diffs
+	}
+}
+
+// Returns only diffs where Type != constants.Equals
+func filterNonEqualDiffs(diffs []*ManifestDiff) []*ManifestDiff {
+	outputDiffs := make([]*ManifestDiff, 0, len(diffs))
+	for _, d := range diffs {
+		if d.Type != constants.Equals {
+			outputDiffs = append(outputDiffs, d)
+		}
+	}
+	return outputDiffs
+}
+
+func filterDiffsWithChunks(diffs []*ManifestDiff, nlines int) []*ManifestDiff {
+	nonEqualDiffs := filterNonEqualDiffs(diffs)
+
+	lineSet := make(map[int]struct{})
+	for _, d := range nonEqualDiffs {
+		for i := d.Line - nlines; i <= d.Line+nlines; i++ {
+			if i > 0 {
+				lineSet[i] = struct{}{}
+			}
+		}
+	}
+	outputDiffs := make([]*ManifestDiff, 0, len(diffs))
+	for _, d := range diffs {
+		if _, ok := lineSet[d.Line]; ok {
+			outputDiffs = append(outputDiffs, d)
+		}
+	}
+	return outputDiffs
 }

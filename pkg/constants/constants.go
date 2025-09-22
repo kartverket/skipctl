@@ -26,6 +26,12 @@ const (
 )
 
 const (
+	DiffVerbosityMinimal = "minimal"
+	DiffVerbosityChunk   = "chunk"
+	DiffVerbosityFull    = "full"
+)
+
+const (
 	Equals     = "Equals"
 	Deletions  = "Deletions"
 	Insertions = "Insertions"

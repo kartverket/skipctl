@@ -13,7 +13,8 @@ import (
 
 var (
 	ref              string
-	verbose          bool
+	verbosityLevel   string
+	chunkSize        int
 	diffOutputFormat string
 )
 
@@ -29,7 +30,7 @@ correctly, otherwise return code 1 is used to indicate failure.`,
 		strings.Join(constants.ManifestSuffixes, ", ")),
 	RunE:          runDiff,
 	SilenceErrors: true,
-	SilenceUsage:  true,
+	SilenceUsage:  false,
 }
 
 func runDiff(_ *cobra.Command, _ []string) error {
@@ -57,7 +58,7 @@ func runDiff(_ *cobra.Command, _ []string) error {
 
 	processor := manifest.NewDocumentProcessor()
 
-	differ := manifest.NewDiffer(ref, verbose, diffOutputFormat)
+	differ := manifest.NewDiffer(ref, verbosityLevel, diffOutputFormat, chunkSize)
 
 	err = processor.ProcessDocuments(manifestFiles, differ.DiffManifest)
 	if err != nil {
@@ -68,7 +69,8 @@ func runDiff(_ *cobra.Command, _ []string) error {
 
 func init() {
 	diffCmd.Flags().StringVar(&ref, "ref", "HEAD", "git ref to diff against, use commit hash or branch name (default HEAD)")
-	diffCmd.Flags().BoolVarP(&verbose, "verbose", "v", false, "Include entire file contents with diffs")
-	diffCmd.Flags().StringVar(&diffOutputFormat, "diff-format", "pretty", "the output format of the diff (default pretty), allowed (pretty | patch | json)")
+	diffCmd.Flags().StringVar(&verbosityLevel, "verbosity", constants.DiffVerbosityFull, "Include entire file contents with diffs")
+	diffCmd.Flags().IntVar(&chunkSize, "chunk-size", 3, "Number of lines to include above and below a diff line")
+	diffCmd.Flags().StringVar(&diffOutputFormat, "diff-format", constants.DiffOutputPretty, "the output format of the diff (default pretty), allowed (pretty | patch | json)")
 	manifestCmd.AddCommand(diffCmd)
 }
