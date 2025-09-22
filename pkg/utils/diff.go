@@ -147,56 +147,77 @@ func DiffsToPatch(diffs []*ManifestDiff, fileName string) string {
 		return ""
 	}
 
-	// Build stats for shortstat and unified header.
-	var (
-		insertions, deletions int
-		aCount, bCount        int
-		lineA, lineB          int
-	)
+	// Count insertions/deletions for shortstat.
+	insertions, deletions := 0, 0
 	for _, d := range diffs {
 		switch d.Type {
-		case "Equals":
-			aCount++
-			bCount++
-		case "Deletion":
-			lineA = d.Line
-			deletions++
-			aCount++
 		case "Insertion":
-			lineB = d.Line
 			insertions++
-			bCount++
+		case "Deletion":
+			deletions++
 		}
 	}
 	if insertions == 0 && deletions == 0 {
 		return ""
 	}
 
+	// Header first, then diffs
+	header := writePatchHeaders(fileName, insertions, deletions)
+	body := writePatch(diffs)
+	return header + body
+}
+
+func writePatchHeaders(fileName string, insertions, deletions int) string {
 	var b strings.Builder
-	// Shortstat of the diff
+	// Shortstat
 	fmt.Fprintf(&b, " %s | %d %s%s\n", fileName, insertions+deletions, strings.Repeat("+", insertions), strings.Repeat("-", deletions))
-	fmt.Fprintf(&b, " 1 file changed, %d insertions(+), %d deletions(-)\n\n",
-		insertions, insertions)
-	// Patch headers of the diff
-	fmt.Fprintf(&b, "diff --git a /%s b /%s\n", fileName, fileName)
-	fmt.Fprintf(&b, "--- a /%s\n", fileName)
-	fmt.Fprintf(&b, "+++ b /%s\n", fileName)
-	fmt.Fprintf(&b, "@@ -%d,%d +%d,%d @@\n", lineA, aCount, lineB, bCount)
-	// Body of the diff
-	for _, d := range diffs {
-		switch d.Type {
-		case "Equals":
-			b.WriteByte(' ')
-		case "Deletion":
-			b.WriteByte('-')
-		case "Insertion":
-			b.WriteByte('+')
-		default:
-			b.WriteByte(' ')
+	fmt.Fprintf(&b, " 1 file changed, %d insertion(+), %d deletion(-)\n\n", insertions, deletions)
+
+	// Patch headers
+	fmt.Fprintf(&b, "diff --git a/%s b/%s\n", fileName, fileName)
+	fmt.Fprintf(&b, "--- a/%s\n", fileName)
+	fmt.Fprintf(&b, "+++ b/%s\n", fileName)
+	return b.String()
+}
+
+func writePatch(diffs []*ManifestDiff) string {
+	var b strings.Builder
+
+	aLn, bLn := 1, 1
+	i := 0
+	for i < len(diffs) {
+		if diffs[i].Type == "Equals" {
+			aLn++
+			bLn++
+			i++
+			continue
 		}
-		b.WriteByte(' ')
-		b.WriteString(d.Text)
-		b.WriteByte('\n')
+
+		aStart, bStart := aLn, bLn
+		aCount, bCount := 0, 0
+		var h strings.Builder
+
+		for i < len(diffs) && diffs[i].Type != "Equals" {
+			switch diffs[i].Type {
+			case "Deletion":
+				h.WriteString("- ")
+				h.WriteString(diffs[i].Text)
+				h.WriteByte('\n')
+				aCount++
+				aLn++
+			case "Insertion":
+				h.WriteString("+ ")
+				h.WriteString(diffs[i].Text)
+				h.WriteByte('\n')
+				bCount++
+				bLn++
+			}
+			i++
+		}
+
+		// Emit hunk header and its lines.
+		fmt.Fprintf(&b, "@@ -%d,%d +%d,%d @@\n", aStart, aCount, bStart, bCount)
+		b.WriteString(h.String())
 	}
 
 	return b.String()
