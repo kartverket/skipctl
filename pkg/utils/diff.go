@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
+
+	"github.com/kartverket/skipctl/pkg/constants"
 )
 
 const (
@@ -26,9 +28,11 @@ var diffColorMap = map[string]string{
 }
 
 type ManifestDiff struct {
-	Type string `json:"type"`
-	Text string `json:"text"`
-	Line int    `json:"line"`
+	Type     string `json:"type"`
+	Text     string `json:"text"`
+	Line     int    `json:"line"`
+	FileName string `json:"filename"`
+	Ref      string `json:"ref"`
 }
 
 func Diff(a, b string) ([]*ManifestDiff, bool) {
@@ -96,7 +100,7 @@ func filterDiffsVerbose(diffs []*ManifestDiff, verbose bool) []*ManifestDiff {
 
 	outputDiffs := []*ManifestDiff{}
 	for _, d := range diffs {
-		if d.Type != "Equals" {
+		if d.Type != constants.Equals {
 			outputDiffs = append(outputDiffs, d)
 		}
 	}
@@ -126,8 +130,75 @@ func DiffsToJSON(diffs []*ManifestDiff, verbose bool) string {
 }
 
 func DiffsToPatch(diffs []*ManifestDiff, verbose bool) string {
-	_ = filterDiffsVerbose(diffs, verbose)
+	filteredDiffs := filterDiffsVerbose(diffs, verbose)
 
 	// return diff as patch format
-	return "TODO IMPLEMENT"
+	return makePatch(filteredDiffs)
+}
+func makePatch(diffs []*ManifestDiff) string {
+	if len(diffs) == 0 {
+		return ""
+	}
+
+	// Determine filename (fallback).
+	var fileName string
+	for _, d := range diffs {
+		if fileName == "" && d.FileName != "" {
+			fileName = d.FileName
+		}
+	}
+
+	// Build stats for shortstat and unified header.
+	var (
+		insertions, deletions int
+		aCount, bCount        int
+		lineA, lineB          int
+	)
+	for _, d := range diffs {
+		switch d.Type {
+		case "Equals":
+			aCount++
+			bCount++
+		case "Deletion":
+			lineA = d.Line
+			deletions++
+			aCount++
+		case "Insertion":
+			lineB = d.Line
+			insertions++
+			bCount++
+		}
+	}
+	if insertions == 0 && deletions == 0 {
+		return ""
+	}
+
+	var b strings.Builder
+	// Shortstat of the diff
+	fmt.Fprintf(&b, " %s | %d %s%s\n", fileName, insertions+deletions, strings.Repeat("+", insertions), strings.Repeat("-", deletions))
+	fmt.Fprintf(&b, " 1 file changed, %d insertions(+), %d deletions(-)\n\n",
+		insertions, insertions)
+	// Patch headers of the diff
+	fmt.Fprintf(&b, "diff --git a /%s b /%s\n", fileName, fileName)
+	fmt.Fprintf(&b, "--- a /%s\n", fileName)
+	fmt.Fprintf(&b, "+++ b /%s\n", fileName)
+	fmt.Fprintf(&b, "@@ -%d,%d +%d,%d @@\n", lineA, aCount, lineB, bCount)
+	// Body of the diff
+	for _, d := range diffs {
+		switch d.Type {
+		case "Equals":
+			b.WriteByte(' ')
+		case "Deletion":
+			b.WriteByte('-')
+		case "Insertion":
+			b.WriteByte('+')
+		default:
+			b.WriteByte(' ')
+		}
+		b.WriteByte(' ')
+		b.WriteString(d.Text)
+		b.WriteByte('\n')
+	}
+
+	return b.String()
 }

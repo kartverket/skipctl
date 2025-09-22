@@ -25,6 +25,12 @@ const (
 	DiffOutputPretty = "pretty"
 )
 
+const (
+	Equals     = "Equals"
+	Deletions  = "Deletions"
+	Insertions = "Insertions"
+)
+
 var (
 	ManifestSuffixes = []string{ManifestSuffixJsonnet, ManifestSuffixYaml, ManifestSuffixYml}
 )

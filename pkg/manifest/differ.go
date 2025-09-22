@@ -53,23 +53,27 @@ func (d *Differ) DiffManifest(file *Document) error {
 	}
 	prevRendered := d.renderBuffer.String()
 
-	diff, hasChanges := utils.Diff(prevRendered, rendered)
+	diffs, hasChanges := utils.Diff(prevRendered, rendered)
 
 	if !hasChanges {
 		return nil
 	}
-
+	// need access to the filename and ref inside the differ somehow
+	for i := range diffs {
+		diffs[i].FileName = file.Name
+		diffs[i].Ref = d.ref
+	}
 	d.logger.Info("diff", "file", file.Name, "ref", d.ref)
 
 	switch d.outputFormat {
 	case constants.DiffOutputPretty:
-		d.rawOutput.Info(utils.DiffsToPrettyPrint(diff, d.verbose))
+		d.rawOutput.Info(utils.DiffsToPrettyPrint(diffs, d.verbose))
 		return nil
 	case constants.DiffOutputPatch:
-		d.rawOutput.Info(utils.DiffsToPatch(diff, d.verbose))
+		d.rawOutput.Info(utils.DiffsToPatch(diffs, d.verbose))
 		return nil
 	case constants.DiffOutputJSON:
-		d.rawOutput.Info(utils.DiffsToJSON(diff, d.verbose))
+		d.rawOutput.Info(utils.DiffsToJSON(diffs, d.verbose))
 		return nil
 	default:
 		return nil
