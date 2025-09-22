@@ -33,7 +33,19 @@ correctly, otherwise return code 1 is used to indicate failure.`,
 	SilenceUsage:  true,
 }
 
-func runDiff(_ *cobra.Command, _ []string) error {
+func runDiff(cmd *cobra.Command, _ []string) error {
+	// if user did not ovveride verbosity flag, set more sensible defaults based on output format
+	if !cmd.Flags().Changed("verbosity") {
+		switch diffOutputFormat {
+		case constants.DiffOutputPretty:
+			verbosityLevel = constants.DiffVerbosityFull
+		case constants.DiffOutputPatch:
+			verbosityLevel = constants.DiffVerbosityChunk
+		case constants.DiffOutputJSON:
+			verbosityLevel = constants.DiffVerbosityFull
+		}
+	}
+
 	filenames, err := utils.FindFilesWithSuffixes(path, constants.ManifestSuffixes)
 	if err != nil {
 		log.Error("Error collecting files", "error", err.Error())
