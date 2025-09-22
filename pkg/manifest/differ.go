@@ -66,10 +66,10 @@ func (d *Differ) DiffManifest(file *Document) error {
 		d.rawOutput.Info(utils.DiffsToPrettyPrint(diff, d.verbose))
 		return nil
 	case constants.DiffOutputPatch:
-		d.rawOutput.Info(utils.DiffsToPrettyPrint(diff, d.verbose))
+		d.rawOutput.Info(utils.DiffsToPatch(diff, d.verbose))
 		return nil
-	case constants.DiffOutputJson:
-		d.rawOutput.Info(utils.DiffsToJson(diff, d.verbose))
+	case constants.DiffOutputJSON:
+		d.rawOutput.Info(utils.DiffsToJSON(diff, d.verbose))
 		return nil
 	default:
 		return nil

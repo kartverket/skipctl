@@ -26,9 +26,9 @@ var diffColorMap = map[string]string{
 }
 
 type ManifestDiff struct {
-	Type string
-	Text string
-	Line int
+	Type string `json:"type"`
+	Text string `json:"text"`
+	Line int    `json:"line"`
 }
 
 func Diff(a, b string) ([]*ManifestDiff, bool) {
@@ -113,7 +113,7 @@ func DiffsToPrettyPrint(diffs []*ManifestDiff, verbose bool) string {
 	return out.String()
 }
 
-func DiffsToJson(diffs []*ManifestDiff, verbose bool) string {
+func DiffsToJSON(diffs []*ManifestDiff, verbose bool) string {
 	filteredDiffs := filterDiffsVerbose(diffs, verbose)
 
 	// Marshal the filtered diffs to JSON
@@ -126,6 +126,8 @@ func DiffsToJson(diffs []*ManifestDiff, verbose bool) string {
 }
 
 func DiffsToPatch(diffs []*ManifestDiff, verbose bool) string {
+	_ = filterDiffsVerbose(diffs, verbose)
+
 	// return diff as patch format
 	return "TODO IMPLEMENT"
 }

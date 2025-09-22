@@ -20,7 +20,7 @@ const (
 )
 
 const (
-	DiffOutputJson   = "json"
+	DiffOutputJSON   = "json"
 	DiffOutputPatch  = "patch"
 	DiffOutputPretty = "pretty"
 )
