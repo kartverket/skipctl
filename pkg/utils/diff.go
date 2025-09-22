@@ -89,7 +89,7 @@ func Diff(a, b string) ([]*ManifestDiff, bool) {
 	return diffs, hasDiff
 }
 
-func filterDiffs(diffs []*ManifestDiff, verbose bool) []*ManifestDiff {
+func filterDiffsVerbose(diffs []*ManifestDiff, verbose bool) []*ManifestDiff {
 	if verbose {
 		return diffs
 	}
@@ -104,7 +104,7 @@ func filterDiffs(diffs []*ManifestDiff, verbose bool) []*ManifestDiff {
 }
 
 func DiffsToPrettyPrint(diffs []*ManifestDiff, verbose bool) string {
-	filteredDiffs := filterDiffs(diffs, verbose)
+	filteredDiffs := filterDiffsVerbose(diffs, verbose)
 
 	var out strings.Builder
 	for _, d := range filteredDiffs {
@@ -114,7 +114,7 @@ func DiffsToPrettyPrint(diffs []*ManifestDiff, verbose bool) string {
 }
 
 func DiffsToJson(diffs []*ManifestDiff, verbose bool) string {
-	filteredDiffs := filterDiffs(diffs, verbose)
+	filteredDiffs := filterDiffsVerbose(diffs, verbose)
 
 	// Marshal the filtered diffs to JSON
 	jsonBytes, err := json.MarshalIndent(filteredDiffs, "", "  ")
@@ -123,4 +123,9 @@ func DiffsToJson(diffs []*ManifestDiff, verbose bool) string {
 		return `{"error": "failed to marshal diffs to JSON"}`
 	}
 	return string(jsonBytes)
+}
+
+func DiffsToPatch(diffs []*ManifestDiff, verbose bool) string {
+	// return diff as patch format
+	return "TODO IMPLEMENT"
 }
