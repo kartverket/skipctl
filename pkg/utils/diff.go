@@ -16,15 +16,15 @@ const (
 )
 
 var diffSymbolMap = map[string]string{
-	"Equals":    " ",
-	"Insertion": "+",
-	"Deletion":  "-",
+	constants.Equals:    " ",
+	constants.Insertion: "+",
+	constants.Deletion:  "-",
 }
 
 var diffColorMap = map[string]string{
-	"Equals":    colorReset,
-	"Insertion": colorGreen,
-	"Deletion":  colorRed,
+	constants.Equals:    colorReset,
+	constants.Insertion: colorGreen,
+	constants.Deletion:  colorRed,
 }
 
 type ManifestDiff struct {
@@ -74,7 +74,7 @@ func DiffLCS(a, b string) ([]*ManifestDiff, bool) {
 		switch {
 		case linesA[i] == linesB[j]:
 			diffs = append(diffs, &ManifestDiff{
-				Type: "Equals",
+				Type: constants.Equals,
 				Text: linesA[i],
 				Line: i + 1,
 			})
@@ -82,7 +82,7 @@ func DiffLCS(a, b string) ([]*ManifestDiff, bool) {
 			j++
 		case dp[i+1][j] >= dp[i][j+1]:
 			diffs = append(diffs, &ManifestDiff{
-				Type: "Deletion",
+				Type: constants.Deletion,
 				Text: linesA[i],
 				Line: i + 1,
 			})
@@ -90,7 +90,7 @@ func DiffLCS(a, b string) ([]*ManifestDiff, bool) {
 			i++
 		default:
 			diffs = append(diffs, &ManifestDiff{
-				Type: "Insertion",
+				Type: constants.Insertion,
 				Text: linesB[j],
 				Line: j + 1,
 			})
@@ -102,7 +102,7 @@ func DiffLCS(a, b string) ([]*ManifestDiff, bool) {
 	// Handle trailing insertions/deletions
 	for i < len(linesA) {
 		diffs = append(diffs, &ManifestDiff{
-			Type: "Deletion",
+			Type: constants.Deletion,
 			Text: linesA[i],
 			Line: i,
 		})
@@ -111,7 +111,7 @@ func DiffLCS(a, b string) ([]*ManifestDiff, bool) {
 	}
 	for j < len(linesB) {
 		diffs = append(diffs, &ManifestDiff{
-			Type: "Insertion",
+			Type: constants.Insertion,
 			Text: linesB[j],
 			Line: j,
 		})
@@ -151,9 +151,9 @@ func DiffsToPatch(diffs []*ManifestDiff, fileName string) string {
 	insertions, deletions := 0, 0
 	for _, d := range diffs {
 		switch d.Type {
-		case "Insertion":
+		case constants.Insertion:
 			insertions++
-		case "Deletion":
+		case constants.Deletion:
 			deletions++
 		}
 	}
@@ -162,12 +162,12 @@ func DiffsToPatch(diffs []*ManifestDiff, fileName string) string {
 	}
 
 	// Header first, then diffs
-	header := writePatchHeaders(fileName, insertions, deletions)
+	header := writePatchHeaders(fileName)
 	body := writePatch(diffs)
 	return header + body
 }
 
-func writePatchHeaders(fileName string, insertions, deletions int) string {
+func writePatchHeaders(fileName string) string {
 	var b strings.Builder
 	// Shortstat
 	fmt.Fprintf(&b, "--- remote /%s\n", fileName)
@@ -241,8 +241,8 @@ func formatPatchHunk(hunk []*ManifestDiff) string {
 	fmt.Fprintf(&h, "@@ -%d,%d +%d,%d @@\n", startLineRemote, del+eql, startLineLocal, ins+eql)
 	h.WriteString(b.String())
 	return h.String()
-
 }
+
 func filterNonEqualDiffs(diffs []*ManifestDiff) []*ManifestDiff {
 	outputDiffs := make([]*ManifestDiff, 0, len(diffs))
 	for _, d := range diffs {
