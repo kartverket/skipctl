@@ -76,7 +76,7 @@ func DiffLCS(a, b string) ([]*ManifestDiff, bool) {
 			diffs = append(diffs, &ManifestDiff{
 				Type: "Equals",
 				Text: linesA[i],
-				Line: i,
+				Line: i + 1,
 			})
 			i++
 			j++
@@ -84,7 +84,7 @@ func DiffLCS(a, b string) ([]*ManifestDiff, bool) {
 			diffs = append(diffs, &ManifestDiff{
 				Type: "Deletion",
 				Text: linesA[i],
-				Line: i,
+				Line: i + 1,
 			})
 			hasDiff = true
 			i++
@@ -92,7 +92,7 @@ func DiffLCS(a, b string) ([]*ManifestDiff, bool) {
 			diffs = append(diffs, &ManifestDiff{
 				Type: "Insertion",
 				Text: linesB[j],
-				Line: j,
+				Line: j + 1,
 			})
 			hasDiff = true
 			j++
@@ -170,56 +170,26 @@ func DiffsToPatch(diffs []*ManifestDiff, fileName string) string {
 func writePatchHeaders(fileName string, insertions, deletions int) string {
 	var b strings.Builder
 	// Shortstat
-	fmt.Fprintf(&b, " %s | %d %s%s\n", fileName, insertions+deletions, strings.Repeat("+", insertions), strings.Repeat("-", deletions))
-	fmt.Fprintf(&b, " 1 file changed, %d insertion(+), %d deletion(-)\n\n", insertions, deletions)
-
-	// Patch headers
-	fmt.Fprintf(&b, "diff --git a/%s b/%s\n", fileName, fileName)
-	fmt.Fprintf(&b, "--- a/%s\n", fileName)
-	fmt.Fprintf(&b, "+++ b/%s\n", fileName)
+	fmt.Fprintf(&b, "--- remote /%s\n", fileName)
+	fmt.Fprintf(&b, "+++ local /%s\n", fileName)
 	return b.String()
 }
 
 func writePatch(diffs []*ManifestDiff) string {
 	var b strings.Builder
-
-	aLn, bLn := 1, 1
-	i := 0
-	for i < len(diffs) {
-		if diffs[i].Type == "Equals" {
-			aLn++
-			bLn++
-			i++
-			continue
+	prevLineNum := -1
+	hunkIdx := 0
+	hunks := make(map[int][]*ManifestDiff)
+	for _, diff := range diffs {
+		if diff.Line > prevLineNum+1 {
+			hunkIdx++
 		}
-
-		aStart, bStart := aLn, bLn
-		aCount, bCount := 0, 0
-		var h strings.Builder
-
-		for i < len(diffs) && diffs[i].Type != "Equals" {
-			switch diffs[i].Type {
-			case "Deletion":
-				h.WriteString("- ")
-				h.WriteString(diffs[i].Text)
-				h.WriteByte('\n')
-				aCount++
-				aLn++
-			case "Insertion":
-				h.WriteString("+ ")
-				h.WriteString(diffs[i].Text)
-				h.WriteByte('\n')
-				bCount++
-				bLn++
-			}
-			i++
-		}
-
-		// Emit hunk header and its lines.
-		fmt.Fprintf(&b, "@@ -%d,%d +%d,%d @@\n", aStart, aCount, bStart, bCount)
-		b.WriteString(h.String())
+		hunks[hunkIdx] = append(hunks[hunkIdx], diff)
+		prevLineNum = diff.Line
 	}
-
+	for _, hunk := range hunks {
+		b.WriteString(formatPatchHunk(hunk))
+	}
 	return b.String()
 }
 func FilterDiffs(diffs []*ManifestDiff, verbosityLevel string, chunkSize int) []*ManifestDiff {
@@ -235,6 +205,44 @@ func FilterDiffs(diffs []*ManifestDiff, verbosityLevel string, chunkSize int) []
 	}
 }
 
+func formatPatchHunk(hunk []*ManifestDiff) string {
+	var b strings.Builder
+	startLineRemote, startLineLocal := 0, 0
+	ins, del, eql := 0, 0, 0
+	for _, h := range hunk {
+		switch h.Type {
+		case constants.Deletion:
+			if startLineRemote == 0 {
+				startLineRemote = h.Line
+			}
+			b.WriteString("- ")
+			b.WriteString(h.Text)
+			b.WriteByte('\n')
+			del++
+		case constants.Insertion:
+			if startLineLocal == 0 {
+				startLineLocal = h.Line
+			}
+			b.WriteString("+ ")
+			b.WriteString(h.Text)
+			b.WriteByte('\n')
+			ins++
+		case constants.Equals:
+			b.WriteString("  ")
+			b.WriteString(h.Text)
+			b.WriteByte('\n')
+			eql++
+		}
+	}
+	if startLineRemote == 0 {
+		startLineRemote = startLineLocal - 1
+	}
+	var h strings.Builder
+	fmt.Fprintf(&h, "@@ -%d,%d +%d,%d @@\n", startLineRemote, del+eql, startLineLocal, ins+eql)
+	h.WriteString(b.String())
+	return h.String()
+
+}
 func filterNonEqualDiffs(diffs []*ManifestDiff) []*ManifestDiff {
 	outputDiffs := make([]*ManifestDiff, 0, len(diffs))
 	for _, d := range diffs {

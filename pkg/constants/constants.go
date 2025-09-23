@@ -35,9 +35,9 @@ const (
 )
 
 const (
-	Equals     = "Equals"
-	Deletions  = "Deletions"
-	Insertions = "Insertions"
+	Equals    = "Equals"
+	Deletion  = "Deletion"
+	Insertion = "Insertion"
 )
 
 var (
