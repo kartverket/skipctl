@@ -15,6 +15,12 @@ import (
 	"github.com/go-git/go-git/v5/plumbing/object"
 )
 
+const (
+	// ioReadAll buffer sizing and safety cap.
+	readBufferGrowSize = 64 << 10 // 65 536 bytes (64 KiB)
+	readMaxBytes       = 32 << 20 // 33 554 432 bytes (32 MiB)
+)
+
 func GetFileContentFromRef(filename string, ref string) (*string, error) {
 	repo, err := git.PlainOpenWithOptions(".", &git.PlainOpenOptions{DetectDotGit: true})
 	if err != nil {
@@ -55,8 +61,7 @@ func readPathFromTree(repo *git.Repository, tree *object.Tree, relPath string) (
 	curRepo := repo
 	curTree := tree
 
-	for i := range len(parts) {
-		name := parts[i]
+	for i, name := range parts {
 		entry, err := findEntry(curTree, name)
 		if err != nil {
 			return "", fmt.Errorf("path %q: %w", join(parts[:i+1]), err)
@@ -65,26 +70,33 @@ func readPathFromTree(repo *git.Repository, tree *object.Tree, relPath string) (
 		switch entry.Mode {
 		case filemode.Submodule:
 			// Switch into submodule repo at the recorded commit.
-			subRepo, subTree, err := openSubmoduleAt(curRepo, name, entry.Hash)
-			if err != nil {
-				return "", fmt.Errorf("enter submodule %q: %w", join(parts[:i+1]), err)
+			subRepo, subTree, subModErr := openSubmoduleAt(curRepo, name, entry.Hash)
+			if subModErr != nil {
+				return "", fmt.Errorf("enter submodule %q: %w", join(parts[:i+1]), subModErr)
 			}
 			curRepo = subRepo
 			curTree = subTree
 
 		case filemode.Dir:
-			nextTree, err := curRepo.TreeObject(entry.Hash)
-			if err != nil {
-				return "", fmt.Errorf("open dir %q: %w", join(parts[:i+1]), err)
+			nextTree, treeObjErr := curRepo.TreeObject(entry.Hash)
+			if treeObjErr != nil {
+				return "", fmt.Errorf("open dir %q: %w", join(parts[:i+1]), treeObjErr)
 			}
 			curTree = nextTree
 
-		default:
-			// If this is the last segment and it’s a file-ish entry, read blob.
+		case filemode.Regular, filemode.Executable, filemode.Symlink, filemode.Deprecated:
+			// Treat these as file-like entries; only valid if last segment.
 			if i == len(parts)-1 {
 				return readBlob(curRepo, entry.Hash)
 			}
 			return "", fmt.Errorf("path %q is not a directory", join(parts[:i+1]))
+
+		case filemode.Empty:
+			// Not a valid traversable entry; report clearly.
+			return "", fmt.Errorf("path %q refers to an empty entry", join(parts[:i+1]))
+
+		default:
+			return "", fmt.Errorf("path %q has unsupported file mode %v", join(parts[:i+1]), entry.Mode)
 		}
 	}
 
@@ -180,15 +192,14 @@ func resolveDotGitFile(dotGitPath string) (string, error) {
 }
 
 func ioReadAll(r io.Reader) ([]byte, error) {
-	const max = 32 << 20 // 32 MiB cap
 	var b bytes.Buffer
-	b.Grow(64 << 10)
-	n, err := b.ReadFrom(io.LimitReader(r, max))
+	b.Grow(readBufferGrowSize)
+	n, err := b.ReadFrom(io.LimitReader(r, readMaxBytes))
 	if err != nil {
 		return nil, err
 	}
-	if n >= max {
-		return nil, fmt.Errorf("file exceeds read limit (%d bytes)", max)
+	if n >= readMaxBytes {
+		return nil, fmt.Errorf("file exceeds read limit (%d bytes)", readMaxBytes)
 	}
 	return b.Bytes(), nil
 }
