@@ -2,13 +2,17 @@
 package utils
 
 import (
+	"bytes"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
 
 	"github.com/go-git/go-git/v5"
 	"github.com/go-git/go-git/v5/plumbing"
+	"github.com/go-git/go-git/v5/plumbing/filemode"
+	"github.com/go-git/go-git/v5/plumbing/object"
 )
 
 func GetFileContentFromRef(filename string, ref string) (*string, error) {
@@ -26,7 +30,6 @@ func GetFileContentFromRef(filename string, ref string) (*string, error) {
 	if err != nil {
 		return nil, fmt.Errorf("read commit: %w", err)
 	}
-
 	tree, err := commit.Tree()
 	if err != nil {
 		return nil, fmt.Errorf("read tree: %w", err)
@@ -37,17 +40,170 @@ func GetFileContentFromRef(filename string, ref string) (*string, error) {
 		return nil, err
 	}
 
-	f, err := tree.File(rel)
+	content, err := readPathFromTree(repo, tree, rel)
 	if err != nil {
 		return nil, fmt.Errorf("file %q not found in commit %s: %w", rel, ref, err)
 	}
+	return &content, nil
+}
 
-	content, err := f.Contents()
-	if err != nil {
-		return nil, fmt.Errorf("read blob: %w", err)
+// readPathFromTree walks the given path starting at "tree" in "repo".
+// It detects submodule (gitlink) entries and continues resolution inside the
+// submodule repository at the recorded commit. Supports nested submodules.
+func readPathFromTree(repo *git.Repository, tree *object.Tree, relPath string) (string, error) {
+	parts := splitPath(relPath)
+	curRepo := repo
+	curTree := tree
+
+	for i := range len(parts) {
+		name := parts[i]
+		entry, err := findEntry(curTree, name)
+		if err != nil {
+			return "", fmt.Errorf("path %q: %w", join(parts[:i+1]), err)
+		}
+
+		switch entry.Mode {
+		case filemode.Submodule:
+			// Switch into submodule repo at the recorded commit.
+			subRepo, subTree, err := openSubmoduleAt(curRepo, name, entry.Hash)
+			if err != nil {
+				return "", fmt.Errorf("enter submodule %q: %w", join(parts[:i+1]), err)
+			}
+			curRepo = subRepo
+			curTree = subTree
+
+		case filemode.Dir:
+			nextTree, err := curRepo.TreeObject(entry.Hash)
+			if err != nil {
+				return "", fmt.Errorf("open dir %q: %w", join(parts[:i+1]), err)
+			}
+			curTree = nextTree
+
+		default:
+			// If this is the last segment and it’s a file-ish entry, read blob.
+			if i == len(parts)-1 {
+				return readBlob(curRepo, entry.Hash)
+			}
+			return "", fmt.Errorf("path %q is not a directory", join(parts[:i+1]))
+		}
 	}
 
-	return &content, nil
+	return "", fmt.Errorf("path %q resolved to a directory", relPath)
+}
+
+// openSubmoduleAt opens the submodule repository located under the current repo’s
+// .git/modules/<submoduleName> and returns its tree at the given commit hash.
+func openSubmoduleAt(parentRepo *git.Repository, submoduleName string, subCommitHash plumbing.Hash) (*git.Repository, *object.Tree, error) {
+	gitDir, err := repoGitDir(parentRepo)
+	if err != nil {
+		return nil, nil, fmt.Errorf("locate git dir: %w", err)
+	}
+	// Standard on-disk layout for submodules.
+	subGitDir := filepath.Join(gitDir, "modules", submoduleName)
+	subRepo, err := git.PlainOpen(subGitDir)
+	if err != nil {
+		return nil, nil, fmt.Errorf("open submodule repo at %q: %w", subGitDir, err)
+	}
+	subCommit, err := subRepo.CommitObject(subCommitHash)
+	if err != nil {
+		return nil, nil, fmt.Errorf("load submodule commit %s: %w", subCommitHash.String(), err)
+	}
+	subTree, err := subCommit.Tree()
+	if err != nil {
+		return nil, nil, fmt.Errorf("load submodule tree %s: %w", subCommitHash.String(), err)
+	}
+	return subRepo, subTree, nil
+}
+
+// findEntry returns the tree entry with the given name.
+func findEntry(tree *object.Tree, name string) (*object.TreeEntry, error) {
+	for i := range tree.Entries {
+		if tree.Entries[i].Name == name {
+			return &tree.Entries[i], nil
+		}
+	}
+	return nil, fmt.Errorf("entry %q not found", name)
+}
+
+func readBlob(repo *git.Repository, h plumbing.Hash) (string, error) {
+	blob, err := repo.BlobObject(h)
+	if err != nil {
+		return "", fmt.Errorf("read blob: %w", err)
+	}
+	rdr, err := blob.Reader()
+	if err != nil {
+		return "", fmt.Errorf("blob reader: %w", err)
+	}
+	defer rdr.Close()
+	data, err := ioReadAll(rdr)
+	if err != nil {
+		return "", fmt.Errorf("read blob data: %w", err)
+	}
+	return string(data), nil
+}
+
+// repoGitDir returns the absolute path to the repository’s git dir,
+// resolving the .git file indirection for worktrees if necessary.
+func repoGitDir(_ *git.Repository) (string, error) {
+	// Resolve from the superproject working directory.
+	root, err := findGitRoot()
+	if err != nil {
+		return "", fmt.Errorf("find git root: %w", err)
+	}
+	dotGit := filepath.Join(root, ".git")
+	fi, err := os.Stat(dotGit)
+	if err != nil {
+		return "", fmt.Errorf("stat .git: %w", err)
+	}
+	if fi.IsDir() {
+		return dotGit, nil
+	}
+	// .git is a file; resolve the actual gitdir
+	return resolveDotGitFile(dotGit)
+}
+
+func resolveDotGitFile(dotGitPath string) (string, error) {
+	b, err := os.ReadFile(dotGitPath)
+	if err != nil {
+		return "", err
+	}
+	s := strings.TrimSpace(string(b))
+	const pref = "gitdir: "
+	if strings.HasPrefix(strings.ToLower(s), pref) {
+		gitdir := strings.TrimSpace(s[len(pref):])
+		if !filepath.IsAbs(gitdir) {
+			gitdir = filepath.Join(filepath.Dir(dotGitPath), gitdir)
+		}
+		return gitdir, nil
+	}
+	return "", fmt.Errorf("%s is not a gitdir file", dotGitPath)
+}
+
+func ioReadAll(r io.Reader) ([]byte, error) {
+	const max = 32 << 20 // 32 MiB cap
+	var b bytes.Buffer
+	b.Grow(64 << 10)
+	n, err := b.ReadFrom(io.LimitReader(r, max))
+	if err != nil {
+		return nil, err
+	}
+	if n >= max {
+		return nil, fmt.Errorf("file exceeds read limit (%d bytes)", max)
+	}
+	return b.Bytes(), nil
+}
+
+// splitPath returns forward-slashed components for a repo-relative path.
+func splitPath(p string) []string {
+	p = strings.TrimPrefix(filepath.ToSlash(p), "/")
+	if p == "" {
+		return nil
+	}
+	return strings.Split(p, "/")
+}
+
+func join(parts []string) string {
+	return strings.Join(parts, "/")
 }
 
 // repoRelativePath converts an OS path to a repo-relative, slash-separated path.
