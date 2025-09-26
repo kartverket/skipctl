@@ -23,6 +23,13 @@ var diffCmd = &cobra.Command{
 	Short: "Diff manifest",
 	Long: fmt.Sprintf(`Recursively diff manifest files in the specified path.
 
+
+
+Verbosity levels:
+minimal (output only changed lines)
+chunk (output changed lines with 3 lines of context above and below)
+full (output the entire file)
+
 Supported formats are: %s.
 
 Any errors will be printed to stderr. Returns 0 if all input files are diffed
