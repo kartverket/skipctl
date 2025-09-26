@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/kartverket/skipctl/pkg/constants"
+	"github.com/kartverket/skipctl/pkg/logging"
 	"github.com/kartverket/skipctl/pkg/manifest"
 	"github.com/kartverket/skipctl/pkg/utils"
 	"github.com/spf13/cobra"
@@ -66,9 +67,9 @@ func runValidate(_ *cobra.Command, args []string) error {
 
 	result := validator.GetResults()
 	totalResources := result.GetTotalResources()
-
-	fmt.Printf("validation completed: totalResources=%d, valid=%d, invalid=%d, errors=%d, skipped=%d\n",
-		totalResources, result.ValidCount, result.InvalidCount, result.ErrorCount, result.SkippedCount)
+	rawLog := logging.RawLogger()
+	rawLog.Info(fmt.Sprintf("validation completed: totalResources=%d, valid=%d, invalid=%d, errors=%d, skipped=%d",
+		totalResources, result.ValidCount, result.InvalidCount, result.ErrorCount, result.SkippedCount))
 
 	// Cobra does not call the PostRun or PersistentPostRun functions if the program exits with an error (os.Exit(>0))
 	// Reported in https://github.com/spf13/cobra/issues/1893
