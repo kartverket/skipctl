@@ -142,7 +142,7 @@ func initValidator(tempDir string) validator.Validator {
 	}
 
 	if extraSchemaSpecified && len(extraSchemaLoc) > 0 {
-		log.Info("User have specified an extra schema location", "location", extraSchemaLoc)
+		log.Debug("User have specified an extra schema location", "location", extraSchemaLoc)
 		schemaLocations = append(schemaLocations, extraSchemaLoc)
 	}
 
