@@ -1,5 +1,4 @@
-//revive:disable-next-line var-naming
-package utils
+package git
 
 import (
 	"bytes"
@@ -21,7 +20,7 @@ const (
 	readMaxBytes       = 32 << 20 // 33 554 432 bytes (32 MiB)
 )
 
-func GetFileContentFromRef(filename string, ref string) (*string, error) {
+func GetFileContentAtRef(filename string, ref string) (*string, error) {
 	repo, err := git.PlainOpenWithOptions(".", &git.PlainOpenOptions{DetectDotGit: true})
 	if err != nil {
 		return nil, fmt.Errorf("open git repo: %w", err)

@@ -5,6 +5,6 @@ application(
   env='dev',
   version='v1.2.3',
   clientId='xyz',
-  port=3333,
+  port=9000,
   ingress='testname',
 )

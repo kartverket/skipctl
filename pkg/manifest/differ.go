@@ -2,6 +2,7 @@ package manifest
 
 import (
 	"bytes"
+	"fmt"
 	"log/slog"
 
 	"github.com/kartverket/skipctl/pkg/constants"
@@ -34,7 +35,7 @@ func NewDiffer(ref string, verbosityLevel string, outputFormat string, chunkSize
 	}
 }
 func (d *Differ) DiffManifest(file *Document) error {
-	prevFile, err := file.FromRef(d.ref)
+	prevFile, err := file.AtRef(d.ref)
 	if err != nil {
 		return err
 	}
@@ -77,6 +78,6 @@ func (d *Differ) DiffManifest(file *Document) error {
 		d.rawOutput.Info(diff.DiffsToJSON(outputDiffs, file.Name, d.ref))
 		return nil
 	default:
-		return nil
+		return fmt.Errorf("invalid format diff output format %s", d.outputFormat)
 	}
 }

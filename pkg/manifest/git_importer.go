@@ -4,7 +4,7 @@ import (
 	"path/filepath"
 
 	"github.com/google/go-jsonnet"
-	"github.com/kartverket/skipctl/pkg/utils"
+	"github.com/kartverket/skipctl/pkg/git"
 )
 
 type GitImporter struct {
@@ -19,7 +19,7 @@ func (gi *GitImporter) Import(importedFrom, importedPath string) (jsonnet.Conten
 	// Resolve the path relative to importedFrom
 	absPath := filepath.Join(filepath.Dir(importedFrom), importedPath)
 	// Fetch the content at the correct ref
-	content, err := utils.GetFileContentFromRef(absPath, gi.Ref)
+	content, err := git.GetFileContentAtRef(absPath, gi.Ref)
 	if err != nil {
 		return jsonnet.Contents{}, "", err
 	}

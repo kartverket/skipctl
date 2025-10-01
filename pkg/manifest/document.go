@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/kartverket/skipctl/pkg/git"
 	"github.com/kartverket/skipctl/pkg/logging"
 	"github.com/kartverket/skipctl/pkg/utils"
 )
@@ -20,8 +21,8 @@ type Document struct {
 	FromStdin   bool
 }
 
-func (d *Document) FromRef(ref string) (*Document, error) {
-	content, err := utils.GetFileContentFromRef(d.Name, ref)
+func (d *Document) AtRef(ref string) (*Document, error) {
+	content, err := git.GetFileContentAtRef(d.Name, ref)
 	if err != nil {
 		return nil, err
 	}
