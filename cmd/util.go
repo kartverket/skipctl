@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"os"
+	"regexp"
 	"strings"
 
 	"github.com/kartverket/skipctl/pkg/discovery"
@@ -34,4 +35,55 @@ func ValidateAPIServerName(_ *cobra.Command, _ []string) {
 		log.Error("unknown api server - please pick another supported", "specified", apiServer, "supported", names)
 		os.Exit(1)
 	}
+}
+
+var (
+	// HEAD with allowed suffixes: ~N, ^, ^N, optionally @{N}
+	reHead = regexp.MustCompile(`^HEAD(?:~[0-9]+|\^[0-9]*|@\{\d+\})?$`)
+
+	// 7–40 hex SHA
+	reSHA = regexp.MustCompile(`^[0-9a-fA-F]{7,40}$`)
+
+	// Basic branch/tag-like names (broad)
+	reBranch = regexp.MustCompile(`^[A-Za-z0-9._/-]+$`)
+)
+
+func isAllHex(s string) bool {
+	if s == "" {
+		return false
+	}
+	for _, r := range s {
+		if (r >= '0' && r <= '9') || (r >= 'a' && r <= 'f') || (r >= 'A' && r <= 'F') {
+			continue
+		}
+		return false
+	}
+	return true
+}
+
+func IsValidCommitRef(ref string) bool {
+	// 1) HEAD and suffixes
+	if reHead.MatchString(ref) {
+		return true
+	}
+
+	// 2) 7–40 hex
+	if reSHA.MatchString(ref) {
+		return true
+	}
+
+	// 3) Branch-like names, but exclude:
+	//    - exact "HEAD" handled above (already excluded)
+	//    - lowercase "head" (explicitly reject)
+	//    - any pure-hex string of any length (so 6, 41, 50, etc. don't sneak in)
+	if reBranch.MatchString(ref) {
+		if ref == "head" {
+			return false
+		}
+		if isAllHex(ref) {
+			return false
+		}
+		return true
+	}
+	return false
 }

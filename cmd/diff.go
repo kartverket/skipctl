@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"fmt"
-	"regexp"
 	"strings"
 
 	"github.com/kartverket/skipctl/pkg/constants"
@@ -41,7 +40,7 @@ correctly, otherwise return code 1 is used to indicate failure.`,
 }
 
 func runDiff(cmd *cobra.Command, _ []string) error {
-	// if user did not ovveride verbosity flag, set more sensible defaults based on output format
+	// if user did not override verbosity flag, set more sensible defaults based on output format
 	if !cmd.Flags().Changed("verbosity") {
 		switch diffOutputFormat {
 		case constants.DiffOutputPretty:
@@ -67,9 +66,8 @@ func runDiff(cmd *cobra.Command, _ []string) error {
 		log.Info("No manifests found.")
 		return nil
 	}
-	var reRef = regexp.MustCompile(`^(HEAD|[0-9a-fA-F]{7,40}|[A-Za-z0-9._/-]+)$`)
 
-	if !reRef.MatchString(ref) {
+	if !IsValidCommitRef(ref) {
 		refErr := fmt.Errorf("invalid commit ref %s", ref)
 		log.Error(refErr.Error())
 		return refErr

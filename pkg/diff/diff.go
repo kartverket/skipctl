@@ -1,5 +1,4 @@
-//revive:disable-next-line var-naming
-package utils
+package diff
 
 import (
 	"encoding/json"
@@ -33,7 +32,7 @@ type ManifestDiff struct {
 	Line int    `json:"line"`
 }
 
-type DiffJSONOutput struct {
+type JSONOutput struct {
 	File  string          `json:"file"`
 	Ref   string          `json:"ref"`
 	Diffs []*ManifestDiff `json:"diffs"`
@@ -62,7 +61,7 @@ func lcs(a, b []string) [][]int {
 	return dp
 }
 
-func DiffLCS(a, b string) ([]*ManifestDiff, bool) {
+func LCS(a, b string) ([]*ManifestDiff, bool) {
 	linesA := strings.Split(a, "\n")
 	linesB := strings.Split(b, "\n")
 	dp := lcs(linesA, linesB)
@@ -130,7 +129,7 @@ func DiffsToPrettyPrint(diffs []*ManifestDiff) string {
 }
 
 func DiffsToJSON(diffs []*ManifestDiff, fileName string, ref string) string {
-	out := DiffJSONOutput{
+	out := JSONOutput{
 		File:  fileName,
 		Ref:   ref,
 		Diffs: diffs,

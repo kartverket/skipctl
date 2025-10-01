@@ -5,8 +5,8 @@ import (
 	"log/slog"
 
 	"github.com/kartverket/skipctl/pkg/constants"
+	"github.com/kartverket/skipctl/pkg/diff"
 	"github.com/kartverket/skipctl/pkg/logging"
-	"github.com/kartverket/skipctl/pkg/utils"
 )
 
 type Differ struct {
@@ -57,24 +57,24 @@ func (d *Differ) DiffManifest(file *Document) error {
 	}
 	prevRendered := d.renderBuffer.String()
 
-	diffs, hasChanges := utils.DiffLCS(prevRendered, rendered)
+	diffs, hasChanges := diff.LCS(prevRendered, rendered)
 
 	if !hasChanges {
 		return nil
 	}
 
-	outputDiffs := utils.FilterDiffs(diffs, d.verbosityLevel, d.chunkSize)
+	outputDiffs := diff.FilterDiffs(diffs, d.verbosityLevel, d.chunkSize)
 
 	switch d.outputFormat {
 	case constants.DiffOutputPretty:
 		d.logger.Info("diff", "file", file.Name, "ref", d.ref)
-		d.rawOutput.Info(utils.DiffsToPrettyPrint(outputDiffs))
+		d.rawOutput.Info(diff.DiffsToPrettyPrint(outputDiffs))
 		return nil
 	case constants.DiffOutputPatch:
-		d.rawOutput.Info(utils.DiffsToPatch(outputDiffs, file.Name))
+		d.rawOutput.Info(diff.DiffsToPatch(outputDiffs, file.Name))
 		return nil
 	case constants.DiffOutputJSON:
-		d.rawOutput.Info(utils.DiffsToJSON(outputDiffs, file.Name, d.ref))
+		d.rawOutput.Info(diff.DiffsToJSON(outputDiffs, file.Name, d.ref))
 		return nil
 	default:
 		return nil
