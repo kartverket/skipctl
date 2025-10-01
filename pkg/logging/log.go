@@ -1,6 +1,8 @@
 package logging
 
 import (
+	"context"
+	"io"
 	"log/slog"
 	"os"
 	"sync"
@@ -9,11 +11,50 @@ import (
 	"github.com/pkg/errors"
 )
 
-var logger *slog.Logger
-var rawLogger *slog.Logger
-var leveler *slog.LevelVar
+var (
+	logger    *slog.Logger
+	rawLogger *slog.Logger
+	leveler   *slog.LevelVar
+	lock      sync.Mutex
 
-var lock sync.Mutex
+	ctxStdoutKey stdoutCtxKey
+
+	DefaultStdoutContext = ForceStdoutContext(context.Background())
+)
+
+type stdoutCtxKey struct{}
+
+type splitHandler struct {
+	stdout, stderr slog.Handler
+}
+
+func (h *splitHandler) Enabled(ctx context.Context, level slog.Level) bool {
+	// Delegate; assume same levels configured on both.
+	return h.stdout.Enabled(ctx, level) || h.stderr.Enabled(ctx, level)
+}
+
+func (h *splitHandler) Handle(ctx context.Context, r slog.Record) error {
+	toStdout, _ := ctx.Value(ctxStdoutKey).(bool)
+
+	if toStdout {
+		return h.stdout.Handle(ctx, r)
+	}
+	return h.stderr.Handle(ctx, r)
+}
+
+func (h *splitHandler) WithAttrs(attrs []slog.Attr) slog.Handler {
+	return &splitHandler{
+		stdout: h.stdout.WithAttrs(attrs),
+		stderr: h.stderr.WithAttrs(attrs),
+	}
+}
+
+func (h *splitHandler) WithGroup(name string) slog.Handler {
+	return &splitHandler{
+		stdout: h.stdout.WithGroup(name),
+		stderr: h.stderr.WithGroup(name),
+	}
+}
 
 func init() {
 	rawLogger = slog.New(&rawHandler{})
@@ -38,23 +79,29 @@ func ConfigureLogging(mode string, isDebug bool) *slog.Logger {
 		AddSource: isDebug,
 	}
 
-	var h slog.Handler
-	switch parsedMode {
-	case OutputModeJSON:
-		h = slog.NewJSONHandler(os.Stderr, opts)
-	case OutputModeText:
-		h = slog.NewTextHandler(os.Stderr, opts)
-	default:
-		panic(errors.Errorf("invalid output option: %v", parsedMode))
+	newHandler := func(w io.Writer) slog.Handler {
+		switch parsedMode {
+		case OutputModeJSON:
+			return slog.NewJSONHandler(w, opts)
+		case OutputModeText:
+			return slog.NewTextHandler(w, opts)
+		default:
+			panic(errors.Errorf("invalid output option: %v", parsedMode))
+		}
 	}
 
+	splitHandler := &splitHandler{stdout: newHandler(os.Stdout), stderr: newHandler(os.Stderr)}
 	// slog-context outputs key-values found in the context to the log output
-	ctxHandler := slogcontext.NewHandler(h)
+	ctxHandler := slogcontext.NewHandler(splitHandler)
 
 	lock.Lock()
 	defer lock.Unlock()
 	logger = slog.New(ctxHandler)
 	return logger
+}
+
+func ForceStdoutContext(parent context.Context) context.Context {
+	return context.WithValue(parent, ctxStdoutKey, true)
 }
 
 func Logger() *slog.Logger {
