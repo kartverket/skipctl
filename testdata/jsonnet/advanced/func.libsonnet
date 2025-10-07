@@ -3,6 +3,8 @@ function(
   version,
   name='backend',
   clientId,
+  port,
+  ingress,
 ) [
   {
     apiVersion: 'skiperator.kartverket.no/v1alpha1',
@@ -10,16 +12,18 @@ function(
     metadata: {
       name: name,
     },
+    variant: ingress,
     spec: {
       image: version,
-      port: 8080,
+      port: port,
       liveness: {
         path: '/health',
-        port: 8080,
+        port: port,
       },
       readiness: {
         path: '/health',
-        port: 8080,
+        port: port,
+        variant: ingress,
       },
       resources: {
         requests: {

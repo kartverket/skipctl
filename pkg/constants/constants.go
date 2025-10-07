@@ -19,6 +19,27 @@ const (
 	ManifestSuffixYml     = ".yml"
 )
 
+const (
+	DiffOutputJSON   = "json"
+	DiffOutputPatch  = "patch"
+	DiffOutputPretty = "pretty"
+)
+
+const (
+	DiffVerbosityMinimal = "minimal"
+	DiffVerbosityChunk   = "chunk"
+	DiffVerbosityFull    = "full"
+)
+const (
+	DefaultChunkSize = 3
+)
+
+const (
+	Equals    = "Equals"
+	Deletion  = "Deletion"
+	Insertion = "Insertion"
+)
+
 var (
 	ManifestSuffixes = []string{ManifestSuffixJsonnet, ManifestSuffixYaml, ManifestSuffixYml}
 )

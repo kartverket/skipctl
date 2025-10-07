@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/kartverket/skipctl/pkg/git"
 	"github.com/kartverket/skipctl/pkg/logging"
 	"github.com/kartverket/skipctl/pkg/utils"
 )
@@ -20,15 +21,30 @@ type Document struct {
 	FromStdin   bool
 }
 
-func (r *Document) Write(content string) error {
-	r.Content = content
-	if r.FromStdin {
-		if _, err := io.WriteString(os.Stdout, r.Content); err != nil {
+func (d *Document) AtRef(ref string) (*Document, error) {
+	content, err := git.GetFileContentAtRef(d.Name, ref)
+	if err != nil {
+		return nil, err
+	}
+
+	return &Document{
+		Name:        d.Name,
+		Extension:   d.Extension,
+		Permissions: d.Permissions,
+		Content:     *content,
+		FromStdin:   false,
+	}, nil
+}
+
+func (d *Document) Write(content string) error {
+	d.Content = content
+	if d.FromStdin {
+		if _, err := io.WriteString(os.Stdout, d.Content); err != nil {
 			return fmt.Errorf("error writing document to stdout: %w", err)
 		}
 		return nil
 	}
-	if err := os.WriteFile(r.Name, []byte(r.Content), r.Permissions); err != nil {
+	if err := os.WriteFile(d.Name, []byte(d.Content), d.Permissions); err != nil {
 		return fmt.Errorf("error writing document to file: %w", err)
 	}
 	return nil

@@ -33,6 +33,14 @@ func NewRenderer(loggers ...*slog.Logger) *Renderer {
 	}
 }
 
+func (r *Renderer) SetImporter(i jsonnet.Importer) {
+	r.jsonnet.Importer(i)
+}
+
+func (r *Renderer) ResetImporter() {
+	r.jsonnet.Importer(nil)
+}
+
 func (r *Renderer) RenderManifest(file *Document) error {
 	switch file.Extension {
 	case constants.ManifestSuffixJsonnet:
