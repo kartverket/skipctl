@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/kartverket/skipctl/cmd"
+	"github.com/kartverket/skipctl/pkg/telemetry"
 )
 
 var (
@@ -11,5 +12,8 @@ var (
 )
 
 func main() {
-	cmd.Execute(GitTag, GitCommitHash)
+	defer telemetry.Close()
+	if err := cmd.Execute(GitTag, GitCommitHash); err != nil {
+		return
+	}
 }
