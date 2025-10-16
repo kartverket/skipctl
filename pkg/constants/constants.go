@@ -46,7 +46,11 @@ var (
 
 // Collector constants
 var (
-	PostHogURL   = "https://eu.i.posthog.com"
-	BatchSize    = 1
-	DisableGeoIP = true
+	PostHogURL     = "https://eu.i.posthog.com"
+	BatchSize      = 1
+	DisableGeoIP   = true
+	IDDirName      = "skipctl"
+	IDFileName     = "id"
+	RawIDBytes     = 16 // 128-bit random ID
+	MinExistingLen = 32 // hex length for 16 bytes
 )

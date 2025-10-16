@@ -4,6 +4,7 @@ import (
 	"crypto/rand"
 	"crypto/sha256"
 	"encoding/hex"
+	"errors"
 	"log"
 	"os"
 	"path/filepath"
@@ -96,21 +97,24 @@ func readOrCreateLocalID() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	appDir := filepath.Join(cacheDir, "skipctl")
-	if err := os.MkdirAll(appDir, 0o700); err != nil {
-		return "", err
+	if cacheDir == "" {
+		return "", errors.New("empty cache dir")
 	}
-	idPath := filepath.Join(appDir, "id")
-	if b, err := os.ReadFile(idPath); err == nil && len(b) >= 32 {
+	appDir := filepath.Join(cacheDir, constants.IDDirName)
+	if mkErr := os.MkdirAll(appDir, 0o700); mkErr != nil {
+		return "", mkErr
+	}
+	idPath := filepath.Join(appDir, constants.IDFileName)
+	if b, readErr := os.ReadFile(idPath); readErr == nil && len(b) >= constants.MinExistingLen {
 		return string(b), nil
 	}
-	buf := make([]byte, 16)
-	if _, err := rand.Read(buf); err != nil {
-		return "", err
+	buf := make([]byte, constants.RawIDBytes)
+	if _, genErr := rand.Read(buf); genErr != nil {
+		return "", genErr
 	}
 	hexID := hex.EncodeToString(buf)
-	if err := os.WriteFile(idPath, []byte(hexID), 0o600); err != nil {
-		return "", err
+	if writeErr := os.WriteFile(idPath, []byte(hexID), 0o600); writeErr != nil {
+		return "", writeErr
 	}
 	return hexID, nil
 }
