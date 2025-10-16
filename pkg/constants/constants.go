@@ -43,3 +43,10 @@ const (
 var (
 	ManifestSuffixes = []string{ManifestSuffixJsonnet, ManifestSuffixYaml, ManifestSuffixYml}
 )
+
+// Collector constants
+var (
+	PostHogURL   = "https://eu.i.posthog.com"
+	BatchSize    = 1
+	DisableGeoIP = true
+)
