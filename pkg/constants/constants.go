@@ -45,12 +45,14 @@ var (
 )
 
 // Collector constants
-var (
-	PostHogURL     = "https://eu.i.posthog.com"
-	BatchSize      = 1
-	DisableGeoIP   = true
-	IDDirName      = "skipctl"
-	IDFileName     = "id"
-	RawIDBytes     = 16 // 128-bit random ID
-	MinExistingLen = 32 // hex length for 16 bytes
+const (
+	// TODO: Change these two constants before go live
+	PostHogURL             = "https://eu.i.posthog.com"
+	PostHogProjectAPIToken = "phc_CeP8yxo2muPw6U2rfjdZ4dAMqxfxd7Y2hgAhS1LKGOo"
+	BatchSize              = 1
+	DisableGeoIP           = true
+	IDDirName              = "skipctl"
+	IDFileName             = "id"
+	RawIDBytes             = 16 // 128-bit random ID
+	MinExistingLen         = 32 // hex length for 16 bytes
 )

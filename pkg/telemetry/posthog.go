@@ -5,53 +5,71 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"errors"
-	"log"
+	"fmt"
+	"log/slog"
 	"os"
 	"path/filepath"
+	"runtime"
 	"time"
 
 	"github.com/kartverket/skipctl/pkg/constants"
+	"github.com/kartverket/skipctl/pkg/logging"
 	"github.com/posthog/posthog-go"
 )
 
 type Collector struct {
+	log     *slog.Logger
 	client  posthog.Client
-	config  posthog.Config
 	enabled bool
 }
 
-func ConfigureCollector(disabledAnalytics bool) *Collector {
-	collector := &Collector{}
-	if disabledAnalytics {
+type Options struct {
+	Debug            bool
+	DisableAnalytics bool
+	GitVersion       string
+	GitCommitHash    string
+	Arch             string
+	OS               string
+}
+
+func ConfigureCollector(opts Options) *Collector {
+	logger := logging.Logger().With("component", "telemetry/posthog")
+
+	collector := &Collector{log: logger}
+	if opts.DisableAnalytics {
 		collector.enabled = false
+		logger.Info("telemetry is disabled")
 		return collector
+	} else {
+		logger.Info("telemetry enabled, set DO_NOT_TRACK=true to disable")
 	}
-	key := os.Getenv("POSTHOG_API_KEY")
-	if key == "" {
-		log.Printf("telemetry disabled: missing POSTHOG_API_KEY")
-		collector.enabled = false
-		return collector
-	}
+
 	config := posthog.Config{
-		Endpoint:     constants.PostHogURL,
-		BatchSize:    constants.BatchSize,
-		DisableGeoIP: &constants.DisableGeoIP,
+		Endpoint:               constants.PostHogURL,
+		BatchSize:              constants.BatchSize,
+		DisableGeoIP:           &constants.DisableGeoIP,
+		Logger:                 &posthogSlogAdapter{logger},
+		DefaultEventProperties: defaultProps(opts),
+		Verbose:                true, // TODO: Remove
 	}
-	client, err := posthog.NewWithConfig(key, config)
+	client, err := posthog.NewWithConfig(constants.PostHogProjectAPIToken, config)
 	if err != nil {
-		log.Printf("telemetry disabled: failed to initialize client: %v", err)
+		logger.Error("telemetry disabled: failed to initialize client", "error", err)
 		collector.enabled = false
 		return collector
 	}
 	collector.client = client
-	collector.config = config
 	collector.enabled = true
 	return collector
 }
 
 func (c *Collector) Close() {
 	if c.client != nil {
-		c.client.Close()
+		err := c.client.Close()
+		if err != nil {
+			c.log.Error("could not close posthog client", "error", err)
+			return
+		}
 	}
 }
 
@@ -76,13 +94,16 @@ func (c *Collector) CaptureCommand(command string, args []string, flags []string
 		"time":      time.Now().UTC(),
 		"$ip":       "0", // explicit neutral IP
 	}
-	distinctID := hostHash()
+	distinctID, hErr := hostHash()
+	if hErr != nil {
+		c.log.Error("could not get anonymous identity", "error", hErr)
+	}
 	if err := c.client.Enqueue(posthog.Capture{
 		DistinctId: distinctID,
 		Event:      "command",
 		Properties: props,
 	}); err != nil {
-		log.Printf("Failed to enqueue telemetry event: %v", err)
+		c.log.Error("failed to enqueue telemetry event", "error", err)
 	}
 }
 
@@ -92,6 +113,7 @@ func envKind() string {
 	}
 	return "local"
 }
+
 func readOrCreateLocalID() (string, error) {
 	cacheDir, err := os.UserCacheDir()
 	if err != nil {
@@ -119,12 +141,23 @@ func readOrCreateLocalID() (string, error) {
 	return hexID, nil
 }
 
-func hostHash() string {
+func hostHash() (string, error) {
 	id, err := readOrCreateLocalID()
 	if err != nil {
-		log.Printf("Failed to get local ID: %v", err)
-		return "unknown"
+		return "unknown", fmt.Errorf("failed to get local ID: %v", err)
 	}
 	h := sha256.Sum256([]byte(id))
-	return hex.EncodeToString(h[:])
+	return hex.EncodeToString(h[:]), nil
+}
+
+func defaultProps(opts Options) posthog.Properties {
+	props := make(posthog.Properties)
+
+	props.Set("debug_mode", opts.Debug)
+	props.Set("app_version", opts.GitVersion)
+	props.Set("app_git_commit", opts.GitCommitHash)
+	props.Set("user_os", runtime.GOOS)
+	props.Set("user_arch", runtime.GOARCH)
+
+	return props
 }

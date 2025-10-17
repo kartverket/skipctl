@@ -11,7 +11,10 @@ var (
 )
 
 func main() {
-	if err := cmd.Execute(GitTag, GitCommitHash); err != nil {
+	cmd.GitTag = GitTag
+	cmd.GitCommitHash = GitCommitHash
+
+	if err := cmd.Execute(); err != nil {
 		return
 	}
 }
