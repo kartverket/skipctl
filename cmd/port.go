@@ -2,7 +2,8 @@ package cmd
 
 import (
 	"context"
-	"os"
+	"errors"
+	"fmt"
 
 	"github.com/kartverket/skipctl/pkg/test"
 	"github.com/spf13/cobra"
@@ -14,32 +15,29 @@ var (
 )
 
 var portProbeCmd = &cobra.Command{
-	Use:    "probe",
-	Short:  "Check whether a TCP port is open from a SKIP cluster",
-	PreRun: ValidateAPIServerName,
-	Run: func(_ *cobra.Command, _ []string) {
+	Use:     "probe",
+	Short:   "Check whether a TCP port is open from a SKIP cluster",
+	PreRunE: ValidateAPIServerName,
+	RunE: func(_ *cobra.Command, _ []string) error {
 		if len(probeHostname) == 0 {
-			log.Error("no hostname provided")
-			os.Exit(1)
+			return errors.New("no hostname provided")
 		}
 		if probePort == 0 {
-			log.Error("no port provided")
-			os.Exit(1)
+			return errors.New("no port provided")
 		}
 
 		t, err := test.NewTester(context.Background(), activeAPIServer.Addr, tls)
 		if err != nil {
-			log.Error("could not create client", "error", err)
-			os.Exit(1)
+			return fmt.Errorf("could not create client: %v", err)
 		}
 
 		res, err := t.PortProbe(context.Background(), probeHostname, probePort, timeout)
 		if err != nil {
-			log.Error("could not probe", "error", err)
-			os.Exit(1)
+			return fmt.Errorf("could not probe: %v", err)
 		}
 
 		log.Info("probe finished", "portOpen", res.GetOpen())
+		return nil
 	},
 }
 

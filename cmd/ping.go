@@ -2,7 +2,8 @@ package cmd
 
 import (
 	"context"
-	"os"
+	"errors"
+	"fmt"
 
 	"github.com/kartverket/skipctl/pkg/constants"
 	"github.com/kartverket/skipctl/pkg/test"
@@ -15,25 +16,22 @@ var (
 )
 
 var pingCmd = &cobra.Command{
-	Use:    "ping",
-	Short:  "Perform a ping from a SKIP cluster",
-	PreRun: ValidateAPIServerName,
-	Run: func(_ *cobra.Command, _ []string) {
+	Use:     "ping",
+	Short:   "Perform a ping from a SKIP cluster",
+	PreRunE: ValidateAPIServerName,
+	RunE: func(_ *cobra.Command, _ []string) error {
 		if len(pingHostname) == 0 {
-			log.Error("no hostname provided")
-			os.Exit(1)
+			return errors.New("no hostname provided")
 		}
 
 		t, err := test.NewTester(context.Background(), activeAPIServer.Addr, tls)
 		if err != nil {
-			log.Error("could not create client", "error", err)
-			os.Exit(1)
+			return fmt.Errorf("could not create client: %w", err)
 		}
 
 		res, err := t.Ping(context.Background(), pingHostname, pingCount, timeout)
 		if err != nil {
-			log.Error("could not ping", "error", err)
-			os.Exit(1)
+			return fmt.Errorf("could not ping: %w", err)
 		}
 
 		if res.GetPingable() {
@@ -41,6 +39,8 @@ var pingCmd = &cobra.Command{
 		} else {
 			log.Info("host not responsive to ping", "hostname", pingHostname, "result", res)
 		}
+
+		return nil
 	},
 }
 
