@@ -17,6 +17,10 @@ import (
 	"github.com/posthog/posthog-go"
 )
 
+var (
+	trueVal = true
+)
+
 type Collector struct {
 	log     *slog.Logger
 	client  posthog.Client
@@ -47,7 +51,7 @@ func ConfigureCollector(opts Options) *Collector {
 	config := posthog.Config{
 		Endpoint:               constants.PostHogURL,
 		BatchSize:              constants.BatchSize,
-		DisableGeoIP:           &constants.DisableGeoIP,
+		DisableGeoIP:           &trueVal,
 		Logger:                 &posthogSlogAdapter{logger},
 		DefaultEventProperties: defaultProps(opts),
 		Verbose:                true, // TODO: Remove

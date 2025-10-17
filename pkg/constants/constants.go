@@ -50,7 +50,6 @@ const (
 	PostHogURL             = "https://eu.i.posthog.com"
 	PostHogProjectAPIToken = "phc_CeP8yxo2muPw6U2rfjdZ4dAMqxfxd7Y2hgAhS1LKGOo"
 	BatchSize              = 1
-	DisableGeoIP           = true
 	IDDirName              = "skipctl"
 	IDFileName             = "id"
 	RawIDBytes             = 16 // 128-bit random ID
