@@ -48,7 +48,7 @@ var (
 const (
 	// TODO: Change these two constants before go live
 	PostHogURL             = "https://eu.i.posthog.com"
-	PostHogProjectAPIToken = "phc_CeP8yxo2muPw6U2rfjdZ4dAMqxfxd7Y2hgAhS1LKGOo"
+	PostHogProjectAPIToken = ""
 	BatchSize              = 1
 	IDDirName              = "skipctl"
 	IDFileName             = "id"

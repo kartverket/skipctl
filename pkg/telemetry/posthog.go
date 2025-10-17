@@ -44,9 +44,9 @@ func ConfigureCollector(opts Options) *Collector {
 		collector.enabled = false
 		logger.Info("telemetry is disabled")
 		return collector
-	} else {
-		logger.Info("telemetry enabled, set DO_NOT_TRACK=true to disable")
 	}
+
+	logger.Info("telemetry enabled, set DO_NOT_TRACK=true to disable")
 
 	config := posthog.Config{
 		Endpoint:               constants.PostHogURL,
@@ -56,7 +56,14 @@ func ConfigureCollector(opts Options) *Collector {
 		DefaultEventProperties: defaultProps(opts),
 		Verbose:                true, // TODO: Remove
 	}
-	client, err := posthog.NewWithConfig(constants.PostHogProjectAPIToken, config)
+	// NOTE: This is only here until we go live
+	apiToken := os.Getenv("POSTHOG_API_KEY")
+	if apiToken == "" {
+		logger.Warn("POSTHOG_API_KEY environment variable not set, telemetry disabled")
+		collector.enabled = false
+		return collector
+	}
+	client, err := posthog.NewWithConfig(apiToken, config)
 	if err != nil {
 		logger.Error("telemetry disabled: failed to initialize client", "error", err)
 		collector.enabled = false
@@ -98,7 +105,8 @@ func (c *Collector) CaptureCommand(command string, args []string, flags []string
 		"time":      time.Now().UTC(),
 		"$ip":       "0", // explicit neutral IP
 	}
-	distinctID, hErr := hostHash()
+	isCI := envKind() == "ci"
+	distinctID, hErr := hostHash(isCI)
 	if hErr != nil {
 		c.log.Error("could not get anonymous identity", "error", hErr)
 	}
@@ -118,7 +126,11 @@ func envKind() string {
 	return "local"
 }
 
-func readOrCreateLocalID() (string, error) {
+func readOrCreateLocalID(isCI bool) (string, error) {
+	// If it runs from a Action, just hash the hostname
+	if isCI {
+		return os.Hostname()
+	}
 	cacheDir, err := os.UserCacheDir()
 	if err != nil {
 		return "", err
@@ -145,10 +157,10 @@ func readOrCreateLocalID() (string, error) {
 	return hexID, nil
 }
 
-func hostHash() (string, error) {
-	id, err := readOrCreateLocalID()
+func hostHash(isCI bool) (string, error) {
+	id, err := readOrCreateLocalID(isCI)
 	if err != nil {
-		return "unknown", fmt.Errorf("failed to get local ID: %v", err)
+		return "unknown", fmt.Errorf("failed to get local ID: %w", err)
 	}
 	h := sha256.Sum256([]byte(id))
 	return hex.EncodeToString(h[:]), nil

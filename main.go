@@ -11,8 +11,7 @@ var (
 )
 
 func main() {
-	cmd.GitTag = GitTag
-	cmd.GitCommitHash = GitCommitHash
+	cmd.SetVersionInfo(GitTag, GitCommitHash)
 
 	if err := cmd.Execute(); err != nil {
 		return

@@ -19,6 +19,12 @@ var (
 	GitCommitHash string
 )
 
+// SetVersionInfo sets version metadata used for CLI version output and telemetry.
+func SetVersionInfo(tag, commit string) {
+	GitTag = tag
+	GitCommitHash = commit
+}
+
 var (
 	log              *slog.Logger
 	collector        *telemetry.Collector
@@ -41,7 +47,7 @@ func Execute() error {
 	schemas, err := crd.ListSchemas()
 	if err != nil {
 		slog.Error("could not list schemas", "error", err)
-		os.Exit(1)
+		return err
 	}
 	for _, schema := range schemas {
 		schemasText += fmt.Sprintf(" - %s\n", schema)
@@ -82,7 +88,7 @@ func initTelemetry() {
 }
 
 // instrumentCommands wraps each command's RunE to emit telemetry once.
-// All our commands are run with RunE
+// All our commands are with RunE
 func instrumentCommands(c *cobra.Command) {
 	if c.RunE != nil {
 		orig := c.RunE

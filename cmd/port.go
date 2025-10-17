@@ -28,12 +28,12 @@ var portProbeCmd = &cobra.Command{
 
 		t, err := test.NewTester(context.Background(), activeAPIServer.Addr, tls)
 		if err != nil {
-			return fmt.Errorf("could not create client: %v", err)
+			return fmt.Errorf("could not create client: %w", err)
 		}
 
 		res, err := t.PortProbe(context.Background(), probeHostname, probePort, timeout)
 		if err != nil {
-			return fmt.Errorf("could not probe: %v", err)
+			return fmt.Errorf("could not probe: %w", err)
 		}
 
 		log.Info("probe finished", "portOpen", res.GetOpen())
