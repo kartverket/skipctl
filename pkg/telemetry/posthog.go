@@ -56,14 +56,8 @@ func ConfigureCollector(opts Options) *Collector {
 		DefaultEventProperties: defaultProps(opts),
 		Verbose:                true, // TODO: Remove
 	}
-	// NOTE: This is only here until we go live
-	apiToken := os.Getenv("POSTHOG_API_KEY")
-	if apiToken == "" {
-		logger.Warn("POSTHOG_API_KEY environment variable not set, telemetry disabled")
-		collector.enabled = false
-		return collector
-	}
-	client, err := posthog.NewWithConfig(apiToken, config)
+
+	client, err := posthog.NewWithConfig(constants.PostHogProjectAPIToken, config)
 	if err != nil {
 		logger.Error("telemetry disabled: failed to initialize client", "error", err)
 		collector.enabled = false
