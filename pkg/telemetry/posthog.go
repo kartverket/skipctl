@@ -120,7 +120,7 @@ func (c *Collector) CaptureCommand(command string, args []string, flags []string
 }
 
 func envKind() string {
-	if os.Getenv("GITHUB_ACTIONS") == "true" {
+	if os.Getenv("CI") == "true" { // this is true for Githhub runners
 		return "ci"
 	}
 	return "local"
@@ -129,7 +129,7 @@ func envKind() string {
 func readOrCreateLocalID(isCI bool) (string, error) {
 	// If it runs from a Action, just hash the hostname
 	if isCI {
-		return os.Hostname()
+		return constants.CIDefault, nil
 	}
 	cacheDir, err := os.UserCacheDir()
 	if err != nil {

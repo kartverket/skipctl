@@ -54,4 +54,5 @@ const (
 	IDFileName             = "id"
 	RawIDBytes             = 16 // 128-bit random ID
 	MinExistingLen         = 32 // hex length for 16 bytes
+	CIDefault              = "IamCI"
 )
