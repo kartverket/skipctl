@@ -46,7 +46,6 @@ func (r *Renderer) RenderManifest(file *Document) error {
 }
 
 func (r *Renderer) renderJsonnet(file *Document) error {
-
 	result, err := r.vm.EvaluateFile(file.Name)
 	if err != nil {
 		return fmt.Errorf("evaluate jsonnet %q: %w", file.Name, err)
