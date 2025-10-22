@@ -11,7 +11,6 @@ import (
 )
 
 type Differ struct {
-	renderer       *Renderer
 	rawOutput      *slog.Logger
 	ref            string
 	verbosityLevel string
@@ -24,7 +23,6 @@ type Differ struct {
 func NewDiffer(ref string, verbosityLevel string, outputFormat string, chunkSize int) *Differ {
 	buf := &bytes.Buffer{}
 	return &Differ{
-		renderer:       NewRenderer(logging.NewRawLoggerTo(buf)),
 		rawOutput:      logging.RawLogger(),
 		logger:         logging.Logger(),
 		ref:            ref,
@@ -34,25 +32,27 @@ func NewDiffer(ref string, verbosityLevel string, outputFormat string, chunkSize
 		renderBuffer:   buf,
 	}
 }
+
 func (d *Differ) DiffManifest(file *Document) error {
 	prevFile, err := file.AtRef(d.ref)
 	if err != nil {
 		return err
 	}
 
-	// render current manifest to buffer
 	d.renderBuffer.Reset()
-	err = d.renderer.RenderManifest(file)
+	currentRenderer := NewRenderer(logging.NewRawLoggerTo(d.renderBuffer))
+	currentRenderer.SetImporter(NewCachingFileImporter())
+	err = currentRenderer.RenderManifest(file)
 	if err != nil {
 		return err
 	}
 	rendered := d.renderBuffer.String()
 
-	// render previous manifest to buffer
+	// Create fresh VM and renderer for previous file
 	d.renderBuffer.Reset()
-	d.renderer.SetImporter(NewGitImporter(d.ref))
-	err = d.renderer.RenderManifest(prevFile)
-	d.renderer.ResetImporter()
+	prevRenderer := NewRenderer(logging.NewRawLoggerTo(d.renderBuffer))
+	prevRenderer.SetImporter(NewGitImporter(d.ref))
+	err = prevRenderer.RenderManifest(prevFile)
 	if err != nil {
 		return err
 	}

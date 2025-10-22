@@ -12,9 +12,9 @@ import (
 )
 
 type Renderer struct {
-	jsonnet    *jsonnet.VM
 	rawOutput  *slog.Logger
 	isFirstDoc bool
+	vm         *jsonnet.VM
 }
 
 func NewRenderer(loggers ...*slog.Logger) *Renderer {
@@ -25,20 +25,14 @@ func NewRenderer(loggers ...*slog.Logger) *Renderer {
 		logger = logging.RawLogger()
 	}
 	return &Renderer{
-		jsonnet: jsonnet.MakeVM(),
-
 		isFirstDoc: true,
 
 		rawOutput: logger,
 	}
 }
 
-func (r *Renderer) SetImporter(i jsonnet.Importer) {
-	r.jsonnet.Importer(i)
-}
-
-func (r *Renderer) ResetImporter() {
-	r.jsonnet.Importer(nil)
+func (r *Renderer) SetImporter(importer jsonnet.Importer) {
+	r.vm.Importer(importer)
 }
 
 func (r *Renderer) RenderManifest(file *Document) error {
@@ -52,12 +46,8 @@ func (r *Renderer) RenderManifest(file *Document) error {
 }
 
 func (r *Renderer) renderJsonnet(file *Document) error {
-	node, err := jsonnet.SnippetToAST(file.Name, file.Content)
-	if err != nil {
-		return fmt.Errorf("parse jsonnet %q: %w", file.Name, err)
-	}
 
-	result, err := r.jsonnet.Evaluate(node)
+	result, err := r.vm.EvaluateFile(file.Name)
 	if err != nil {
 		return fmt.Errorf("evaluate jsonnet %q: %w", file.Name, err)
 	}
