@@ -26,8 +26,8 @@ func NewRenderer(loggers ...*slog.Logger) *Renderer {
 	}
 	return &Renderer{
 		isFirstDoc: true,
-
-		rawOutput: logger,
+		rawOutput:  logger,
+		vm:         jsonnet.MakeVM(),
 	}
 }
 
