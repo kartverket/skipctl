@@ -55,7 +55,6 @@ func (r *Renderer) renderJsonnet(file *Document) error {
 	node, err := jsonnet.SnippetToAST(file.Name, file.Content)
 	if err != nil {
 		return fmt.Errorf("parse jsonnet %q: %w", file.Name, err)
-
 	}
 	result, err := r.vm.Evaluate(node)
 	if err != nil {
