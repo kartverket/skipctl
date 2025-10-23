@@ -80,7 +80,7 @@ func (gi *GitFileImporter) Import(importedFrom, importedPath string) (jsonnet.Co
 	absPath = filepath.Clean(absPath)
 
 	// Check if we already have this file cached
-	if contents, exists := gi.sharedCache.cache[gi.Ref+absPath]; exists {
+	if contents, exists := gi.sharedCache.cache[gi.Ref+":"+absPath]; exists {
 		return contents, absPath, nil
 	}
 
@@ -92,7 +92,7 @@ func (gi *GitFileImporter) Import(importedFrom, importedPath string) (jsonnet.Co
 
 	// Create Contents instance and cache it
 	contents := jsonnet.MakeContents(*content)
-	gi.sharedCache.cache[gi.Ref+absPath] = contents
+	gi.sharedCache.cache[gi.Ref+":"+absPath] = contents
 
 	return contents, absPath, nil
 }
