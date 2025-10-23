@@ -12,9 +12,10 @@ import (
 )
 
 type Renderer struct {
-	rawOutput  *slog.Logger
-	isFirstDoc bool
-	vm         *jsonnet.VM
+	rawOutput   *slog.Logger
+	isFirstDoc  bool
+	vm          *jsonnet.VM
+	sharedCache *ImportCache
 }
 
 func NewRenderer(loggers ...*slog.Logger) *Renderer {
@@ -25,16 +26,19 @@ func NewRenderer(loggers ...*slog.Logger) *Renderer {
 		logger = logging.RawLogger()
 	}
 	return &Renderer{
-		isFirstDoc: true,
-		rawOutput:  logger,
-		vm:         jsonnet.MakeVM(),
+		isFirstDoc:  true,
+		rawOutput:   logger,
+		vm:          jsonnet.MakeVM(),
+		sharedCache: NewImportCache(),
 	}
 }
 
-func (r *Renderer) SetImporter(importer jsonnet.Importer) {
-	r.vm.Importer(importer)
+func (r *Renderer) SetDefaultImporter() {
+	r.vm.Importer(NewFileImporter(r.sharedCache))
 }
-
+func (r *Renderer) SetGitImporter(ref string) {
+	r.vm.Importer(NewGitFileImporter(ref, r.sharedCache))
+}
 func (r *Renderer) RenderManifest(file *Document) error {
 	switch file.Extension {
 	case constants.ManifestSuffixJsonnet:
@@ -46,7 +50,12 @@ func (r *Renderer) RenderManifest(file *Document) error {
 }
 
 func (r *Renderer) renderJsonnet(file *Document) error {
-	result, err := r.vm.EvaluateFile(file.Name)
+	node, err := jsonnet.SnippetToAST(file.Name, file.Content)
+	if err != nil {
+		return fmt.Errorf("parse jsonnet %q: %w", file.Name, err)
+
+	}
+	result, err := r.vm.Evaluate(node)
 	if err != nil {
 		return fmt.Errorf("evaluate jsonnet %q: %w", file.Name, err)
 	}

@@ -18,10 +18,12 @@ type Differ struct {
 	outputFormat   string
 	renderBuffer   *bytes.Buffer
 	logger         *slog.Logger
+	renderer       *Renderer
 }
 
 func NewDiffer(ref string, verbosityLevel string, outputFormat string, chunkSize int) *Differ {
 	buf := &bytes.Buffer{}
+	renderer := NewRenderer(logging.NewRawLoggerTo(buf))
 	return &Differ{
 		rawOutput:      logging.RawLogger(),
 		logger:         logging.Logger(),
@@ -30,6 +32,7 @@ func NewDiffer(ref string, verbosityLevel string, outputFormat string, chunkSize
 		chunkSize:      chunkSize,
 		outputFormat:   outputFormat,
 		renderBuffer:   buf,
+		renderer:       renderer,
 	}
 }
 
@@ -40,19 +43,16 @@ func (d *Differ) DiffManifest(file *Document) error {
 	}
 
 	d.renderBuffer.Reset()
-	currentRenderer := NewRenderer(logging.NewRawLoggerTo(d.renderBuffer))
-	currentRenderer.SetImporter(NewCachingFileImporter())
-	err = currentRenderer.RenderManifest(file)
+	d.renderer.SetDefaultImporter()
+	err = d.renderer.RenderManifest(file)
 	if err != nil {
 		return err
 	}
 	rendered := d.renderBuffer.String()
 
-	// Create fresh VM and renderer for previous file
 	d.renderBuffer.Reset()
-	prevRenderer := NewRenderer(logging.NewRawLoggerTo(d.renderBuffer))
-	prevRenderer.SetImporter(NewGitImporter(d.ref))
-	err = prevRenderer.RenderManifest(prevFile)
+	d.renderer.SetGitImporter(d.ref)
+	err = d.renderer.RenderManifest(prevFile)
 	if err != nil {
 		return err
 	}
