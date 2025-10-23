@@ -44,6 +44,7 @@ func (d *Differ) DiffManifest(file *Document) error {
 
 	d.renderBuffer.Reset()
 	d.renderer.SetDefaultImporter()
+	d.renderer.DisableYamlSeparator()
 	err = d.renderer.RenderManifest(file)
 	if err != nil {
 		return err
@@ -52,6 +53,7 @@ func (d *Differ) DiffManifest(file *Document) error {
 
 	d.renderBuffer.Reset()
 	d.renderer.SetGitImporter(d.ref)
+	d.renderer.DisableYamlSeparator()
 	err = d.renderer.RenderManifest(prevFile)
 	if err != nil {
 		return err
@@ -59,7 +61,6 @@ func (d *Differ) DiffManifest(file *Document) error {
 	prevRendered := d.renderBuffer.String()
 
 	diffs, hasChanges := diff.LCS(prevRendered, rendered)
-
 	if !hasChanges {
 		return nil
 	}
@@ -68,7 +69,6 @@ func (d *Differ) DiffManifest(file *Document) error {
 
 	switch d.outputFormat {
 	case constants.DiffOutputPretty:
-		d.logger.Info("diff", "file", file.Name, "ref", d.ref)
 		d.rawOutput.Info(diff.DiffsToPrettyPrint(outputDiffs))
 		return nil
 	case constants.DiffOutputPatch:

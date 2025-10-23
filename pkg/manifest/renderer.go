@@ -12,10 +12,10 @@ import (
 )
 
 type Renderer struct {
-	rawOutput   *slog.Logger
-	isFirstDoc  bool
-	vm          *jsonnet.VM
-	sharedCache *ImportCache
+	rawOutput     *slog.Logger
+	vm            *jsonnet.VM
+	sharedCache   *ImportCache
+	yamlSeparator bool
 }
 
 func NewRenderer(loggers ...*slog.Logger) *Renderer {
@@ -26,13 +26,15 @@ func NewRenderer(loggers ...*slog.Logger) *Renderer {
 		logger = logging.RawLogger()
 	}
 	return &Renderer{
-		isFirstDoc:  true,
-		rawOutput:   logger,
-		vm:          jsonnet.MakeVM(),
-		sharedCache: NewImportCache(),
+		rawOutput:     logger,
+		vm:            jsonnet.MakeVM(),
+		sharedCache:   NewImportCache(),
+		yamlSeparator: false,
 	}
 }
-
+func (r *Renderer) DisableYamlSeparator() {
+	r.yamlSeparator = false
+}
 func (r *Renderer) SetDefaultImporter() {
 	r.vm.Importer(NewFileImporter(r.sharedCache))
 }
@@ -72,10 +74,10 @@ func (r *Renderer) renderYaml(file *Document) error {
 	if err != nil {
 		return err
 	}
-	if !r.isFirstDoc {
-		r.rawOutput.Info("---")
+	if r.yamlSeparator {
+		r.rawOutput.Info("---\n")
 	}
-	r.isFirstDoc = false
+	r.yamlSeparator = true
 
 	r.rawOutput.Info(file.Content)
 
