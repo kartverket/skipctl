@@ -24,7 +24,7 @@
 <!--- Go over all the following points, and put an `x` in all the boxes that apply. -->
 <!--- If you're unsure about any of these, don't hesitate to ask. We're here to help! -->
 - [ ] My code follows the code style of this project. 💅
-- [ ] My changes does not break the existing tests 🧪
+- [ ] My changes do not break the existing tests 🧪
 - [ ] I have updated the tests accordingly ➕ 
 - [ ] My change requires a change to the documentation. 📚
 - [ ] I have updated the documentation accordingly. 📝
@@ -33,5 +33,5 @@
 <!---If this pull request also fixes something else that is not related to the main description. -->
 <!---For example: you found a bug and it was a quick fix. It might be other stuff as well :) -->
 
-## Questions:❓
-<!--- If you have some questions, put then under here pointwise. -->
+## Questions: ❓
+<!--- If you have some questions, put them under here pointwise. -->
