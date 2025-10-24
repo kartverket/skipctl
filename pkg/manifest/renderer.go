@@ -12,9 +12,10 @@ import (
 )
 
 type Renderer struct {
-	jsonnet    *jsonnet.VM
-	rawOutput  *slog.Logger
-	isFirstDoc bool
+	rawOutput     *slog.Logger
+	vm            *jsonnet.VM
+	sharedCache   *ImportCache
+	yamlSeparator bool
 }
 
 func NewRenderer(loggers ...*slog.Logger) *Renderer {
@@ -25,22 +26,21 @@ func NewRenderer(loggers ...*slog.Logger) *Renderer {
 		logger = logging.RawLogger()
 	}
 	return &Renderer{
-		jsonnet: jsonnet.MakeVM(),
-
-		isFirstDoc: true,
-
-		rawOutput: logger,
+		rawOutput:     logger,
+		vm:            jsonnet.MakeVM(),
+		sharedCache:   NewImportCache(),
+		yamlSeparator: false,
 	}
 }
-
-func (r *Renderer) SetImporter(i jsonnet.Importer) {
-	r.jsonnet.Importer(i)
+func (r *Renderer) DisableYamlSeparator() {
+	r.yamlSeparator = false
 }
-
-func (r *Renderer) ResetImporter() {
-	r.jsonnet.Importer(nil)
+func (r *Renderer) SetDefaultImporter() {
+	r.vm.Importer(NewFileImporter(r.sharedCache))
 }
-
+func (r *Renderer) SetGitImporter(ref string) {
+	r.vm.Importer(NewGitFileImporter(ref, r.sharedCache))
+}
 func (r *Renderer) RenderManifest(file *Document) error {
 	switch file.Extension {
 	case constants.ManifestSuffixJsonnet:
@@ -56,8 +56,7 @@ func (r *Renderer) renderJsonnet(file *Document) error {
 	if err != nil {
 		return fmt.Errorf("parse jsonnet %q: %w", file.Name, err)
 	}
-
-	result, err := r.jsonnet.Evaluate(node)
+	result, err := r.vm.Evaluate(node)
 	if err != nil {
 		return fmt.Errorf("evaluate jsonnet %q: %w", file.Name, err)
 	}
@@ -74,10 +73,10 @@ func (r *Renderer) renderYaml(file *Document) error {
 	if err != nil {
 		return err
 	}
-	if !r.isFirstDoc {
-		r.rawOutput.Info("---")
+	if r.yamlSeparator {
+		r.rawOutput.Info("---\n")
 	}
-	r.isFirstDoc = false
+	r.yamlSeparator = true
 
 	r.rawOutput.Info(file.Content)
 
