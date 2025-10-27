@@ -17,6 +17,8 @@ const (
 	ManifestSuffixJsonnet = ".jsonnet"
 	ManifestSuffixYaml    = ".yaml"
 	ManifestSuffixYml     = ".yml"
+	ManifestKustomizeYaml = "kustomization.yaml"
+	ManifestKustomizeYml  = "kustomization.yml"
 )
 
 const (
