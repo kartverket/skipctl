@@ -43,16 +43,3 @@ const (
 var (
 	ManifestSuffixes = []string{ManifestSuffixJsonnet, ManifestSuffixYaml, ManifestSuffixYml}
 )
-
-// Collector constants
-const (
-	// TODO: Change these two constants before go live
-	PostHogURL             = "https://eu.i.posthog.com"
-	PostHogProjectAPIToken = "phc_igsuASPLMxTIw2103uuHsgJHWYBKMTf8lOdSoj2GPSN"
-	BatchSize              = 1
-	IDDirName              = "skipctl"
-	IDFileName             = "id"
-	RawIDBytes             = 16 // 128-bit random ID
-	MinExistingLen         = 32 // hex length for 16 bytes
-	CIDefault              = "IamCI"
-)

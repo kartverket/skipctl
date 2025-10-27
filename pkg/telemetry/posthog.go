@@ -12,7 +12,6 @@ import (
 	"runtime"
 	"time"
 
-	"github.com/kartverket/skipctl/pkg/constants"
 	"github.com/kartverket/skipctl/pkg/logging"
 	"github.com/posthog/posthog-go"
 )
@@ -40,7 +39,13 @@ func ConfigureCollector(opts Options) *Collector {
 	logger := logging.Logger().With("component", "telemetry/posthog")
 
 	collector := &Collector{log: logger}
-	if opts.DisableAnalytics {
+	if len(PostHogProjectAPIToken) == 0 {
+		collector.enabled = false
+		logger.Info("telemetry is disabled because no PostHog project API token set – normal for development builds")
+		return collector
+	}
+
+	if opts.DisableAnalytics || len(PostHogProjectAPIToken) == 0 {
 		collector.enabled = false
 		logger.Info("telemetry is disabled")
 		return collector
@@ -49,15 +54,15 @@ func ConfigureCollector(opts Options) *Collector {
 	logger.Info("telemetry enabled, set DO_NOT_TRACK=true to disable")
 
 	config := posthog.Config{
-		Endpoint:               constants.PostHogURL,
-		BatchSize:              constants.BatchSize,
+		Endpoint:               postHogURL,
+		BatchSize:              batchSize,
 		DisableGeoIP:           &trueVal,
 		Logger:                 &posthogSlogAdapter{logger},
 		DefaultEventProperties: defaultProps(opts),
 		Verbose:                true, // TODO: Remove
 	}
 
-	client, err := posthog.NewWithConfig(constants.PostHogProjectAPIToken, config)
+	client, err := posthog.NewWithConfig(PostHogProjectAPIToken, config)
 	if err != nil {
 		logger.Error("telemetry disabled: failed to initialize client", "error", err)
 		collector.enabled = false
@@ -123,7 +128,7 @@ func envKind() string {
 func readOrCreateLocalID(isCI bool) (string, error) {
 	// If it runs from a Action, just hash the hostname
 	if isCI {
-		return constants.CIDefault, nil
+		return ciDefault, nil
 	}
 	cacheDir, err := os.UserCacheDir()
 	if err != nil {
@@ -132,15 +137,15 @@ func readOrCreateLocalID(isCI bool) (string, error) {
 	if cacheDir == "" {
 		return "", errors.New("empty cache dir")
 	}
-	appDir := filepath.Join(cacheDir, constants.IDDirName)
+	appDir := filepath.Join(cacheDir, idDirName)
 	if mkErr := os.MkdirAll(appDir, 0o700); mkErr != nil {
 		return "", mkErr
 	}
-	idPath := filepath.Join(appDir, constants.IDFileName)
-	if b, readErr := os.ReadFile(idPath); readErr == nil && len(b) >= constants.MinExistingLen {
+	idPath := filepath.Join(appDir, idFileName)
+	if b, readErr := os.ReadFile(idPath); readErr == nil && len(b) >= minExistingLen {
 		return string(b), nil
 	}
-	buf := make([]byte, constants.RawIDBytes)
+	buf := make([]byte, rawIDBytes)
 	if _, genErr := rand.Read(buf); genErr != nil {
 		return "", genErr
 	}
