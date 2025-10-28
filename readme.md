@@ -54,6 +54,9 @@ If a directory is specified, all commands in this group will recursively search 
 - `.jsonnet`
 - `.yaml`
 - `.yml`
+- `kustomization.yaml`(only for `manifests render`)
+- `kustomization.yml`(only for `manifests render`)
+
 
 #### Render manifests
 
