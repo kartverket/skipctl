@@ -3,6 +3,8 @@
 
 A simple client (and [server](./server.md)) to perform various network troubleshooting.
 
+![skipctl](assets/skipctl-logo.png)
+
 - [Installation](#installation)
 - [Usage](#usage)
     - [Test](#test)
@@ -11,7 +13,7 @@ A simple client (and [server](./server.md)) to perform various network troublesh
     - [Manifests](#manifests)
         - [Render manifests](#render-manifests)
         - [Validate manifests](#validate-k8s-manifests)
-
+- [Informatin](#information)
 ## Installation
 
 Download the [latest release](https://github.com/kartverket/skipctl/releases) or use the provided Docker image (mainly for running a server).
@@ -142,3 +144,39 @@ Returns status code `1` if there are failures or `0` for successful validation
 ```shell
 skipctl manifests validate --path <pathname>
 ```
+
+## Analytics & Privacy
+
+`skipctl` collects anonymous usage analytics by **default** to help us understand how the tool is being used and improve the user experience.
+
+### What We Collect
+
+We collect the following **non-personal** information:
+- **Command usage**: Which commands and subcommands are executed (e.g., `test ping`, `manifests render`)
+- **Command arguments**: Arguments passed to commands (e.g., flags used)
+- **Error information**: Whether a command succeeded or failed, and error messages if applicable
+- **Environment context**:
+  - Operating system (e.g., macOS, Linux, Windows)
+  - System architecture (e.g., amd64, arm64)
+  - Application version and git commit hash
+  - Environment type (local or CI)
+- **Anonymous identifier**: A hashed machine-specific identifier that cannot be traced back to you.
+
+### How We Collect Data
+
+Analytics are collected through [PostHog](https://posthog.com/), a privacy-focused analytics platform, and sent to our self-hosted instance.
+
+### How to Disable Analytics
+
+You can disable analytics collection in two ways:
+
+#### 1. Using the `DO_NOT_TRACK` Environment Variable
+
+Set the `DO_NOT_TRACK` environment variable to `true`:
+
+To make this permanent, add the line above to your shell configuration file. 
+
+#### 2. Using the `--no-analytics` Flag
+
+Pass the `--no-analytics` flag when running any `skipctl` command:
+
