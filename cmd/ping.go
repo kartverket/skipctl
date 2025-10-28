@@ -42,8 +42,7 @@ var pingCmd = &cobra.Command{
 
 		return nil
 	},
-	SilenceErrors: true,
-	SilenceUsage:  true,
+	SilenceUsage: true,
 }
 
 func init() {

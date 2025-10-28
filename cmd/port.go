@@ -39,8 +39,7 @@ var portProbeCmd = &cobra.Command{
 		log.Info("probe finished", "portOpen", res.GetOpen())
 		return nil
 	},
-	SilenceErrors: true,
-	SilenceUsage:  true,
+	SilenceUsage: true,
 }
 
 func init() {
