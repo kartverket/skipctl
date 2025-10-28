@@ -43,6 +43,28 @@ func findKustomizeDirs(directory string) (map[string]bool, error) {
 	})
 	return kustomizeDirs, kustomizeWalkErr
 }
+func isKustomizeDir(kustomizeDirs map[string]bool, path string) bool {
+	fileDir := filepath.Dir(path)
+
+	// Check if file is in a kustomize directory or its subdirectory
+	inKustomizeDir := false
+	for kustomizeDir := range kustomizeDirs {
+		absKustomizeDir, err1 := filepath.Abs(kustomizeDir)
+		absFileDir, err2 := filepath.Abs(fileDir)
+		if err1 != nil || err2 != nil {
+			continue
+		}
+		rel, relErr := filepath.Rel(absKustomizeDir, absFileDir)
+		if relErr != nil {
+			continue
+		}
+		if rel == "." || (len(rel) > 0 && !strings.HasPrefix(rel, ".."+string(filepath.Separator)) && rel != "..") {
+			inKustomizeDir = true
+			break
+		}
+	}
+	return inKustomizeDir
+}
 func FindFilesWithSuffixes(directory string, suffixes []string) ([]string, error) {
 	kustomizeDirs, findKustomizeErr := findKustomizeDirs(directory)
 	if findKustomizeErr != nil {
@@ -58,27 +80,9 @@ func FindFilesWithSuffixes(directory string, suffixes []string) ([]string, error
 		}
 
 		baseName := filepath.Base(path)
-		fileDir := filepath.Dir(path)
 
-		// Check if file is in a kustomize directory or its subdirectory
-		inKustomizeDir := false
-		for kustomizeDir := range kustomizeDirs {
-			absKustomizeDir, err1 := filepath.Abs(kustomizeDir)
-			absFileDir, err2 := filepath.Abs(fileDir)
-			if err1 != nil || err2 != nil {
-				continue
-			}
-			rel, err := filepath.Rel(absKustomizeDir, absFileDir)
-			if err != nil {
-				continue
-			}
-			if rel == "." || (len(rel) > 0 && !strings.HasPrefix(rel, ".."+string(filepath.Separator)) && rel != "..") {
-				inKustomizeDir = true
-				break
-			}
-		}
 		// Only include kustomization files from kustomize directories
-		if inKustomizeDir {
+		if isKustomizeDir(kustomizeDirs, path) {
 			if baseName == constants.ManifestKustomizeYaml || baseName == constants.ManifestKustomizeYml {
 				files = append(files, path)
 			}
