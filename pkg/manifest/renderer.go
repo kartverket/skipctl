@@ -29,7 +29,7 @@ func NewRenderer(loggers ...*slog.Logger) *Renderer {
 	} else {
 		logger = logging.RawLogger()
 	}
-	// Make the kustomizer for the rendrer
+	// Make the kustomizer for the renderer
 	opts := krusty.MakeDefaultOptions()
 	k := krusty.MakeKustomizer(opts)
 	return &Renderer{
