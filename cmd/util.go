@@ -1,7 +1,8 @@
 package cmd
 
 import (
-	"os"
+	"errors"
+	"fmt"
 	"regexp"
 	"strings"
 
@@ -11,10 +12,9 @@ import (
 
 var activeAPIServer discovery.APIServer
 
-func ValidateAPIServerName(_ *cobra.Command, _ []string) {
+func ValidateAPIServerName(_ *cobra.Command, _ []string) error {
 	if len(apiServer) == 0 {
-		log.Error("no api server specified, exiting")
-		os.Exit(1)
+		return errors.New("no api server specified")
 	}
 
 	var matchFound = false
@@ -32,9 +32,10 @@ func ValidateAPIServerName(_ *cobra.Command, _ []string) {
 			names = append(names, strings.ToLower(server.Name))
 		}
 
-		log.Error("unknown api server - please pick another supported", "specified", apiServer, "supported", names)
-		os.Exit(1)
+		return fmt.Errorf("unknown api server '%s'  - please pick another supported: %s", apiServer, names)
 	}
+
+	return nil
 }
 
 var (

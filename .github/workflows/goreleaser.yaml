@@ -61,4 +61,5 @@ jobs:
           args: release --clean
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PH_PROJECT_API_KEY: ${{ secrets.PH_PROJECT_API_KEY }}
           STS_TOKEN: ${{ steps.octo-sts.outputs.token }}
