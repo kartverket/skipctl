@@ -63,12 +63,20 @@ func FindFilesWithSuffixes(directory string, suffixes []string) ([]string, error
 		// Check if file is in a kustomize directory or its subdirectory
 		inKustomizeDir := false
 		for kustomizeDir := range kustomizeDirs {
-			if fileDir == kustomizeDir || strings.HasPrefix(fileDir, kustomizeDir+string(filepath.Separator)) {
+			absKustomizeDir, err1 := filepath.Abs(kustomizeDir)
+			absFileDir, err2 := filepath.Abs(fileDir)
+			if err1 != nil || err2 != nil {
+				continue
+			}
+			rel, err := filepath.Rel(absKustomizeDir, absFileDir)
+			if err != nil {
+				continue
+			}
+			if rel == "." || (len(rel) > 0 && !strings.HasPrefix(rel, ".."+string(filepath.Separator)) && rel != "..") {
 				inKustomizeDir = true
 				break
 			}
 		}
-
 		// Only include kustomization files from kustomize directories
 		if inKustomizeDir {
 			if baseName == constants.ManifestKustomizeYaml || baseName == constants.ManifestKustomizeYml {
