@@ -105,7 +105,7 @@ func (r *Renderer) renderKustomize(file *Document) error {
 	// Render yaml
 	yaml, yamlErr := resMap.AsYaml()
 	if yamlErr != nil {
-		return fmt.Errorf("convert kustomize output to yaml %q: %w", file.Name, err)
+		return fmt.Errorf("convert kustomize output to yaml %q: %w", file.Name, yamlErr)
 	}
 
 	r.rawOutput.Info(string(yaml))

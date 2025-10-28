@@ -87,3 +87,37 @@ port: 8080
 	res := NewRenderer().RenderManifest(doc)
 	require.Error(t, res, "expected error for invalid Yaml input")
 }
+func TestRenderManifestValidKustomize(t *testing.T) {
+	// Use actual kustomize test directory
+	kustomizePath := "../../testdata/kustomize/kustomization.yaml"
+
+	doc := &Document{
+		Name:        kustomizePath,
+		Extension:   "kustomization.yaml",
+		Permissions: filePermission,
+		FromStdin:   false,
+	}
+
+	renderer, buf := newRendererWithLogger()
+	err := renderer.RenderManifest(doc)
+
+	require.NoError(t, err, "expected no error for valid Kustomize")
+	got := buf.String()
+	assert.NotEmpty(t, got, "expected kustomize output")
+	assert.Contains(t, got, "kind: Application", "output should contain Application")
+}
+func TestRenderManifestInvalidKustomize(t *testing.T) {
+	// Point to a directory that doesn't exist
+	doc := &Document{
+		Name:        "/nonexistent/path/kustomization.yaml",
+		Extension:   "kustomization.yaml",
+		Permissions: filePermission,
+		FromStdin:   false,
+	}
+
+	renderer := NewRenderer()
+	err := renderer.RenderManifest(doc)
+
+	require.Error(t, err, "expected error for non-existent kustomization directory")
+	assert.Contains(t, err.Error(), "kustomize build", "error should mention kustomize build")
+}

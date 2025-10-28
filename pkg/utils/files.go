@@ -28,44 +28,65 @@ func FindManifestFiles(path string) ([]string, error) {
 
 	return files, nil
 }
+func findKustomizeDirs(directory string) (map[string]bool, error) {
+	kustomizeDirs := make(map[string]bool)
 
+	// First pass: Find all kustomization directories
+	kustomizeWalkErr := filepath.WalkDir(directory, func(path string, info os.DirEntry, err error) error {
+		if err == nil && !info.IsDir() {
+			baseName := filepath.Base(path)
+			if baseName == constants.ManifestKustomizeYaml || baseName == constants.ManifestKustomizeYml {
+				kustomizeDirs[filepath.Dir(path)] = true
+			}
+		}
+		return nil
+	})
+	return kustomizeDirs, kustomizeWalkErr
+}
 func FindFilesWithSuffixes(directory string, suffixes []string) ([]string, error) {
+	kustomizeDirs, findKustomizeErr := findKustomizeDirs(directory)
+	if findKustomizeErr != nil {
+		return nil, findKustomizeErr
+	}
 	var files []string
-	var kustomizeDirs []string
 	err := filepath.WalkDir(directory, func(path string, info os.DirEntry, err error) error {
 		if err != nil {
 			return err
 		}
-		if !info.IsDir() {
-			ext := strings.ToLower(filepath.Ext(path))
-			baseName := filepath.Base(path)
-			if baseName == constants.ManifestKustomizeYaml || baseName == constants.ManifestKustomizeYml {
-				kustomizeDirs = append(kustomizeDirs, filepath.Dir(path))
+		if info.IsDir() {
+			return nil
+		}
+
+		baseName := filepath.Base(path)
+		fileDir := filepath.Dir(path)
+
+		// Check if file is in a kustomize directory or its subdirectory
+		inKustomizeDir := false
+		for kustomizeDir := range kustomizeDirs {
+			if fileDir == kustomizeDir || strings.HasPrefix(fileDir, kustomizeDir+string(filepath.Separator)) {
+				inKustomizeDir = true
+				break
 			}
-			if slices.Contains(suffixes, ext) {
+		}
+
+		// Only include kustomization files from kustomize directories
+		if inKustomizeDir {
+			if baseName == constants.ManifestKustomizeYaml || baseName == constants.ManifestKustomizeYml {
 				files = append(files, path)
 			}
+			return nil
+		}
+
+		// Include other files if they match suffixes
+		ext := strings.ToLower(filepath.Ext(path))
+		if slices.Contains(suffixes, ext) {
+			files = append(files, path)
 		}
 
 		return nil
 	})
-	// Remove all files from kustomization directories except kustomization.yaml
-	var filteredFiles []string
-	for _, f := range files {
-		isKustomize := false
-		for _, kd := range kustomizeDirs {
-			if strings.HasPrefix(f, kd) {
-				isKustomize = true
-				if filepath.Base(f) == constants.ManifestKustomizeYaml {
-					filteredFiles = append(filteredFiles, f)
-				}
-			}
-		}
-		if !isKustomize {
-			filteredFiles = append(filteredFiles, f)
-		}
-	}
-	return filteredFiles, err
+
+	return files, err
 }
 
 // CreateTempDirectory creates a temporary directory with a given name in a unique location.
