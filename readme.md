@@ -13,7 +13,7 @@ A simple client (and [server](./server.md)) to perform various network troublesh
     - [Manifests](#manifests)
         - [Render manifests](#render-manifests)
         - [Validate manifests](#validate-k8s-manifests)
-- [Informatin](#information)
+- [Analytics & Privacy](#analytics--privacy)
 ## Installation
 
 Download the [latest release](https://github.com/kartverket/skipctl/releases) or use the provided Docker image (mainly for running a server).
@@ -154,11 +154,11 @@ skipctl manifests validate --path <pathname>
 We collect the following **non-personal** information:
 - **Command usage**: Which commands and subcommands are executed (e.g., `test ping`, `manifests render`)
 - **Command arguments**: Arguments passed to commands (e.g., flags used)
-- **Error information**: Whether a command succeeded or failed, and error messages if applicable
+- **Error information**: Whether a command succeeded or failed, and error messages if applicable. The error message may itself contain information about your system, e.g. file paths.
 - **Environment context**:
   - Operating system (e.g., macOS, Linux, Windows)
   - System architecture (e.g., amd64, arm64)
-  - Application version and git commit hash
+  - Application version and git commit hash of skipctl
   - Environment type (local or CI)
 - **Anonymous identifier**: A hashed machine-specific identifier that cannot be traced back to you.
 
@@ -170,13 +170,5 @@ Analytics are collected through [PostHog](https://posthog.com/), a privacy-focus
 
 You can disable analytics collection in two ways:
 
-#### 1. Using the `DO_NOT_TRACK` Environment Variable
-
-Set the `DO_NOT_TRACK` environment variable to `true`:
-
-To make this permanent, add the line above to your shell configuration file. 
-
-#### 2. Using the `--no-analytics` Flag
-
-Pass the `--no-analytics` flag when running any `skipctl` command:
-
+1. Set the `DO_NOT_TRACK` environment variable to `true`
+2. Use the `--no-analytics` flag when running any `skipctl` command
