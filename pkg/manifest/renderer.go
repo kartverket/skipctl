@@ -54,19 +54,11 @@ func (r *Renderer) RenderManifest(file *Document) error {
 	case constants.ManifestSuffixJsonnet:
 		return r.renderJsonnet(file)
 	case constants.ManifestSuffixYaml, constants.ManifestSuffixYml:
-		if r.isKustomizationFile(file) {
-			return r.renderKustomize(file)
-		}
 		return r.renderYaml(file)
+	case constants.ManifestKustomizeYaml, constants.ManifestKustomizeYml:
+		return r.renderKustomize(file)
 	}
 	return nil
-}
-func (r *Renderer) isKustomizationFile(file *Document) bool {
-	baseName := filepath.Base(file.Name)
-	if baseName == constants.ManifestKustomizeYaml || baseName == constants.ManifestKustomizeYml {
-		return true
-	}
-	return false
 }
 func (r *Renderer) renderJsonnet(file *Document) error {
 	node, err := jsonnet.SnippetToAST(file.Name, file.Content)
@@ -101,6 +93,7 @@ func (r *Renderer) renderYaml(file *Document) error {
 }
 
 func (r *Renderer) renderKustomize(file *Document) error {
+	// Kustomize needs a file system
 	kustomizeDir := filepath.Dir(file.Name)
 	kustomizeFileSys := filesys.MakeFsOnDisk()
 

@@ -1,7 +1,7 @@
 apiVersion: skiperator.kartverket.no/v1alpha1
 kind: Application
 metadata:
-  name: valid-manifest
+  name: valid-manifest-3
   namespace: devex
 spec:
   image: "kartverket/example"

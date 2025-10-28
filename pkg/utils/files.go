@@ -31,20 +31,41 @@ func FindManifestFiles(path string) ([]string, error) {
 
 func FindFilesWithSuffixes(directory string, suffixes []string) ([]string, error) {
 	var files []string
+	var kustomizeDirs []string
 	err := filepath.WalkDir(directory, func(path string, info os.DirEntry, err error) error {
 		if err != nil {
 			return err
 		}
 		if !info.IsDir() {
 			ext := strings.ToLower(filepath.Ext(path))
-
+			baseName := filepath.Base(path)
+			if baseName == constants.ManifestKustomizeYaml || baseName == constants.ManifestKustomizeYml {
+				kustomizeDirs = append(kustomizeDirs, filepath.Dir(path))
+			}
 			if slices.Contains(suffixes, ext) {
 				files = append(files, path)
 			}
 		}
+
 		return nil
 	})
-	return files, err
+	// Remove all files from kustomization directories except kustomization.yaml
+	var filteredFiles []string
+	for _, f := range files {
+		isKustomize := false
+		for _, kd := range kustomizeDirs {
+			if strings.HasPrefix(f, kd) {
+				isKustomize = true
+				if filepath.Base(f) == constants.ManifestKustomizeYaml {
+					filteredFiles = append(filteredFiles, f)
+				}
+			}
+		}
+		if !isKustomize {
+			filteredFiles = append(filteredFiles, f)
+		}
+	}
+	return filteredFiles, err
 }
 
 // CreateTempDirectory creates a temporary directory with a given name in a unique location.
