@@ -26,6 +26,10 @@ type Collector struct {
 	enabled bool
 }
 
+func (c *Collector) Enabled() bool {
+	return c.enabled
+}
+
 type Options struct {
 	Debug            bool
 	DisableAnalytics bool
@@ -35,10 +39,10 @@ type Options struct {
 	OS               string
 }
 
-func ConfigureCollector(opts Options) *Collector {
+func ConfigureCollector(opts Options) Collector {
 	logger := logging.Logger().With("component", "telemetry/posthog")
 
-	collector := &Collector{log: logger}
+	collector := Collector{log: logger}
 	if len(PostHogProjectAPIToken) == 0 {
 		collector.enabled = false
 		logger.Info("telemetry is disabled because no PostHog project API token set – normal for development builds")
@@ -59,7 +63,7 @@ func ConfigureCollector(opts Options) *Collector {
 		DisableGeoIP:           &trueVal,
 		Logger:                 &posthogSlogAdapter{logger},
 		DefaultEventProperties: defaultProps(opts),
-		Verbose:                true, // TODO: Remove
+		Verbose:                opts.Debug,
 	}
 
 	client, err := posthog.NewWithConfig(PostHogProjectAPIToken, config)
@@ -75,15 +79,13 @@ func ConfigureCollector(opts Options) *Collector {
 
 func (c *Collector) Close() {
 	if c.client != nil {
-		err := c.client.Close()
-		if err != nil {
-			c.log.Error("could not close posthog client", "error", err)
-			return
+		if err := c.client.Close(); err != nil {
+			c.log.Error("could not close PostHog client", "error", err)
 		}
 	}
 }
 
-// CaptureCommand sends a simple event. Safe to call even if disabled.
+// CaptureCommand sends a simple event. Safe to call even if telemetry is disabled.
 func (c *Collector) CaptureCommand(command string, args []string, flags []string, runErr error) {
 	// Skip if disabled or not initialized.
 	if !c.enabled || c.client == nil || command == "" {
