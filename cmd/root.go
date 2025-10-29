@@ -27,7 +27,7 @@ func SetVersionInfo(tag, commit string) {
 
 var (
 	log              *slog.Logger
-	collector        *telemetry.Collector
+	collector        telemetry.Collector
 	debug            bool
 	outputFormat     string
 	disableAnalytics bool
@@ -40,8 +40,7 @@ var rootCmd = &cobra.Command{
 }
 
 func Execute() error {
-	// Wrap commands before execution so wrappers see parsed flag values later.
-	instrumentCommands(rootCmd)
+	defer collector.Close()
 
 	schemasText := "Supported schemas:\n"
 	schemas, err := crd.ListSchemas()
@@ -52,11 +51,20 @@ func Execute() error {
 	for _, schema := range schemas {
 		schemasText += fmt.Sprintf(" - %s\n", schema)
 	}
+
 	rootCmd.SetVersionTemplate(fmt.Sprintf("skipctl %s (%s)\n\n%s", GitTag, GitCommitHash, schemasText))
-	err = rootCmd.Execute()
-	if collector != nil {
-		collector.Close()
+
+	executed, err := rootCmd.ExecuteC()
+	if executed != nil {
+		var flagNames []string
+		executed.Flags().Visit(func(f *pflag.Flag) {
+			flagNames = append(flagNames, f.Name)
+		})
+
+		posArgs := executed.Flags().Args()
+		collector.CaptureCommand(shortCommandPath(executed), posArgs, flagNames, err)
 	}
+
 	return err
 }
 
@@ -87,55 +95,6 @@ func initTelemetry() {
 	})
 }
 
-// instrumentCommands wraps each command's RunE,PreRunE and PersistentPreRunE to emit telemetry once.
-func instrumentCommands(c *cobra.Command) {
-	if c.RunE != nil {
-		orig := c.RunE
-		c.RunE = func(cmd *cobra.Command, args []string) error {
-			err := orig(cmd, args)
-			if collector != nil {
-				var flagNames []string
-				cmd.Flags().Visit(func(flag *pflag.Flag) {
-					flagNames = append(flagNames, flag.Name)
-				})
-				collector.CaptureCommand(shortCommandPath(cmd), args, flagNames, err)
-			}
-			return err
-		}
-	}
-	if c.PreRunE != nil {
-		origPreRun := c.PreRunE
-		c.PreRunE = func(cmd *cobra.Command, args []string) error {
-			err := origPreRun(cmd, args)
-			// Only capture telemetry on error, since RunE will capture success
-			if err != nil && collector != nil {
-				var flagNames []string
-				cmd.Flags().Visit(func(flag *pflag.Flag) {
-					flagNames = append(flagNames, flag.Name)
-				})
-				collector.CaptureCommand(shortCommandPath(cmd), args, flagNames, err)
-			}
-			return err
-		}
-		if c.PersistentPreRunE != nil {
-			origPersPreRun := c.PersistentPreRunE
-			c.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
-				err := origPersPreRun(cmd, args)
-				if err != nil && collector != nil {
-					var flagNames []string
-					cmd.Flags().Visit(func(flag *pflag.Flag) {
-						flagNames = append(flagNames, flag.Name)
-					})
-					collector.CaptureCommand(shortCommandPath(cmd), args, flagNames, err)
-				}
-				return err
-			}
-		}
-	}
-	for _, child := range c.Commands() {
-		instrumentCommands(child)
-	}
-}
 func shortCommandPath(c *cobra.Command) string {
 	if c == rootCmd {
 		return rootCmd.DisplayName()
