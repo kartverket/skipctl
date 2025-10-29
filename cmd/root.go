@@ -87,8 +87,7 @@ func initTelemetry() {
 	})
 }
 
-// instrumentCommands wraps each command's RunE to emit telemetry once.
-// All our commands are with RunE
+// instrumentCommands wraps each command's RunE,PreRunE and PersistentPreRunE to emit telemetry once.
 func instrumentCommands(c *cobra.Command) {
 	if c.RunE != nil {
 		orig := c.RunE
@@ -102,6 +101,35 @@ func instrumentCommands(c *cobra.Command) {
 				collector.CaptureCommand(shortCommandPath(cmd), args, flagNames, err)
 			}
 			return err
+		}
+	}
+	if c.PreRunE != nil {
+		origPreRun := c.PreRunE
+		c.PreRunE = func(cmd *cobra.Command, args []string) error {
+			err := origPreRun(cmd, args)
+			// Only capture telemetry on error, since RunE will capture success
+			if err != nil && collector != nil {
+				var flagNames []string
+				cmd.Flags().Visit(func(flag *pflag.Flag) {
+					flagNames = append(flagNames, flag.Name)
+				})
+				collector.CaptureCommand(shortCommandPath(cmd), args, flagNames, err)
+			}
+			return err
+		}
+		if c.PersistentPreRunE != nil {
+			origPersPreRun := c.PersistentPreRunE
+			c.PersistentPreRunE = func(cmd *cobra.Command, args []string) error {
+				err := origPersPreRun(cmd, args)
+				if err != nil && collector != nil {
+					var flagNames []string
+					cmd.Flags().Visit(func(flag *pflag.Flag) {
+						flagNames = append(flagNames, flag.Name)
+					})
+					collector.CaptureCommand(shortCommandPath(cmd), args, flagNames, err)
+				}
+				return err
+			}
 		}
 	}
 	for _, child := range c.Commands() {
