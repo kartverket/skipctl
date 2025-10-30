@@ -9,8 +9,8 @@ import (
 
 	"github.com/kartverket/skipctl/pkg/constants"
 	"github.com/kartverket/skipctl/pkg/diff"
-	"github.com/kartverket/skipctl/pkg/git"
 	"github.com/kartverket/skipctl/pkg/logging"
+	"github.com/kartverket/skipctl/pkg/utils"
 )
 
 type Differ struct {
@@ -136,7 +136,7 @@ func (d *Differ) diffYaml(file *Document) ([]*diff.ManifestDiff, bool, error) {
 }
 
 func (d *Differ) diffKustomize(file *Document) ([]*diff.ManifestDiff, bool, error) {
-	// 1. render the current kustomize file
+	// render the current kustomize file
 	d.renderBuffer.Reset()
 	renderErr := d.renderer.RenderManifest(file)
 	if renderErr != nil {
@@ -145,60 +145,47 @@ func (d *Differ) diffKustomize(file *Document) ([]*diff.ManifestDiff, bool, erro
 	rendered := d.renderBuffer.String()
 	d.renderBuffer.Reset()
 
-	// 2. create a tmp dir and write files form git ref
-	kustomizeDir := filepath.Dir(file.Name)
-	tmpDir, dirErr := os.MkdirTemp(os.TempDir(), "kustomize-diff-tmp")
-
-	if dirErr != nil {
-		return nil, false, dirErr
-	}
-	defer func() {
-		os.RemoveAll(tmpDir)
-	}()
-
-	walkErr := filepath.WalkDir(kustomizeDir, func(path string, info os.DirEntry, fileErr error) error {
-		if fileErr != nil {
-			return fileErr
-		}
-		if !info.IsDir() {
-			content, gitErr := git.GetFileContentAtRef(path, d.ref)
-			if gitErr != nil {
-				return gitErr
-			}
-
-			relPath, _ := filepath.Rel(kustomizeDir, path)
-			tmpFilePath := filepath.Join(tmpDir, relPath)
-			tmpFileDir := filepath.Dir(tmpFilePath)
-
-			if mkdirErr := os.MkdirAll(tmpFileDir, 0755); mkdirErr != nil {
-				return mkdirErr
-			}
-			if writeErr := os.WriteFile(tmpFilePath, []byte(*content), 0600); writeErr != nil {
-				return writeErr
-			}
-		}
-		return nil
-	})
-
-	if walkErr != nil {
-		return nil, false, walkErr
-	}
-
-	// 3. render the git version
+	// get the kustomization file at ref
 	prevFile, err := file.AtRef(d.ref)
-
 	if err != nil {
 		return nil, false, err
 	}
 
-	prevFile.Name = filepath.Join(tmpDir, "kustomization.yaml")
+	kustomizeDir := filepath.Dir(file.Name)
+
+	// get all the filenames referenced in the kustomization.yaml (recursive)
+	filesToCopy, err := utils.CollectKustomizationFiles(".", []byte(prevFile.Content), kustomizeDir, nil)
+
+	if err != nil {
+		return nil, false, fmt.Errorf("collect kustomization files: %w", err)
+	}
+
+	// create a tmp file structure and copy previous versions of all files above to it
+	tmpDir, tmpDirErr := utils.CopyKustomziationFilesToTmpDirAtGitRef(filesToCopy, d.ref)
+
+	if tmpDirErr != nil {
+		return nil, false, tmpDirErr
+	}
+
+	defer func() {
+		os.RemoveAll(tmpDir)
+	}()
+
+	// render the kustomize file in the tmp dir
+	absKustomizeDir, err := filepath.Abs(kustomizeDir)
+	if err != nil {
+		return nil, false, err
+	}
+
+	prevFile.Name = filepath.Join(tmpDir, absKustomizeDir, filepath.Base(prevFile.Name))
+
 	gitRenderErr := d.renderer.RenderManifest(prevFile)
 	if gitRenderErr != nil {
 		return nil, false, gitRenderErr
 	}
-
 	prevRendered := d.renderBuffer.String()
 
+	// diff the outputs
 	diffs, hasChanges := diff.LCS(prevRendered, rendered)
 
 	return diffs, hasChanges, nil

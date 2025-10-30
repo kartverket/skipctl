@@ -1,0 +1,3 @@
+resources:
+  - test.yaml
+  - ../patch-2
