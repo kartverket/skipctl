@@ -261,3 +261,111 @@ func findGitRoot() (string, error) {
 		dir = parent
 	}
 }
+
+// GetFilesystemAt materializes the repository tree at the given git ref to a temporary directory on disk.
+// It creates a temporary directory and writes all files from the ref.
+// Returns the path to the temporary directory which the caller is responsible for cleaning up.
+// Supports submodules using the existing submodule traversal logic.
+
+//nolint:govet // variable shadowing  acceptable
+func GetFilesystemAt(ref string) (string, error) {
+	repo, err := git.PlainOpenWithOptions(".", &git.PlainOpenOptions{DetectDotGit: true})
+	if err != nil {
+		return "", fmt.Errorf("open git repo: %w", err)
+	}
+
+	h, err := repo.ResolveRevision(plumbing.Revision(ref))
+	if err != nil {
+		return "", fmt.Errorf("resolve ref %q: %w", ref, err)
+	}
+
+	commit, err := repo.CommitObject(*h)
+	if err != nil {
+		return "", fmt.Errorf("read commit: %w", err)
+	}
+
+	tree, err := commit.Tree()
+	if err != nil {
+		return "", fmt.Errorf("read tree: %w", err)
+	}
+
+	// Create temporary directory
+	tmpDir, err := os.MkdirTemp("", "git-ref-*")
+	if err != nil {
+		return "", fmt.Errorf("create temp directory: %w", err)
+	}
+
+	// Write tree to disk
+	if err := writeTreeToDisk(repo, tree, tmpDir); err != nil {
+		os.RemoveAll(tmpDir) // Clean up on error
+		return "", err
+	}
+
+	return tmpDir, nil
+}
+
+//nolint:govet,exhaustive,mnd, gocognit // variable shadowing, exhaustive switch, magic numbers acceptable for this helper
+func writeTreeToDisk(repo *git.Repository, tree *object.Tree, targetDir string) error {
+	for i := range tree.Entries {
+		entry := &tree.Entries[i]
+		targetPath := filepath.Join(targetDir, entry.Name)
+
+		switch entry.Mode {
+		case filemode.Dir:
+			// Create directory and recurse
+			if err := os.MkdirAll(targetPath, 0755); err != nil {
+				return fmt.Errorf("create directory %q: %w", entry.Name, err)
+			}
+			subTree, err := repo.TreeObject(entry.Hash)
+			if err != nil {
+				return fmt.Errorf("read tree for %q: %w", entry.Name, err)
+			}
+			if err := writeTreeToDisk(repo, subTree, targetPath); err != nil {
+				return fmt.Errorf("write tree %q: %w", entry.Name, err)
+			}
+
+		case filemode.Submodule:
+			// Open submodule and materialize it
+			subRepo, subTree, err := openSubmoduleAt(repo, entry.Name, entry.Hash)
+			if err != nil {
+				return fmt.Errorf("open submodule %q: %w", entry.Name, err)
+			}
+			if err := os.MkdirAll(targetPath, 0755); err != nil {
+				return fmt.Errorf("create submodule directory %q: %w", entry.Name, err)
+			}
+			if err := writeTreeToDisk(subRepo, subTree, targetPath); err != nil {
+				return fmt.Errorf("write submodule %q: %w", entry.Name, err)
+			}
+
+		case filemode.Regular, filemode.Executable, filemode.Deprecated:
+			// Write file content
+			content, err := readBlob(repo, entry.Hash)
+			if err != nil {
+				return fmt.Errorf("read file %q: %w", entry.Name, err)
+			}
+			mode := os.FileMode(0644)
+			if entry.Mode == filemode.Executable {
+				mode = 0755
+			}
+			if err := os.WriteFile(targetPath, []byte(content), mode); err != nil {
+				return fmt.Errorf("write file %q: %w", entry.Name, err)
+			}
+
+		case filemode.Symlink:
+			// Read symlink target and create symlink
+			target, err := readBlob(repo, entry.Hash)
+			if err != nil {
+				return fmt.Errorf("read symlink %q: %w", entry.Name, err)
+			}
+			if err := os.Symlink(target, targetPath); err != nil {
+				return fmt.Errorf("create symlink %q: %w", entry.Name, err)
+			}
+
+		default:
+			// Skip unsupported file modes
+			continue
+		}
+	}
+
+	return nil
+}

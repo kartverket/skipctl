@@ -9,8 +9,8 @@ import (
 
 	"github.com/kartverket/skipctl/pkg/constants"
 	"github.com/kartverket/skipctl/pkg/diff"
+	"github.com/kartverket/skipctl/pkg/git"
 	"github.com/kartverket/skipctl/pkg/logging"
-	"github.com/kartverket/skipctl/pkg/utils"
 )
 
 type Differ struct {
@@ -151,33 +151,16 @@ func (d *Differ) diffKustomize(file *Document) ([]*diff.ManifestDiff, bool, erro
 		return nil, false, err
 	}
 
-	kustomizeDir := filepath.Dir(file.Name)
-
-	// get all the filenames referenced in the kustomization.yaml (recursive)
-	filesToCopy, err := utils.CollectKustomizationFiles(".", []byte(prevFile.Content), kustomizeDir, nil)
-
-	if err != nil {
-		return nil, false, fmt.Errorf("collect kustomization files: %w", err)
-	}
-
-	// create a tmp file structure and copy previous versions of all files above to it
-	tmpDir, tmpDirErr := utils.CopyKustomziationFilesToTmpDirAtGitRef(filesToCopy, d.ref)
-
-	if tmpDirErr != nil {
-		return nil, false, tmpDirErr
+	gitFiles, gitErr := git.GetFilesystemAt(d.ref)
+	if gitErr != nil {
+		return nil, false, gitErr
 	}
 
 	defer func() {
-		os.RemoveAll(tmpDir)
+		os.RemoveAll(gitFiles)
 	}()
 
-	// render the kustomize file in the tmp dir
-	absKustomizeDir, err := filepath.Abs(kustomizeDir)
-	if err != nil {
-		return nil, false, err
-	}
-
-	prevFile.Name = filepath.Join(tmpDir, absKustomizeDir, filepath.Base(prevFile.Name))
+	prevFile.Name = filepath.Join(gitFiles, file.Name) // override with filename in git filesystem
 
 	gitRenderErr := d.renderer.RenderManifest(prevFile)
 	if gitRenderErr != nil {
