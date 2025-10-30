@@ -16,11 +16,12 @@ import (
 var (
 	tempDir     string
 	validateCmd = &cobra.Command{
-		Use:   "validate",
-		Short: "Validate manifest files against well-known Kubernetes schemas",
-		Long:  fmt.Sprintf("Recursively validates %s files in the specified path", strings.Join(constants.ManifestSuffixes, ", ")),
-		RunE:  runValidate,
-		Args:  cobra.RangeArgs(0, 1),
+		Use:     "validate",
+		Aliases: []string{"v"},
+		Short:   "Validate manifest files against well-known Kubernetes schemas",
+		Long:    fmt.Sprintf("Recursively validates %s files in the specified path", strings.Join(constants.ManifestSuffixes, ", ")),
+		RunE:    runValidate,
+		Args:    cobra.RangeArgs(0, 1),
 		// SilenceErrors and SilenceUsage are set to true to prevent Cobra from printing errors and usage messages automatically.
 		// This allows for custom error handling and logging within the command's execution logic.
 		SilenceErrors: true,

@@ -11,8 +11,9 @@ import (
 )
 
 var formatCmd = &cobra.Command{
-	Use:   "format",
-	Short: "Format manifest in place",
+	Use:     "format",
+	Aliases: []string{"f", "fmt"},
+	Short:   "Format manifest in place",
 	Long: fmt.Sprintf(`Recursively formats manifest files in the specified path.
 
 Supported formats are: %s.
