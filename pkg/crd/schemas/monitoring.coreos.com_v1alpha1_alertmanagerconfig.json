@@ -287,6 +287,9 @@
                           "type": "object",
                           "x-kubernetes-map-type": "atomic"
                         },
+                        "enableHttp2": {
+                          "type": "boolean"
+                        },
                         "followRedirects": {
                           "type": "boolean"
                         },
@@ -1068,6 +1071,9 @@
                           "type": "object",
                           "x-kubernetes-map-type": "atomic"
                         },
+                        "enableHttp2": {
+                          "type": "boolean"
+                        },
                         "followRedirects": {
                           "type": "boolean"
                         },
@@ -1637,6 +1643,9 @@
                           ],
                           "type": "object",
                           "x-kubernetes-map-type": "atomic"
+                        },
+                        "enableHttp2": {
+                          "type": "boolean"
                         },
                         "followRedirects": {
                           "type": "boolean"
@@ -2258,6 +2267,9 @@
                           "type": "object",
                           "x-kubernetes-map-type": "atomic"
                         },
+                        "enableHttp2": {
+                          "type": "boolean"
+                        },
                         "followRedirects": {
                           "type": "boolean"
                         },
@@ -2714,6 +2726,13 @@
                             "type": "string"
                           },
                           "type": {
+                            "enum": [
+                              "team",
+                              "teams",
+                              "user",
+                              "escalation",
+                              "schedule"
+                            ],
                             "minLength": 1,
                             "type": "string"
                           },
@@ -2875,6 +2894,9 @@
                           ],
                           "type": "object",
                           "x-kubernetes-map-type": "atomic"
+                        },
+                        "enableHttp2": {
+                          "type": "boolean"
                         },
                         "followRedirects": {
                           "type": "boolean"
@@ -3502,6 +3524,9 @@
                           ],
                           "type": "object",
                           "x-kubernetes-map-type": "atomic"
+                        },
+                        "enableHttp2": {
+                          "type": "boolean"
                         },
                         "followRedirects": {
                           "type": "boolean"
@@ -4168,6 +4193,9 @@
                           ],
                           "type": "object",
                           "x-kubernetes-map-type": "atomic"
+                        },
+                        "enableHttp2": {
+                          "type": "boolean"
                         },
                         "followRedirects": {
                           "type": "boolean"
@@ -4890,6 +4918,9 @@
                           "type": "object",
                           "x-kubernetes-map-type": "atomic"
                         },
+                        "enableHttp2": {
+                          "type": "boolean"
+                        },
                         "followRedirects": {
                           "type": "boolean"
                         },
@@ -5477,6 +5508,9 @@
                           "type": "object",
                           "x-kubernetes-map-type": "atomic"
                         },
+                        "enableHttp2": {
+                          "type": "boolean"
+                        },
                         "followRedirects": {
                           "type": "boolean"
                         },
@@ -5971,6 +6005,9 @@
                           ],
                           "type": "object",
                           "x-kubernetes-map-type": "atomic"
+                        },
+                        "useFIPSSTSEndpoint": {
+                          "type": "boolean"
                         }
                       },
                       "type": "object"
@@ -6114,6 +6151,9 @@
                           ],
                           "type": "object",
                           "x-kubernetes-map-type": "atomic"
+                        },
+                        "enableHttp2": {
+                          "type": "boolean"
                         },
                         "followRedirects": {
                           "type": "boolean"
@@ -6716,6 +6756,9 @@
                           "type": "object",
                           "x-kubernetes-map-type": "atomic"
                         },
+                        "enableHttp2": {
+                          "type": "boolean"
+                        },
                         "followRedirects": {
                           "type": "boolean"
                         },
@@ -7271,6 +7314,9 @@
                           "type": "object",
                           "x-kubernetes-map-type": "atomic"
                         },
+                        "enableHttp2": {
+                          "type": "boolean"
+                        },
                         "followRedirects": {
                           "type": "boolean"
                         },
@@ -7819,6 +7865,9 @@
                           ],
                           "type": "object",
                           "x-kubernetes-map-type": "atomic"
+                        },
+                        "enableHttp2": {
+                          "type": "boolean"
                         },
                         "followRedirects": {
                           "type": "boolean"
@@ -8417,6 +8466,9 @@
                           ],
                           "type": "object",
                           "x-kubernetes-map-type": "atomic"
+                        },
+                        "enableHttp2": {
+                          "type": "boolean"
                         },
                         "followRedirects": {
                           "type": "boolean"

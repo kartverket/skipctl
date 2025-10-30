@@ -97,6 +97,13 @@
               "description": "Whether to enable auto login.\nIf enabled, users accessing authenticated endpoints will be redirected to log in towards the configured identity provider.",
               "type": "boolean"
             },
+            "loginParams": {
+              "additionalProperties": {
+                "type": "string"
+              },
+              "description": "LoginParams specifies a map of query parameters and their values which will be added in the authorize request made towards the configured identity provider.",
+              "type": "object"
+            },
             "loginPath": {
               "description": "LoginPath specifies a list of URI paths that should trigger the auto-login behavior.\nWhen a request matches any of these paths, the user will be redirected to log in if not already authenticated.",
               "pattern": "^/.*$",
