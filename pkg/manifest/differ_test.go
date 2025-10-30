@@ -178,3 +178,29 @@ spec:
 	require.Equal(t, expectedCountInsDel, deletionCount)
 	require.Equal(t, expectedCountEq, equalCount)
 }
+
+func TestDiffManifestYamlNewManifest(t *testing.T) {
+	yamlManifest1 := ``
+	yamlManifest2 := `apiVersion: skiperator.kartverket.no/v1alpha1
+kind: Application
+metadata:
+  name: valid-manifest
+  namespace: production
+spec:
+  image: kartverket/example1
+  port: 8080
+  replicas:
+    min: 1
+    max: 15`
+
+	// Mock diffs with two different manifests
+	diffs, hasChanges := diff.LCS(yamlManifest1, yamlManifest2)
+	require.True(t, hasChanges, "expected changes but none were registered")
+	// Count diff types, this should be 3 insertions and deletions from these manifests
+	insertionCount, deletionCount, equalCount := countDiffTypes(diffs)
+	expectedCountIns, expectedCountDel, expectedCountEq := 11, 0, 0
+
+	require.Equal(t, expectedCountIns, insertionCount)
+	require.Equal(t, expectedCountDel, deletionCount)
+	require.Equal(t, expectedCountEq, equalCount)
+}

@@ -61,9 +61,17 @@ func lcs(a, b []string) [][]int {
 	return dp
 }
 
+func splitLines(s string) []string {
+	if s == "" {
+		return []string{}
+	}
+	return strings.Split(s, "\n")
+}
+
 func LCS(a, b string) ([]*ManifestDiff, bool) {
-	linesA := strings.Split(a, "\n")
-	linesB := strings.Split(b, "\n")
+	linesA := splitLines(a)
+	linesB := splitLines(b)
+
 	dp := lcs(linesA, linesB)
 	i, j := 0, 0
 	diffs := []*ManifestDiff{}

@@ -47,7 +47,9 @@ func GetFileContentAtRef(filename string, ref string) (*string, error) {
 
 	content, err := readPathFromTree(repo, tree, rel)
 	if err != nil {
-		return nil, fmt.Errorf("file %q not found in commit %s: %w", rel, ref, err)
+		content = ""
+		//nolint:nilerr // Intentionally treat any read error as "no content at commit"
+		return &content, nil // file does not exist at commit, return empty content
 	}
 	return &content, nil
 }
