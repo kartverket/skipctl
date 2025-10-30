@@ -50,15 +50,18 @@ func (d *Differ) DiffManifest(file *Document) error {
 		return err
 	}
 	rendered := d.renderBuffer.String()
+	prevRendered := ""
 
-	d.renderBuffer.Reset()
-	d.renderer.SetGitImporter(d.ref)
-	d.renderer.DisableYamlSeparator()
-	err = d.renderer.RenderManifest(prevFile)
-	if err != nil {
-		return err
+	if prevFile.Content != "" {
+		d.renderBuffer.Reset()
+		d.renderer.SetGitImporter(d.ref)
+		d.renderer.DisableYamlSeparator()
+		err = d.renderer.RenderManifest(prevFile)
+		if err != nil {
+			return err
+		}
+		prevRendered = d.renderBuffer.String()
 	}
-	prevRendered := d.renderBuffer.String()
 
 	diffs, hasChanges := diff.LCS(prevRendered, rendered)
 	if !hasChanges {
