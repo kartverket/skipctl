@@ -11,7 +11,7 @@ builds:
     flags:
       - -trimpath
     ldflags:
-      - -s -w -X main.GitTag={{.Version}} -X main.GitCommitHash={{.ShortCommit}}
+      - -s -w -X main.GitTag={{.Version}} -X main.GitCommitHash={{.ShortCommit}} -X github.com/kartverket/skipctl/pkg/telemetry.PostHogProjectAPIToken={{ .Env.PH_PROJECT_API_KEY }}
     goos:
       - linux
       - windows
@@ -73,6 +73,7 @@ docker_signs:
     cmd: cosign
     args:
       - "sign"
+      - "--use-signing-config=false"
       - "--oidc-issuer=https://token.actions.githubusercontent.com"
       - "${artifact}"
       - "--yes"
@@ -83,6 +84,7 @@ signs:
     signature: "${artifact}.sig"
     args:
       - "sign-blob"
+      - "--use-signing-config=false"
       - "--oidc-issuer=https://token.actions.githubusercontent.com"
       - "--output-signature=${signature}"
       - "${artifact}"

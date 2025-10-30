@@ -43,7 +43,7 @@ func runValidate(_ *cobra.Command, args []string) error {
 
 	if err != nil {
 		log.Error("Error collecting files", "error", err.Error())
-		os.Exit(1)
+		return err
 	}
 	if len(manifestFiles) == 0 {
 		log.Info("No manifests found.")
