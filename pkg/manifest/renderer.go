@@ -8,6 +8,7 @@ import (
 	"github.com/google/go-jsonnet"
 	"go.yaml.in/yaml/v4"
 	"sigs.k8s.io/kustomize/api/krusty"
+	"sigs.k8s.io/kustomize/api/types"
 	"sigs.k8s.io/kustomize/kyaml/filesys"
 
 	"github.com/kartverket/skipctl/pkg/constants"
@@ -34,6 +35,9 @@ func NewRenderer(loggers ...*slog.Logger) *Renderer {
 	// enable helm plugin, requires that user has helm installed
 	opts.PluginConfig.HelmConfig.Enabled = true
 	opts.PluginConfig.HelmConfig.Command = "helm"
+
+	// set load restrictions to none
+	opts.LoadRestrictions = types.LoadRestrictionsNone
 
 	k := krusty.MakeKustomizer(opts)
 	return &Renderer{
