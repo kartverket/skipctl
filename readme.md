@@ -61,6 +61,8 @@ If a directory is specified, all commands in this group will recursively search 
 
 
 #### Render manifests
+>[!note]
+> When rendering kustomize, the renderer will ignore other `.jsonnet` and `.yaml` files in the same directory and subdirectories. 
 
 Compiles and renders a Skiperator `.jsonnet` or `.yaml` manifest in the specified directory and alerts if any errors are found.
 ```shell
