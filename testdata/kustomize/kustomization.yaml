@@ -9,3 +9,9 @@ patches:
     target:
       kind: Application
       name: valid-manifest-4
+helmCharts:
+  - name: nginx
+    repo: https://charts.bitnami.com/bitnami
+    version: 15.0.0
+    releaseName: test-nginx
+    namespace: default

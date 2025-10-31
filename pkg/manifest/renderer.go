@@ -31,6 +31,10 @@ func NewRenderer(loggers ...*slog.Logger) *Renderer {
 	}
 	// Make the kustomizer for the renderer
 	opts := krusty.MakeDefaultOptions()
+	// enable helm plugin, requires that user has helm installed
+	opts.PluginConfig.HelmConfig.Enabled = true
+	opts.PluginConfig.HelmConfig.Command = "helm"
+
 	k := krusty.MakeKustomizer(opts)
 	return &Renderer{
 		rawOutput:     logger,
