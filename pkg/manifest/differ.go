@@ -160,7 +160,11 @@ func (d *Differ) diffKustomize(file *Document) ([]*diff.ManifestDiff, bool, erro
 		os.RemoveAll(gitFiles)
 	}()
 
-	prevFile.Name = filepath.Join(gitFiles, file.Name) // override with filename in git filesystem
+	relKustomizePath, err := git.RepoRelativePath(file.Name)
+	if err != nil {
+		return nil, false, err
+	}
+	prevFile.Name = filepath.Join(gitFiles, relKustomizePath) // override with filename in git filesystem
 
 	gitRenderErr := d.renderer.RenderManifest(prevFile)
 	if gitRenderErr != nil {
