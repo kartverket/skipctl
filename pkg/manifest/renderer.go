@@ -3,9 +3,12 @@ package manifest
 import (
 	"fmt"
 	"log/slog"
+	"path/filepath"
 
 	"github.com/google/go-jsonnet"
 	"go.yaml.in/yaml/v4"
+	"sigs.k8s.io/kustomize/api/krusty"
+	"sigs.k8s.io/kustomize/kyaml/filesys"
 
 	"github.com/kartverket/skipctl/pkg/constants"
 	"github.com/kartverket/skipctl/pkg/logging"
@@ -14,6 +17,7 @@ import (
 type Renderer struct {
 	rawOutput     *slog.Logger
 	vm            *jsonnet.VM
+	kustomizer    *krusty.Kustomizer
 	sharedCache   *ImportCache
 	yamlSeparator bool
 }
@@ -25,9 +29,13 @@ func NewRenderer(loggers ...*slog.Logger) *Renderer {
 	} else {
 		logger = logging.RawLogger()
 	}
+	// Make the kustomizer for the renderer
+	opts := krusty.MakeDefaultOptions()
+	k := krusty.MakeKustomizer(opts)
 	return &Renderer{
 		rawOutput:     logger,
 		vm:            jsonnet.MakeVM(),
+		kustomizer:    k,
 		sharedCache:   NewImportCache(),
 		yamlSeparator: false,
 	}
@@ -47,10 +55,11 @@ func (r *Renderer) RenderManifest(file *Document) error {
 		return r.renderJsonnet(file)
 	case constants.ManifestSuffixYaml, constants.ManifestSuffixYml:
 		return r.renderYaml(file)
+	case constants.ManifestKustomizeYaml, constants.ManifestKustomizeYml:
+		return r.renderKustomize(file)
 	}
 	return nil
 }
-
 func (r *Renderer) renderJsonnet(file *Document) error {
 	node, err := jsonnet.SnippetToAST(file.Name, file.Content)
 	if err != nil {
@@ -79,6 +88,27 @@ func (r *Renderer) renderYaml(file *Document) error {
 	r.yamlSeparator = true
 
 	r.rawOutput.Info(file.Content)
+
+	return nil
+}
+
+func (r *Renderer) renderKustomize(file *Document) error {
+	// Kustomize needs a file system
+	kustomizeDir := filepath.Dir(file.Name)
+	kustomizeFileSys := filesys.MakeFsOnDisk()
+
+	// Run with build
+	resMap, err := r.kustomizer.Run(kustomizeFileSys, kustomizeDir)
+	if err != nil {
+		return fmt.Errorf("kustomize build %q: %w", file.Name, err)
+	}
+	// Render yaml
+	yaml, yamlErr := resMap.AsYaml()
+	if yamlErr != nil {
+		return fmt.Errorf("convert kustomize output to yaml %q: %w", file.Name, yamlErr)
+	}
+
+	r.rawOutput.Info(string(yaml))
 
 	return nil
 }

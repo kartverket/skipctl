@@ -28,22 +28,76 @@ func FindManifestFiles(path string) ([]string, error) {
 
 	return files, nil
 }
+func findKustomizeDirs(directory string) (map[string]bool, error) {
+	kustomizeDirs := make(map[string]bool)
 
+	// First pass: Find all kustomization directories
+	kustomizeWalkErr := filepath.WalkDir(directory, func(path string, info os.DirEntry, err error) error {
+		if err == nil && !info.IsDir() {
+			baseName := filepath.Base(path)
+			if baseName == constants.ManifestKustomizeYaml || baseName == constants.ManifestKustomizeYml {
+				kustomizeDirs[filepath.Dir(path)] = true
+			}
+		}
+		return nil
+	})
+	return kustomizeDirs, kustomizeWalkErr
+}
+func isKustomizeDir(kustomizeDirs map[string]bool, path string) bool {
+	fileDir := filepath.Dir(path)
+
+	// Check if file is in a kustomize directory or its subdirectory
+	inKustomizeDir := false
+	for kustomizeDir := range kustomizeDirs {
+		absKustomizeDir, err1 := filepath.Abs(kustomizeDir)
+		absFileDir, err2 := filepath.Abs(fileDir)
+		if err1 != nil || err2 != nil {
+			continue
+		}
+		rel, relErr := filepath.Rel(absKustomizeDir, absFileDir)
+		if relErr != nil {
+			continue
+		}
+		if rel == "." || (len(rel) > 0 && !strings.HasPrefix(rel, ".."+string(filepath.Separator)) && rel != "..") {
+			inKustomizeDir = true
+			break
+		}
+	}
+	return inKustomizeDir
+}
 func FindFilesWithSuffixes(directory string, suffixes []string) ([]string, error) {
+	kustomizeDirs, findKustomizeErr := findKustomizeDirs(directory)
+	if findKustomizeErr != nil {
+		return nil, findKustomizeErr
+	}
 	var files []string
 	err := filepath.WalkDir(directory, func(path string, info os.DirEntry, err error) error {
 		if err != nil {
 			return err
 		}
-		if !info.IsDir() {
-			ext := strings.ToLower(filepath.Ext(path))
+		if info.IsDir() {
+			return nil
+		}
 
-			if slices.Contains(suffixes, ext) {
+		baseName := filepath.Base(path)
+
+		// Only include kustomization files from kustomize directories
+		if isKustomizeDir(kustomizeDirs, path) {
+			if baseName == constants.ManifestKustomizeYaml || baseName == constants.ManifestKustomizeYml {
 				files = append(files, path)
 			}
+			return nil
 		}
+
+		// Include other files if they match suffixes
+		ext := strings.ToLower(filepath.Ext(path))
+		if slices.Contains(suffixes, ext) {
+			files = append(files, path)
+		}
+
 		return nil
 	})
+
 	return files, err
 }
 

@@ -1,0 +1,10 @@
+resources:
+  - application1.yaml
+  - application2.yaml
+  - application3.yaml
+  - application4.yaml
+patches:
+  - path: patch/patch.yaml
+    target:
+      kind: Application
+      name: valid-manifest-4

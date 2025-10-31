@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/kartverket/skipctl/pkg/constants"
 	"github.com/kartverket/skipctl/pkg/git"
 	"github.com/kartverket/skipctl/pkg/logging"
 	"github.com/kartverket/skipctl/pkg/utils"
@@ -64,9 +65,13 @@ func FromFiles(filenames []string) ([]*Document, error) {
 		if ferr != nil {
 			return nil, fmt.Errorf("unable to get file info %s %w", filename, ferr)
 		}
+		ext := strings.ToLower(filepath.Ext(filename))
+		if filepath.Base(filename) == constants.ManifestKustomizeYaml || filepath.Base(filename) == constants.ManifestKustomizeYml {
+			ext = constants.ManifestKustomizeYaml
+		}
 		files = append(files, &Document{
 			Name:        filename,
-			Extension:   strings.ToLower(filepath.Ext(filename)),
+			Extension:   ext,
 			Permissions: finfo.Mode().Perm(),
 			Content:     string(fileContent),
 			FromStdin:   false,
