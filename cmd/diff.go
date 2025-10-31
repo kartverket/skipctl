@@ -18,8 +18,9 @@ var (
 )
 
 var diffCmd = &cobra.Command{
-	Use:   "diff",
-	Short: "Diff manifest",
+	Use:     "diff",
+	Aliases: []string{"d"},
+	Short:   "Diff manifest",
 	Long: fmt.Sprintf(`Recursively diff manifest files in the specified path.
 
 

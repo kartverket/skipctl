@@ -15,8 +15,9 @@ var (
 )
 
 var renderCmd = &cobra.Command{
-	Use:   "render",
-	Short: "Render manifest files to stdout",
+	Use:     "render",
+	Aliases: []string{"r"},
+	Short:   "Render manifest files to stdout",
 	Long: fmt.Sprintf(`Recursively validates manifest files in the specified path.
 
 Supported formats are: %s.

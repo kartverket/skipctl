@@ -9,9 +9,10 @@ var (
 )
 
 var manifestCmd = &cobra.Command{
-	Use:   "manifests",
-	Short: "Work with manifests",
-	Long:  `Commands for working with manifests.`,
+	Use:     "manifests",
+	Aliases: []string{"m", "manifest"},
+	Short:   "Work with manifests",
+	Long:    `Commands for working with manifests.`,
 }
 
 func isStdin(args []string) bool {
