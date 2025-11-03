@@ -22,11 +22,18 @@ type Differ struct {
 	renderBuffer   *bytes.Buffer
 	logger         *slog.Logger
 	renderer       *Renderer
+	gitFiles       string
 }
 
-func NewDiffer(ref string, verbosityLevel string, outputFormat string, chunkSize int) *Differ {
+func NewDiffer(ref string, verbosityLevel string, outputFormat string, chunkSize int) (*Differ, error) {
 	buf := &bytes.Buffer{}
 	renderer := NewRenderer(logging.NewRawLoggerTo(buf))
+
+	gitFiles, err := git.GetFilesystemAt(ref)
+	if err != nil {
+		return nil, err
+	}
+
 	return &Differ{
 		rawOutput:      logging.RawLogger(),
 		logger:         logging.Logger(),
@@ -36,7 +43,12 @@ func NewDiffer(ref string, verbosityLevel string, outputFormat string, chunkSize
 		outputFormat:   outputFormat,
 		renderBuffer:   buf,
 		renderer:       renderer,
-	}
+		gitFiles:       gitFiles,
+	}, nil
+}
+
+func (d *Differ) CleanUpGitFiles() {
+	os.RemoveAll(d.gitFiles)
 }
 
 func (d *Differ) DiffManifest(file *Document) error {
@@ -151,20 +163,11 @@ func (d *Differ) diffKustomize(file *Document) ([]*diff.ManifestDiff, bool, erro
 		return nil, false, err
 	}
 
-	gitFiles, gitErr := git.GetFilesystemAt(d.ref)
-	if gitErr != nil {
-		return nil, false, gitErr
-	}
-
-	defer func() {
-		os.RemoveAll(gitFiles)
-	}()
-
 	relKustomizePath, err := git.RepoRelativePath(file.Name)
 	if err != nil {
 		return nil, false, err
 	}
-	prevFile.Name = filepath.Join(gitFiles, relKustomizePath) // override with filename in git filesystem
+	prevFile.Name = filepath.Join(d.gitFiles, relKustomizePath) // override with filename in git filesystem
 
 	gitRenderErr := d.renderer.RenderManifest(prevFile)
 	if gitRenderErr != nil {

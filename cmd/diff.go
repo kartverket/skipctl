@@ -75,7 +75,11 @@ func runDiff(cmd *cobra.Command, _ []string) error {
 
 	processor := manifest.NewDocumentProcessor()
 
-	differ := manifest.NewDiffer(ref, verbosityLevel, diffOutputFormat, chunkSize)
+	differ, differErr := manifest.NewDiffer(ref, verbosityLevel, diffOutputFormat, chunkSize)
+	if differErr != nil {
+		return differErr
+	}
+	defer differ.CleanUpGitFiles()
 
 	err = processor.ProcessDocuments(manifestFiles, differ.DiffManifest)
 
