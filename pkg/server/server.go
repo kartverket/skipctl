@@ -3,10 +3,10 @@ package server
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log/slog"
 	"net"
 	"net/http"
-	"os"
 	"syscall"
 	"time"
 
@@ -97,8 +97,7 @@ func Serve(addr string, metricsAddr string, timeout time.Duration, idTokenOrg st
 	g.Add(run.SignalHandler(ctx, syscall.SIGINT, syscall.SIGTERM))
 
 	if gerr := g.Run(); gerr != nil {
-		log.Error("failed to run server", "error", gerr)
-		os.Exit(1)
+		return fmt.Errorf("failed to run server: %w", gerr)
 	}
 
 	return nil

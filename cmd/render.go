@@ -15,8 +15,9 @@ var (
 )
 
 var renderCmd = &cobra.Command{
-	Use:   "render",
-	Short: "Render manifest files to stdout",
+	Use:     "render",
+	Aliases: []string{"r"},
+	Short:   "Render manifest files to stdout",
 	Long: fmt.Sprintf(`Recursively validates manifest files in the specified path.
 
 Supported formats are: %s.
@@ -24,10 +25,9 @@ Supported formats are: %s.
 Any valid output will be printed raw to stdout, error messages to stderr. Returns 0 if all input is rendered
 correctly, otherwise return code 1 is used to indicate failure.`,
 		strings.Join(constants.ManifestSuffixes, ", ")),
-	RunE:          runRender,
-	Args:          cobra.RangeArgs(0, 1),
-	SilenceErrors: true,
-	SilenceUsage:  true,
+	RunE:         runRender,
+	Args:         cobra.RangeArgs(0, 1),
+	SilenceUsage: true,
 }
 
 func runRender(_ *cobra.Command, args []string) error {
@@ -59,10 +59,6 @@ func runRender(_ *cobra.Command, args []string) error {
 		manifestFiles,
 		renderer.RenderManifest,
 	)
-
-	if err != nil {
-		log.Error("processing error", "error", err)
-	}
 
 	return err
 }

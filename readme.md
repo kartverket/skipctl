@@ -3,6 +3,8 @@
 
 A simple client (and [server](./server.md)) to perform various network troubleshooting.
 
+![skipctl](assets/skipctl-logo.png)
+
 - [Installation](#installation)
 - [Usage](#usage)
     - [Test](#test)
@@ -11,7 +13,7 @@ A simple client (and [server](./server.md)) to perform various network troublesh
     - [Manifests](#manifests)
         - [Render manifests](#render-manifests)
         - [Validate manifests](#validate-k8s-manifests)
-
+- [Analytics & Privacy](#analytics--privacy)
 ## Installation
 
 Download the [latest release](https://github.com/kartverket/skipctl/releases) or use the provided Docker image (mainly for running a server).
@@ -59,16 +61,82 @@ If a directory is specified, all commands in this group will recursively search 
 
 
 #### Render manifests
+>[!note]
+> When rendering kustomize, the renderer will ignore other `.jsonnet` and `.yaml` files in the same directory and subdirectories. 
 
 Compiles and renders a Skiperator `.jsonnet` or `.yaml` manifest in the specified directory and alerts if any errors are found.
 ```shell
 skipctl manifests render --path <pathname>
 ```
+#### Format manifests
+
+Formats a `.jsonnet` or `.yaml` manifest in the specified directory and alerts if any errors are found.
+```shell
+skipctl manifests format --path <pathname>
+```
+
+##### Format quick guide
+
+Purpose: Rewrite manifests in-place to a canonical style (JSONNet / YAML). Recurses a directory or reads from stdin.
+
+Inputs:
+```
+--path, -p <path>   Directory or file (defaults to CWD)
+(stdin)             Use '-' as sole argument to read from standard input
+```
+
+Behavior:
+- Only files with supported suffixes are touched (`.jsonnet`, `.yaml`, `.yml`).
+- On error (parse / write) returns exit code 1 after logging.
+
+Examples:
+```shell
+# Format everything under current directory
+skipctl manifests format --path .
+
+# Format a single file
+skipctl manifests format --path ./app/manifest.yaml
+
+# Format from stdin (outputs the formatted content to stdout)
+cat manifest.yaml | skipctl manifests format -
+```
+
+Exit codes: 0 success / 1 error.
+#### Diff manifests
+
+Compares a Skiperator manifest against the currently deployed version in a Kubernetes cluster and shows the differences.
+
+```shell
+skipctl manifests diff --path <pathname> [flags]
+```
+
+
+##### Diff quick guide
+
+Flags:
+```
+--ref <git-ref>        Git ref to diff against (default HEAD)
+--diff-format <fmt>    pretty | patch | json (default pretty)
+--verbosity <level>    full | chunk | minimal (auto-set if omitted)
+--chunk-size <n>       Context lines for chunk (default 3)
+--path, -p <path>      Files / directory to scan
+```
+
+Defaults (when --verbosity not provided): pretty->full, patch->chunk, json->full.
+
+Examples:
+```shell
+skipctl manifests diff --path .
+skipctl manifests diff --path . --diff-format json --verbosity minimal | jq '.diffs[] | select(.type!="Equals")'
+```
+
+Exit codes: 0 success / 1 error.
+
+
 
 #### Validate K8s manifests
 
 Validates a Skiperator manifest file (in either `.jsonnet` or `.yaml` format) against Skiperator's own custom schema definitions (skiperator.kartverket.no/v1alpha1)
-
 **Supports the following resource types:**
 - Application
 - Routing
@@ -81,3 +149,31 @@ Returns status code `1` if there are failures or `0` for successful validation
 ```shell
 skipctl manifests validate --path <pathname>
 ```
+
+## Analytics & Privacy
+
+`skipctl` collects anonymous usage analytics by **default** to help us understand how the tool is being used and improve the user experience.
+
+### What We Collect
+
+We collect the following **non-personal** information:
+- **Command usage**: Which commands and subcommands are executed (e.g., `test ping`, `manifests render`)
+- **Command arguments**: Arguments passed to commands (e.g., flags used)
+- **Error information**: Whether a command succeeded or failed, and error messages if applicable. The error message may itself contain information about your system, e.g. file paths.
+- **Environment context**:
+  - Operating system (e.g., macOS, Linux, Windows)
+  - System architecture (e.g., amd64, arm64)
+  - Application version and git commit hash of skipctl
+  - Environment type (local or CI)
+- **Anonymous identifier**: A hashed machine-specific identifier that cannot be traced back to you.
+
+### How We Collect Data
+
+Analytics are collected through [PostHog](https://posthog.com/), a privacy-focused analytics platform, and sent to our self-hosted instance.
+
+### How to Disable Analytics
+
+You can disable analytics collection in two ways:
+
+1. Set the `DO_NOT_TRACK` environment variable to `true`
+2. Use the `--no-analytics` flag when running any `skipctl` command

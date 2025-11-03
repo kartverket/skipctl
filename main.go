@@ -1,6 +1,8 @@
 package main
 
 import (
+	"os"
+
 	"github.com/kartverket/skipctl/cmd"
 )
 
@@ -11,5 +13,9 @@ var (
 )
 
 func main() {
-	cmd.Execute(GitTag, GitCommitHash)
+	cmd.SetVersionInfo(GitTag, GitCommitHash)
+
+	if err := cmd.Execute(); err != nil {
+		os.Exit(1)
+	}
 }

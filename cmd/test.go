@@ -21,12 +21,13 @@ var testCmd = &cobra.Command{
 	Use:   "test",
 	Short: "Perform a connectivity test",
 	Long:  `Perform a connectivity test from the perspective of a SKIP cluster.`,
-	PersistentPreRun: func(_ *cobra.Command, _ []string) {
+	PersistentPreRunE: func(_ *cobra.Command, _ []string) error {
 		servers, err := discovery.DiscoverAPIServers(discoveryHost)
 		if err != nil {
-			panic(err)
+			return err
 		}
 		apiServers = servers
+		return nil
 	},
 }
 

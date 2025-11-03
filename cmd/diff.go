@@ -18,8 +18,9 @@ var (
 )
 
 var diffCmd = &cobra.Command{
-	Use:   "diff",
-	Short: "Diff manifest",
+	Use:     "diff",
+	Aliases: []string{"d"},
+	Short:   "Diff manifest",
 	Long: fmt.Sprintf(`Recursively diff manifest files in the specified path.
 
 
@@ -34,9 +35,8 @@ Supported formats are: %s.
 Any errors will be printed to stderr. Returns 0 if all input files are diffed
 correctly, otherwise return code 1 is used to indicate failure.`,
 		strings.Join(constants.ManifestSuffixes, ", ")),
-	RunE:          runDiff,
-	SilenceErrors: true,
-	SilenceUsage:  true,
+	RunE:         runDiff,
+	SilenceUsage: true,
 }
 
 func runDiff(cmd *cobra.Command, _ []string) error {
@@ -78,9 +78,7 @@ func runDiff(cmd *cobra.Command, _ []string) error {
 	differ := manifest.NewDiffer(ref, verbosityLevel, diffOutputFormat, chunkSize)
 
 	err = processor.ProcessDocuments(manifestFiles, differ.DiffManifest)
-	if err != nil {
-		log.Error("processing error", "error", err)
-	}
+
 	return err
 }
 

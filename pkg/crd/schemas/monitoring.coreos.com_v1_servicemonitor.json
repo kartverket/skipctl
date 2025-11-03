@@ -187,7 +187,6 @@
                     },
                     "sourceLabels": {
                       "items": {
-                        "pattern": "^[a-zA-Z_][a-zA-Z0-9_]*$",
                         "type": "string"
                       },
                       "type": "array"
@@ -555,7 +554,6 @@
                     },
                     "sourceLabels": {
                       "items": {
-                        "pattern": "^[a-zA-Z_][a-zA-Z0-9_]*$",
                         "type": "string"
                       },
                       "type": "array"
@@ -876,6 +874,13 @@
           ],
           "type": "string"
         },
+        "serviceDiscoveryRole": {
+          "enum": [
+            "Endpoints",
+            "EndpointSlice"
+          ],
+          "type": "string"
+        },
         "targetLabels": {
           "items": {
             "type": "string"
@@ -957,7 +962,9 @@
               "resource": {
                 "enum": [
                   "prometheuses",
-                  "prometheusagents"
+                  "prometheusagents",
+                  "thanosrulers",
+                  "alertmanagers"
                 ],
                 "type": "string"
               }
@@ -970,7 +977,14 @@
             ],
             "type": "object"
           },
-          "type": "array"
+          "type": "array",
+          "x-kubernetes-list-map-keys": [
+            "group",
+            "resource",
+            "name",
+            "namespace"
+          ],
+          "x-kubernetes-list-type": "map"
         }
       },
       "type": "object"

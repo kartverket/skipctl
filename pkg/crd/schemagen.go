@@ -17,13 +17,11 @@ package crd
 
 //go:generate crdjson -outdir=./schemas -url=https://github.com/prometheus-operator/prometheus-operator/releases/latest/download/stripped-down-crds.yaml
 
-//go:generate crdjson -outdir=./schemas -url=https://github.com/prometheus-operator/prometheus-operator/releases/latest/download/stripped-down-crds.yaml
-
-//go:generate crdjson -outdir=./schemas -one-per-kind -url=https://raw.githubusercontent.com/istio/api/refs/tags/1.27.1/kubernetes/customresourcedefinitions.gen.yaml
+//go:generate crdjson -outdir=./schemas -one-per-kind -url=https://raw.githubusercontent.com/istio/api/refs/tags/1.27.3/kubernetes/customresourcedefinitions.gen.yaml
 
 //go:generate crdjson -outdir=./schemas -url=https://github.com/cert-manager/cert-manager/releases/latest/download/cert-manager.crds.yaml
 
-//go:generate crdjson -outdir=./schemas -one-per-kind -url=https://github.com/external-secrets/external-secrets/releases/download/v0.19.2/external-secrets.yaml
+//go:generate crdjson -outdir=./schemas -one-per-kind -url=https://github.com/external-secrets/external-secrets/releases/download/v0.20.4/external-secrets.yaml
 
 //go:generate crdjson -outdir=./schemas -url=https://raw.githubusercontent.com/cloudnative-pg/cloudnative-pg/release-1.27/releases/cnpg-1.27.0.yaml
 

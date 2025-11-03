@@ -3555,6 +3555,7 @@
               },
               "server": {
                 "minLength": 1,
+                "pattern": "^http(s)?://.+$",
                 "type": "string"
               },
               "tlsConfig": {
@@ -4116,6 +4117,9 @@
                 "type": "object"
               },
               "port": {
+                "format": "int32",
+                "maximum": 65535,
+                "minimum": 0,
                 "type": "integer"
               },
               "proxyConnectHeader": {
@@ -5992,6 +5996,7 @@
                 "type": "object"
               },
               "clientID": {
+                "minLength": 1,
                 "type": "string"
               },
               "enableHTTP2": {
@@ -6303,7 +6308,7 @@
                 "type": "string"
               },
               "server": {
-                "minLength": 1,
+                "pattern": "^https?://.+$",
                 "type": "string"
               },
               "tlsConfig": {
@@ -7564,7 +7569,6 @@
               },
               "sourceLabels": {
                 "items": {
-                  "pattern": "^[a-zA-Z_][a-zA-Z0-9_]*$",
                   "type": "string"
                 },
                 "type": "array"
@@ -8719,19 +8723,9 @@
                 "type": "string"
               },
               "service": {
-                "allOf": [
-                  {
-                    "enum": [
-                      "VPS",
-                      "DedicatedServer"
-                    ]
-                  },
-                  {
-                    "enum": [
-                      "VPS",
-                      "DedicatedServer"
-                    ]
-                  }
+                "enum": [
+                  "VPS",
+                  "DedicatedServer"
                 ],
                 "type": "string"
               }
@@ -9373,7 +9367,6 @@
               },
               "sourceLabels": {
                 "items": {
-                  "pattern": "^[a-zA-Z_][a-zA-Z0-9_]*$",
                   "type": "string"
                 },
                 "type": "array"
@@ -9849,6 +9842,97 @@
         },
         "trackTimestampsStaleness": {
           "type": "boolean"
+        }
+      },
+      "type": "object"
+    },
+    "status": {
+      "properties": {
+        "bindings": {
+          "items": {
+            "properties": {
+              "conditions": {
+                "items": {
+                  "properties": {
+                    "lastTransitionTime": {
+                      "format": "date-time",
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "observedGeneration": {
+                      "format": "int64",
+                      "type": "integer"
+                    },
+                    "reason": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "type": {
+                      "enum": [
+                        "Accepted"
+                      ],
+                      "minLength": 1,
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "lastTransitionTime",
+                    "status",
+                    "type"
+                  ],
+                  "type": "object"
+                },
+                "type": "array",
+                "x-kubernetes-list-map-keys": [
+                  "type"
+                ],
+                "x-kubernetes-list-type": "map"
+              },
+              "group": {
+                "enum": [
+                  "monitoring.coreos.com"
+                ],
+                "type": "string"
+              },
+              "name": {
+                "minLength": 1,
+                "type": "string"
+              },
+              "namespace": {
+                "minLength": 1,
+                "type": "string"
+              },
+              "resource": {
+                "enum": [
+                  "prometheuses",
+                  "prometheusagents",
+                  "thanosrulers",
+                  "alertmanagers"
+                ],
+                "type": "string"
+              }
+            },
+            "required": [
+              "group",
+              "name",
+              "namespace",
+              "resource"
+            ],
+            "type": "object"
+          },
+          "type": "array",
+          "x-kubernetes-list-map-keys": [
+            "group",
+            "resource",
+            "name",
+            "namespace"
+          ],
+          "x-kubernetes-list-type": "map"
         }
       },
       "type": "object"
