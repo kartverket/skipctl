@@ -10,15 +10,3 @@ spec:
   lifecycle: "production"
   owner: "skip"
   system: "skip"
----
-apiVersion: "backstage.io/v1alpha1"
-kind: "Resource"
-metadata:
-  name: "skipctl"
-  links:
-  - url: "https://github.com/kartverket/skipctl"
-    title: "skipctl på GitHub"
-spec:
-  type: "repo"
-  dependencyOf:
-  - "component:skipctl"
