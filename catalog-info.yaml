@@ -12,19 +12,6 @@ spec:
   system: "skip"
 ---
 apiVersion: "backstage.io/v1alpha1"
-kind: "Group"
-metadata:
-  name: "security_champion_skipctl"
-  title: "Security Champion skipctl"
-spec:
-  type: "security_champion"
-  parent: "it_security_champions"
-  members:
-  - "omaen"
-  children:
-  - "resource:skipctl"
----
-apiVersion: "backstage.io/v1alpha1"
 kind: "Resource"
 metadata:
   name: "skipctl"
@@ -33,6 +20,5 @@ metadata:
     title: "skipctl på GitHub"
 spec:
   type: "repo"
-  owner: "security_champion_skipctl"
   dependencyOf:
   - "component:skipctl"
