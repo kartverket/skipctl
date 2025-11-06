@@ -32,6 +32,7 @@ func (v *Validator) ValidateManifest(file *Document) error {
 	}
 	return nil
 }
+
 func (v *Validator) validateJsonnet(file *Document) error {
 	// There is a memory corruption bug that leads to segfaults if we reuse the same VM for multiple evaluations.
 	// if there is a syntax error within the Jsonnet file, the VM gets corrupted and cannot be used again.

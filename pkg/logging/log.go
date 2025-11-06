@@ -2,13 +2,16 @@ package logging
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"log/slog"
 	"os"
+	"strings"
 	"sync"
 
 	slogcontext "github.com/PumpkinSeed/slog-context"
 	"github.com/pkg/errors"
+	"github.com/yannh/kubeconform/pkg/validator"
 )
 
 var (
@@ -120,4 +123,23 @@ func RawLogger() *slog.Logger {
 	}
 
 	return rawLogger
+}
+
+func LogValidationErrors(filename string, validationErrors []validator.ValidationError) {
+	if rawLogger == nil {
+		panic("logger not initialized")
+	}
+
+	if validationErrors == nil {
+		return
+	}
+
+	// Print the red ERROR header with filename
+	rawLogger.Error(fmt.Sprintf("\033[37;41mERROR:\033[0m file is invalid at %s\n", filename))
+
+	// Print each validation error
+	for _, ve := range validationErrors {
+		cleanedMsg := strings.Trim(ve.Error(), "{}") // remove outer braces
+		rawLogger.Error(fmt.Sprintf("  — %s: %s\n", ve.Path, cleanedMsg))
+	}
 }

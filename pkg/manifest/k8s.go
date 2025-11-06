@@ -88,6 +88,10 @@ func (k8 *K8sValidator) processValidationResults(filename string, results []vali
 	var validCount, invalidCount, errorCount, skippedCount int
 	var err error
 
+	for _, r := range results {
+		logging.LogValidationErrors(filename, r.ValidationErrors)
+	}
+
 	for _, result := range results {
 		switch result.Status {
 		case validator.Valid:
@@ -95,7 +99,6 @@ func (k8 *K8sValidator) processValidationResults(filename string, results []vali
 
 		case validator.Invalid:
 			invalidCount++
-			err = fmt.Errorf("file is invalid: filename=%s, errors=%v", filename, result.ValidationErrors)
 
 		case validator.Error:
 			errorCount++

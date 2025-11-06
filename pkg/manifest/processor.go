@@ -28,7 +28,7 @@ func (p *Processor) ProcessDocuments(files []*Document, process FileToErrorFunc)
 		err := process(file)
 
 		if err != nil {
-			errs = append(errs, fmt.Errorf("\033[37;41mError\033[0m" + " while processing document %s: %w ", file.Name, err + "\n"))
+			errs = append(errs, fmt.Errorf("error while processing document %s: %w", file.Name, err))
 			failed = true
 		}
 	}
