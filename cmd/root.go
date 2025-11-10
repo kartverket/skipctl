@@ -42,15 +42,19 @@ var rootCmd = &cobra.Command{
 func Execute() error {
 	defer collector.Close()
 
-	schemasText := "Supported schemas:\n"
+	var schemasBuilder strings.Builder
+	schemasBuilder.WriteString("Supported schemas:\n")
 	schemas, err := crd.ListSchemas()
 	if err != nil {
 		slog.Error("could not list schemas", "error", err)
 		return err
 	}
 	for _, schema := range schemas {
-		schemasText += fmt.Sprintf(" - %s\n", schema)
+		schemasBuilder.WriteString(" - ")
+		schemasBuilder.WriteString(schema)
+		schemasBuilder.WriteString("\n")
 	}
+	schemasText := schemasBuilder.String()
 
 	rootCmd.SetVersionTemplate(fmt.Sprintf("skipctl %s (%s)\n\n%s", GitTag, GitCommitHash, schemasText))
 
