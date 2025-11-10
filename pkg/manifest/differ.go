@@ -48,7 +48,9 @@ func NewDiffer(ref string, verbosityLevel string, outputFormat string, chunkSize
 }
 
 func (d *Differ) CleanUpGitFiles() {
-	os.RemoveAll(d.gitFiles)
+	if err := os.RemoveAll(d.gitFiles); err != nil {
+		d.logger.Error("failed to clean up git files", "path", d.gitFiles, "error", err)
+	}
 }
 
 func (d *Differ) DiffManifest(file *Document) error {
