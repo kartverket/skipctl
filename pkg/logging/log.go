@@ -125,12 +125,12 @@ func RawLogger() *slog.Logger {
 	return rawLogger
 }
 
-func LogValidationErrors(filename string, validationErrors []validator.ValidationError) {
+func LogValidationErrors(filename string, validationErrors []validator.ValidationError, err error) {
 	if rawLogger == nil {
 		panic("logger not initialized")
 	}
 
-	if validationErrors == nil {
+	if validationErrors == nil && err == nil {
 		return
 	}
 
@@ -141,5 +141,9 @@ func LogValidationErrors(filename string, validationErrors []validator.Validatio
 	for _, ve := range validationErrors {
 		cleanedMsg := strings.Trim(ve.Error(), "{}") // remove outer braces
 		rawLogger.Error(fmt.Sprintf("  — %s: %s\n", ve.Path, cleanedMsg))
+	}
+
+	if err != nil {
+		rawLogger.Error(fmt.Sprintf("  — general: %s\n", strings.TrimSpace(err.Error())))
 	}
 }
