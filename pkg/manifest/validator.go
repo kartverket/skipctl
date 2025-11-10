@@ -3,6 +3,7 @@ package manifest
 import (
 	"github.com/google/go-jsonnet"
 	"github.com/kartverket/skipctl/pkg/constants"
+	"github.com/kartverket/skipctl/pkg/logging"
 )
 
 type Validator struct {
@@ -41,12 +42,14 @@ func (v *Validator) validateJsonnet(file *Document) error {
 	node, err := jsonnet.SnippetToAST(file.Name, file.Content)
 	if err != nil {
 		v.res.ErrorCount++
+		logging.LogValidationErrors(file.Name, nil, err)
 		return err
 	}
 
 	content, err := vm.Evaluate(node)
 	if err != nil {
 		v.res.ErrorCount++
+		logging.LogValidationErrors(file.Name, nil, err)
 		return err
 	}
 	res, k8err := v.k8s.validateK8sSchema(file.Name, content)
@@ -58,6 +61,7 @@ func (v *Validator) validateJsonnet(file *Document) error {
 func (v *Validator) validateYaml(d *Document) error {
 	result, jerr := v.k8s.validateK8sSchema(d.Name, d.Content)
 	v.countValidateRes(&result)
+	logging.LogValidationErrors(d.Name, nil, jerr)
 	return jerr
 }
 func (v *Validator) countValidateRes(result *ValidateResult) {

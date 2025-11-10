@@ -62,6 +62,10 @@ func runValidate(_ *cobra.Command, args []string) error {
 
 	err = processor.ProcessDocuments(manifestFiles, validator.ValidateManifest)
 
+	if err != nil {
+		log.Error("processing error", "error", err)
+	}
+
 	result := validator.GetResults()
 	totalResources := result.GetTotalResources()
 	log.InfoContext(logging.DefaultStdoutContext, "validation completed",

@@ -144,6 +144,6 @@ func LogValidationErrors(filename string, validationErrors []validator.Validatio
 	}
 
 	if err != nil {
-		rawLogger.Error(fmt.Sprintf("  — general: %s\n", strings.TrimSpace(err.Error())))
+		rawLogger.Error(fmt.Sprintf("  — %s\n", strings.TrimSpace(err.Error())))
 	}
 }
