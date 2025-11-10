@@ -109,7 +109,7 @@ func (k8 *K8sValidator) processValidationResults(filename string, results []vali
 		}
 
 		// Log validation errors for the current result
-		logging.LogValidationErrors(filename, result.ValidationErrors, err)
+		logging.LogValidationErrors(filename, result.ValidationErrors, result.Err)
 	}
 
 	if err != nil {
