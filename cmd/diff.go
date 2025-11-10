@@ -76,6 +76,8 @@ func runDiff(cmd *cobra.Command, _ []string) error {
 
 	processor := manifest.NewDocumentProcessor()
 	ctx := manifest.NewContext(ref)
+	defer ctx.CleanUp()
+
 	out := logging.RawLogger()
 	differ := manifest.NewDiffer(ctx, out, verbosityLevel, diffOutputFormat, chunkSize)
 

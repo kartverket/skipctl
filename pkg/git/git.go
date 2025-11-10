@@ -12,7 +12,6 @@ import (
 	"github.com/go-git/go-git/v5/plumbing"
 	"github.com/go-git/go-git/v5/plumbing/filemode"
 	"github.com/go-git/go-git/v5/plumbing/object"
-	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
 
 const (
@@ -265,52 +264,57 @@ func findGitRoot() (string, error) {
 	}
 }
 
-func GetInMemoryFilesystemAt(ref string) (filesys.FileSystem, error) {
+func GetFilesystemAt(ref string) (string, error) {
 	repo, err := git.PlainOpenWithOptions(".", &git.PlainOpenOptions{DetectDotGit: true})
 	if err != nil {
-		return nil, fmt.Errorf("open git repo: %w", err)
+		return "", fmt.Errorf("open git repo: %w", err)
 	}
 
 	h, err := repo.ResolveRevision(plumbing.Revision(ref))
 	if err != nil {
-		return nil, fmt.Errorf("resolve ref %q: %w", ref, err)
+		return "", fmt.Errorf("resolve ref %q: %w", ref, err)
 	}
 
 	commit, err := repo.CommitObject(*h)
 	if err != nil {
-		return nil, fmt.Errorf("read commit: %w", err)
+		return "", fmt.Errorf("read commit: %w", err)
 	}
 
 	tree, err := commit.Tree()
 	if err != nil {
-		return nil, fmt.Errorf("read tree: %w", err)
+		return "", fmt.Errorf("read tree: %w", err)
 	}
 
-	fs := filesys.MakeFsInMemory()
-
-	if err = writeTreeToMemory(repo, tree, "/", fs); err != nil {
-		return nil, err
+	// Create temp directory for the git ref
+	tempDir, err := os.MkdirTemp("", "skipctl-git-*")
+	if err != nil {
+		return "", fmt.Errorf("create temp dir: %w", err)
 	}
 
-	return fs, nil
+	if err = writeTreeToDisk(repo, tree, tempDir); err != nil {
+		os.RemoveAll(tempDir)
+		return "", err
+	}
+
+	return tempDir, nil
 }
 
-//nolint:govet,exhaustive,gocognit // variable shadowing, exhaustive switch, magic numbers acceptable for this helper
-func writeTreeToMemory(repo *git.Repository, tree *object.Tree, targetDir string, fs filesys.FileSystem) error {
+//nolint:govet,exhaustive,gocognit,mnd // variable shadowing, exhaustive switch, magic numbers acceptable for this helper
+func writeTreeToDisk(repo *git.Repository, tree *object.Tree, targetDir string) error {
 	for i := range tree.Entries {
 		entry := &tree.Entries[i]
 		targetPath := filepath.Join(targetDir, entry.Name)
 
 		switch entry.Mode {
 		case filemode.Dir:
-			if err := fs.MkdirAll(targetPath); err != nil {
+			if err := os.MkdirAll(targetPath, 0755); err != nil {
 				return fmt.Errorf("create directory %q: %w", entry.Name, err)
 			}
 			subTree, err := repo.TreeObject(entry.Hash)
 			if err != nil {
 				return fmt.Errorf("read tree for %q: %w", entry.Name, err)
 			}
-			if err := writeTreeToMemory(repo, subTree, targetPath, fs); err != nil {
+			if err := writeTreeToDisk(repo, subTree, targetPath); err != nil {
 				return fmt.Errorf("write tree %q: %w", entry.Name, err)
 			}
 
@@ -319,10 +323,10 @@ func writeTreeToMemory(repo *git.Repository, tree *object.Tree, targetDir string
 			if err != nil {
 				return fmt.Errorf("open submodule %q: %w", entry.Name, err)
 			}
-			if err := fs.MkdirAll(targetPath); err != nil {
+			if err := os.MkdirAll(targetPath, 0755); err != nil {
 				return fmt.Errorf("create submodule directory %q: %w", entry.Name, err)
 			}
-			if err := writeTreeToMemory(subRepo, subTree, targetPath, fs); err != nil {
+			if err := writeTreeToDisk(subRepo, subTree, targetPath); err != nil {
 				return fmt.Errorf("write submodule %q: %w", entry.Name, err)
 			}
 
@@ -331,7 +335,11 @@ func writeTreeToMemory(repo *git.Repository, tree *object.Tree, targetDir string
 			if err != nil {
 				return fmt.Errorf("read file %q: %w", entry.Name, err)
 			}
-			if err := fs.WriteFile(targetPath, []byte(content)); err != nil {
+			perm := os.FileMode(0644)
+			if entry.Mode == filemode.Executable {
+				perm = 0755
+			}
+			if err := os.WriteFile(targetPath, []byte(content), perm); err != nil {
 				return fmt.Errorf("write file %q: %w", entry.Name, err)
 			}
 
@@ -340,7 +348,7 @@ func writeTreeToMemory(repo *git.Repository, tree *object.Tree, targetDir string
 			if err != nil {
 				return fmt.Errorf("read symlink %q: %w", entry.Name, err)
 			}
-			if err := fs.WriteFile(targetPath, []byte(target)); err != nil {
+			if err := os.Symlink(target, targetPath); err != nil {
 				return fmt.Errorf("write symlink %q: %w", entry.Name, err)
 			}
 

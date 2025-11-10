@@ -119,17 +119,19 @@ func (d *KustomizeDiffer) Diff(file *Document) ([]*diff.ManifestDiff, bool, erro
 	if err != nil {
 		return nil, false, err
 	}
-	prevFile.Name = "/" + relKustomizePath
 
-	// Get git filesystem
-	gitFS, err := d.ctx.GitFS()
+	// Get git directory (on disk, supports Helm)
+	gitDir, err := d.ctx.GitDir()
 	if err != nil {
-		return nil, false, fmt.Errorf("load git filesystem: %w", err)
+		return nil, false, fmt.Errorf("load git directory: %w", err)
 	}
 
-	// Render git file with git filesystem
+	// Update path to git directory
+	prevFile.Name = filepath.Join(gitDir, relKustomizePath)
+
+	// Render git file from on-disk directory
 	d.gitBuffer.Reset()
-	err = d.gitRenderer.Render(prevFile, gitFS)
+	err = d.gitRenderer.Render(prevFile)
 	if err != nil {
 		return nil, false, err
 	}

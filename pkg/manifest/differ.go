@@ -78,3 +78,13 @@ func (f *Differ) Diff(file *Document) error {
 		return fmt.Errorf("invalid format diff output format %s", f.outputFormat)
 	}
 }
+
+// CleanUpGitFiles removes temporary git directories.
+func (f *Differ) CleanUpGitFiles() {
+	f.ctx.CleanUp()
+}
+
+// DiffManifest is an alias for Diff for backward compatibility.
+func (f *Differ) DiffManifest(file *Document) error {
+	return f.Diff(file)
+}
