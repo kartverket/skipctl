@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/kartverket/skipctl/pkg/constants"
+	"github.com/kartverket/skipctl/pkg/logging"
 	"github.com/kartverket/skipctl/pkg/manifest"
 	"github.com/kartverket/skipctl/pkg/utils"
 	"github.com/spf13/cobra"
@@ -74,14 +75,11 @@ func runDiff(cmd *cobra.Command, _ []string) error {
 	}
 
 	processor := manifest.NewDocumentProcessor()
+	ctx := manifest.NewContext(ref)
+	out := logging.RawLogger()
+	differ := manifest.NewDiffer(ctx, out, verbosityLevel, diffOutputFormat, chunkSize)
 
-	differ, differErr := manifest.NewDiffer(ref, verbosityLevel, diffOutputFormat, chunkSize)
-	if differErr != nil {
-		return differErr
-	}
-	defer differ.CleanUpGitFiles()
-
-	err = processor.ProcessDocuments(manifestFiles, differ.DiffManifest)
+	err = processor.ProcessDocuments(manifestFiles, differ.Diff)
 
 	return err
 }
