@@ -45,3 +45,10 @@ const (
 var (
 	ManifestSuffixes = []string{ManifestSuffixJsonnet, ManifestSuffixYaml, ManifestSuffixYml}
 )
+
+// Commands we don't want to track
+const (
+	Completion = "completion"
+)
+
+var NotTrackableCommands = []string{Completion}
