@@ -14,11 +14,12 @@ const (
 )
 
 const (
-	ManifestSuffixJsonnet = ".jsonnet"
-	ManifestSuffixYaml    = ".yaml"
-	ManifestSuffixYml     = ".yml"
-	ManifestKustomizeYaml = "kustomization.yaml"
-	ManifestKustomizeYml  = "kustomization.yml"
+	ManifestSuffixJsonnet   = ".jsonnet"
+	ManifestSuffixLibsonnet = ".libsonnet"
+	ManifestSuffixYaml      = ".yaml"
+	ManifestSuffixYml       = ".yml"
+	ManifestKustomizeYaml   = "kustomization.yaml"
+	ManifestKustomizeYml    = "kustomization.yml"
 )
 
 const (
@@ -43,5 +44,6 @@ const (
 )
 
 var (
-	ManifestSuffixes = []string{ManifestSuffixJsonnet, ManifestSuffixYaml, ManifestSuffixYml}
+	ManifestSuffixes    = []string{ManifestSuffixJsonnet, ManifestSuffixYaml, ManifestSuffixYml}
+	FmtManifestSuffixes = []string{ManifestSuffixJsonnet, ManifestSuffixLibsonnet, ManifestSuffixYaml, ManifestSuffixYml}
 )
