@@ -69,7 +69,7 @@ func Execute() error {
 	return err
 }
 func isTrackable(c *cobra.Command) bool {
-	// See if the command exectued is trackable
+	// See if the command executed is trackable
 	for cmd := range strings.SplitSeq(shortCommandPath(c), " ") {
 		if slices.Contains(constants.NotTrackableCommands, cmd) {
 			return false
