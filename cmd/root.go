@@ -58,7 +58,6 @@ func Execute() error {
 
 	executed, err := rootCmd.ExecuteC()
 	if executed != nil && isTrackable(executed) {
-
 		var flagNames []string
 		executed.Flags().Visit(func(f *pflag.Flag) {
 			flagNames = append(flagNames, f.Name)
