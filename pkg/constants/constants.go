@@ -46,7 +46,7 @@ var (
 	ManifestSuffixes = []string{ManifestSuffixJsonnet, ManifestSuffixYaml, ManifestSuffixYml}
 )
 
-// Commands we dont want to track
+// Commands we don't want to track
 const (
 	Completion = "completion"
 )
