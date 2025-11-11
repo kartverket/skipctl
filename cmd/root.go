@@ -4,9 +4,11 @@ import (
 	"fmt"
 	"log/slog"
 	"os"
+	"slices"
 	"strconv"
 	"strings"
 
+	"github.com/kartverket/skipctl/pkg/constants"
 	"github.com/kartverket/skipctl/pkg/crd"
 	"github.com/kartverket/skipctl/pkg/logging"
 	"github.com/kartverket/skipctl/pkg/telemetry"
@@ -41,33 +43,40 @@ var rootCmd = &cobra.Command{
 
 func Execute() error {
 	defer collector.Close()
-
-	schemasText := "Supported schemas:\n"
+	var schemasText strings.Builder
+	schemasText.WriteString("Supported schemas:\n")
 	schemas, err := crd.ListSchemas()
 	if err != nil {
 		slog.Error("could not list schemas", "error", err)
 		return err
 	}
 	for _, schema := range schemas {
-		schemasText += fmt.Sprintf(" - %s\n", schema)
+		schemasText.WriteString(fmt.Sprintf(" - %s\n", schema))
 	}
 
-	rootCmd.SetVersionTemplate(fmt.Sprintf("skipctl %s (%s)\n\n%s", GitTag, GitCommitHash, schemasText))
+	rootCmd.SetVersionTemplate(fmt.Sprintf("skipctl %s (%s)\n\n%s", GitTag, GitCommitHash, schemasText.String()))
 
 	executed, err := rootCmd.ExecuteC()
-	if executed != nil {
+	if executed != nil && isTrackable(executed) {
 		var flagNames []string
 		executed.Flags().Visit(func(f *pflag.Flag) {
 			flagNames = append(flagNames, f.Name)
 		})
-
 		posArgs := executed.Flags().Args()
 		collector.CaptureCommand(shortCommandPath(executed), posArgs, flagNames, err)
 	}
 
 	return err
 }
-
+func isTrackable(c *cobra.Command) bool {
+	// See if the command executed is trackable
+	for cmd := range strings.SplitSeq(shortCommandPath(c), " ") {
+		if slices.Contains(constants.NotTrackableCommands, cmd) {
+			return false
+		}
+	}
+	return true
+}
 func init() {
 	cobra.OnInitialize(initLogging, initTelemetry)
 	rootCmd.PersistentFlags().BoolVar(&debug, "debug", false, "enable debug mode")
