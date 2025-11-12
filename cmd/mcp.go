@@ -28,7 +28,7 @@ Add to ~/Library/Application Support/Claude/claude_desktop_config.json:
 {
   "mcpServers": {
     "skipctl": {
-      "command": "/path/to/skipctl",
+      "command": "skipctl",
       "args": ["mcp"]
     }
   }

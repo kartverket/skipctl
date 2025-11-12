@@ -153,23 +153,45 @@ skipctl manifests validate --path <pathname>
 
 ## AI Integration
 
-Skipctl includes a **Model Context Protocol (MCP)** server that enables AI assistants like Claude to interact with manifest tools directly.
+Skipctl includes AI-powered assistance for working with manifests!
 
-### Features
+### Built-in AI Assistant (Recommended)
 
-- 🤖 Natural language manifest operations
-- ✅ Validate manifests with AI assistance
-- 🔍 Diff and compare changes
-- 📝 Format and render manifests
-- 🗂️ Explore project structure
+The easiest way to get AI help - works directly in your terminal:
 
-### Quick Setup
+```bash
+# Setup (one time)
+export ANTHROPIC_API_KEY=sk-ant-...
 
-1. Build skipctl: `go build -o skipctl .`
-2. Configure Claude Desktop (see [MCP_README.md](./MCP_README.md))
+# Ask questions
+skipctl ai "what manifests do I have?"
+skipctl ai "validate testdata/yaml/valid.yaml"
+skipctl ai "show me the diff for my manifest against HEAD"
+
+# Interactive mode
+skipctl ai
+> what manifests do I have?
+> validate them all
+> exit
+```
+
+**Features:**
+- 🚀 Zero setup (just an API key)
+- � Natural language queries
+- � Automatic tool calling (render, diff, validate)
+- � Pay-as-you-go (Claude API)
+
+See [AI_README.md](./AI_README.md) for full guide.
+
+### MCP Server (For Claude Desktop)
+
+For users who prefer Claude Desktop app:
+
+1. Configure Claude Desktop (see [MCP_README.md](./MCP_README.md))
+2. Restart Claude Desktop
 3. Ask Claude: *"Show me the diff for my manifest against main branch"*
 
-For detailed setup instructions and examples, see [MCP_README.md](./MCP_README.md).
+The MCP server provides the same tools but through Claude Desktop's interface.
 
 ## Analytics & Privacy
 
