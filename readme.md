@@ -13,6 +13,7 @@ A simple client (and [server](./server.md)) to perform various network troublesh
     - [Manifests](#manifests)
         - [Render manifests](#render-manifests)
         - [Validate manifests](#validate-k8s-manifests)
+    - [AI Integration](#ai-integration)
 - [Analytics & Privacy](#analytics--privacy)
 ## Installation
 
@@ -149,6 +150,26 @@ Returns status code `1` if there are failures or `0` for successful validation
 ```shell
 skipctl manifests validate --path <pathname>
 ```
+
+## AI Integration
+
+Skipctl includes a **Model Context Protocol (MCP)** server that enables AI assistants like Claude to interact with manifest tools directly.
+
+### Features
+
+- 🤖 Natural language manifest operations
+- ✅ Validate manifests with AI assistance
+- 🔍 Diff and compare changes
+- 📝 Format and render manifests
+- 🗂️ Explore project structure
+
+### Quick Setup
+
+1. Build skipctl: `go build -o skipctl .`
+2. Configure Claude Desktop (see [MCP_README.md](./MCP_README.md))
+3. Ask Claude: *"Show me the diff for my manifest against main branch"*
+
+For detailed setup instructions and examples, see [MCP_README.md](./MCP_README.md).
 
 ## Analytics & Privacy
 
