@@ -6,7 +6,6 @@ import (
 	"sync"
 
 	"github.com/kartverket/skipctl/pkg/git"
-	"sigs.k8s.io/kustomize/kyaml/filesys"
 )
 
 // Context holds shared resources for manifest operations.
@@ -14,7 +13,6 @@ import (
 type Context struct {
 	ref       string
 	gitDir    string
-	currentFS filesys.FileSystem
 	mu        sync.Mutex
 	gitDirErr error
 }
@@ -22,14 +20,8 @@ type Context struct {
 // NewContext creates a new context for manifest operations.
 func NewContext(ref string) *Context {
 	return &Context{
-		ref:       ref,
-		currentFS: filesys.MakeFsOnDisk(),
+		ref: ref,
 	}
-}
-
-// CurrentFS returns the filesystem for the current working directory.
-func (c *Context) CurrentFS() filesys.FileSystem {
-	return c.currentFS
 }
 
 // GitDir returns the temporary directory with git ref contents.
