@@ -13,7 +13,7 @@ A simple client (and [server](./server.md)) to perform various network troublesh
     - [Manifests](#manifests)
         - [Render manifests](#render-manifests)
         - [Validate manifests](#validate-k8s-manifests)
-    - [AI Integration](#ai-integration)
+    - [AI Chat Assistant](#ai-chat-assistant)
 - [Analytics & Privacy](#analytics--privacy)
 ## Installation
 
@@ -164,12 +164,12 @@ The easiest way to get AI help - works directly in your terminal:
 export ANTHROPIC_API_KEY=sk-ant-...
 
 # Ask questions
-skipctl ai "what manifests do I have?"
-skipctl ai "validate testdata/yaml/valid.yaml"
-skipctl ai "show me the diff for my manifest against HEAD"
+skipctl chat "what manifests do I have?"
+skipctl chat "validate testdata/yaml/valid.yaml"
+skipctl chat "show me the diff for my manifest against HEAD"
 
 # Interactive mode
-skipctl ai
+skipctl chat
 > what manifests do I have?
 > validate them all
 > exit
@@ -181,17 +181,7 @@ skipctl ai
 - � Automatic tool calling (render, diff, validate)
 - � Pay-as-you-go (Claude API)
 
-See [AI_README.md](./AI_README.md) for full guide.
-
-### MCP Server (For Claude Desktop)
-
-For users who prefer Claude Desktop app:
-
-1. Configure Claude Desktop (see [MCP_README.md](./MCP_README.md))
-2. Restart Claude Desktop
-3. Ask Claude: *"Show me the diff for my manifest against main branch"*
-
-The MCP server provides the same tools but through Claude Desktop's interface.
+See [CHAT_README.md](./CHAT_README.md) for full guide.
 
 ## Analytics & Privacy
 

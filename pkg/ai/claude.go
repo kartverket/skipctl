@@ -20,7 +20,7 @@ type ClaudeClient struct {
 	apiKey     string
 	model      string
 	httpClient *http.Client
-}
+}¢
 
 // NewClaudeClient creates a new Claude API client
 func NewClaudeClient(apiKey string, model string) *ClaudeClient {

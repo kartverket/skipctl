@@ -82,7 +82,7 @@ func askQuestion(ctx context.Context, agent *ai.Agent, question string) error {
 
 func runInteractive(agent *ai.Agent) error {
 	fmt.Println("💬 Skipctl Chat Assistant")
-	fmt.Println("Ask me anything about your manifests. Type 'exit' to quit.\n")
+	fmt.Println("Ask me anything about your manifests. Type 'exit' to quit.")
 
 	reader := bufio.NewReader(os.Stdin)
 	ctx := context.Background()
