@@ -23,9 +23,9 @@ var (
 var chatCmd = &cobra.Command{
 	Use:   "chat [question]",
 	Short: "Chat with AI to help with manifests",
-	Long: `Chat with AI about your manifests in natural language.
+	Long: `Chat with Mai about your manifests in natural language.
 
-The AI assistant can help you:
+Mai can help you:
 - List and explore manifests
 - Validate syntax and structure
 - Render and preview changes
@@ -112,12 +112,12 @@ func askQuestion(ctx context.Context, agent *ai.Agent, question string) error {
 		return fmt.Errorf("Chat request failed: %w", err)
 	}
 
-	fmt.Printf("Assistant: %s\n", response)
+	fmt.Printf("Mai: %s\n", response)
 	return nil
 }
 
 func runInteractive(agent *ai.Agent) error {
-	fmt.Println("💬 Skipctl Chat Assistant")
+	fmt.Println("💬 Mai - Skipctl Chat")
 	fmt.Println("Ask me anything about your manifests. Type 'exit' to quit.")
 
 	reader := bufio.NewReader(os.Stdin)

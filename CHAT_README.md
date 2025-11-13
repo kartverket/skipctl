@@ -1,10 +1,10 @@
-# Skipctl Chat
+# Skipctl Chat - Mai
 
-Chat med AI for å jobbe med Kubernetes manifester og ArgoKit.
+Chat med Mai for å jobbe med Kubernetes manifester og ArgoKit.
 
 ## Hva er dette?
 
-En innebygd AI-assistent i Skipctl som hjelper deg med:
+Mai er en innebygd AI-assistent i Skipctl som hjelper deg med:
 - 📝 Validere manifester
 - 🔍 Vise hva som vil deployes (render)
 - 📊 Sammenligne endringer (diff)
@@ -66,20 +66,20 @@ skipctl chat
 
 Eksempel samtale:
 ```
-💬 Skipctl Chat Assistant
+💬 Mai - Skipctl Chat
 Ask me anything about your manifests. Type 'exit' to quit.
 
 You: what manifests do I have in testdata?
-AI: I found 6 manifest files in testdata:
+Mai: I found 6 manifest files in testdata:
 - testdata/yaml/valid.yaml
 - testdata/yaml/invalid.yaml
 ...
 
 You: validate testdata/yaml/valid.yaml
-AI: ✅ Manifest testdata/yaml/valid.yaml is valid
+Mai: ✅ Manifest testdata/yaml/valid.yaml is valid
 
 You: what will it deploy?
-AI: This manifest will deploy an Application called "valid-manifest" 
+Mai: This manifest will deploy an Application called "valid-manifest" 
 in the devex namespace. It will:
 - Use the kartverket/example image
 - Expose port 8080
@@ -118,14 +118,14 @@ skipctl chat "how do I add a Redis cache to my ArgoKit application?"
 ## Hvordan fungerer det?
 
 1. **Du stiller et spørsmål** på vanlig norsk eller engelsk
-2. **AI analyserer spørsmålet** og bestemmer hvilke tools den trenger
-3. **AI kaller Skipctl-verktøy**:
+2. **Mai analyserer spørsmålet** og bestemmer hvilke tools hun trenger
+3. **Mai kaller Skipctl-verktøy**:
    - `list_manifests` - finner filer
    - `render_manifest` - viser YAML-output
    - `diff_manifest` - sammenligner versjoner
    - `validate_manifest` - sjekker syntaks
    - `format_manifest` - rydder filer
-4. **AI formulerer svaret** basert på resultatene
+4. **Mai formulerer svaret** basert på resultatene
 
 ## Kostnader
 
@@ -321,7 +321,7 @@ skipctl chat --security=strict "validate prod-manifests/"
 skipctl chat "format testdata/yaml/formatme.yml"
 ```
 
-**Når du IKKE vil at AI skal endre noe:**
+**Når du IKKE vil at Mai skal endre noe:**
 ```bash
 skipctl chat --read-only "help me understand this manifest"
 ```
