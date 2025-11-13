@@ -6,13 +6,18 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/kartverket/skipctl/pkg/ai"
 	"github.com/spf13/cobra"
 )
 
 var (
-	chatModel string
+	chatModel           string
+	chatDisableWrite    bool
+	chatMaxFileSize     int64
+	chatAllowAllPaths   bool
+	chatSecurityProfile string
 )
 
 var chatCmd = &cobra.Command{
@@ -55,7 +60,38 @@ Interactive mode:
 Get your API key from: https://console.anthropic.com/`)
 		}
 
-		agent := ai.NewAgent(apiKey, chatModel)
+		// Create security config based on flags
+		var security *ai.SecurityConfig
+		switch chatSecurityProfile {
+		case "strict":
+			security = ai.NewStrictSecurityConfig()
+		case "relaxed":
+			security = ai.NewRelaxedSecurityConfig()
+		case "default", "":
+			security = ai.DefaultSecurityConfig()
+		default:
+			return fmt.Errorf("unknown security profile: %s (use: default, strict, or relaxed)", chatSecurityProfile)
+		}
+
+		// Apply custom flags if provided
+		if chatDisableWrite {
+			security.DisableWrite = true
+		}
+		if chatMaxFileSize > 0 {
+			security.MaxFileSize = chatMaxFileSize
+		}
+		if chatAllowAllPaths {
+			security.WorkingDirOnly = false
+		}
+
+		// Create agent with security config
+		var agent *ai.Agent
+		if chatSecurityProfile != "" || chatDisableWrite || chatMaxFileSize > 0 || chatAllowAllPaths {
+			rateLimiter := ai.NewRateLimiter(20, time.Minute) // 20 per minute
+			agent = ai.NewAgentWithSecurity(apiKey, chatModel, security, rateLimiter)
+		} else {
+			agent = ai.NewAgent(apiKey, chatModel)
+		}
 
 		// If question provided, run once and exit
 		if len(args) > 0 {
@@ -115,4 +151,10 @@ func init() {
 	rootCmd.AddCommand(chatCmd)
 
 	chatCmd.Flags().StringVar(&chatModel, "model", "", "Claude model to use (default: claude-3-haiku-20240307)")
+
+	// Security flags
+	chatCmd.Flags().StringVar(&chatSecurityProfile, "security", "default", "Security profile: default, strict, or relaxed")
+	chatCmd.Flags().BoolVar(&chatDisableWrite, "read-only", false, "Disable write operations (format)")
+	chatCmd.Flags().Int64Var(&chatMaxFileSize, "max-file-size", 0, "Maximum file size in bytes (0 = use profile default)")
+	chatCmd.Flags().BoolVar(&chatAllowAllPaths, "allow-all-paths", false, "Allow access outside working directory")
 }

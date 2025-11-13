@@ -153,14 +153,9 @@ func (te *ToolExecutor) formatManifest(input map[string]interface{}) (string, er
 		return "", fmt.Errorf("file parameter required")
 	}
 
-	// Validate file access
-	if err := te.security.ValidatePath(file); err != nil {
+	// Validate file access and write permission
+	if err := te.security.ValidatePathForWrite(file, "format"); err != nil {
 		return "", fmt.Errorf("security validation failed: %w", err)
-	}
-
-	// Validate write operation
-	if err := te.security.ValidateWriteOperation("format"); err != nil {
-		return "", fmt.Errorf("write operation validation failed: %w", err)
 	}
 
 	docs, err := manifest.FromFiles([]string{file})

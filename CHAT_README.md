@@ -239,3 +239,89 @@ skipctl chat "what's the difference between Application and SKIPJob?"
 - Anthropic lagrer ikke data i over 30 dager
 
 Les mer: https://www.anthropic.com/legal/privacy
+
+### Sikkerhetsfunksjoner
+
+Skipctl chat har innebygd sikkerhet for å beskytte systemet ditt:
+
+#### Standard sikkerhet (default)
+```bash
+skipctl chat "validate my manifests"
+```
+
+- ✅ Kun tilgang til filer i nåværende mappe (working directory)
+- ✅ Maks filstørrelse: 10MB
+- ✅ Skrivoperasjoner tillatt (format)
+- ✅ Rate limiting: 20 API-kall per minutt
+
+#### Streng sikkerhet (strict)
+```bash
+skipctl chat --security=strict "validate my manifests"
+```
+
+- 🔒 Kun tilgang til filer i nåværende mappe
+- 🔒 Maks filstørrelse: 1MB
+- 🔒 **Ingen skrivoperasjoner** (read-only)
+- 🔒 Rate limiting: 20 API-kall per minutt
+
+Bruk for produksjonsfiler eller når du er usikker.
+
+#### Avslappet sikkerhet (relaxed)
+```bash
+skipctl chat --security=relaxed "validate ~/projects/other/manifest.yaml"
+```
+
+- ⚠️ Tilgang til filer utenfor working directory
+- ⚠️ Maks filstørrelse: 50MB
+- ⚠️ Skrivoperasjoner tillatt
+- ⚠️ Rate limiting: 20 API-kall per minutt
+
+Bruk kun når du trenger tilgang til filer andre steder.
+
+#### Egendefinert sikkerhet
+```bash
+# Deaktiver skriving (read-only)
+skipctl chat --read-only "format my manifests"
+
+# Tillat større filer (20MB)
+skipctl chat --max-file-size=20971520 "validate large-manifest.yaml"
+
+# Tillat tilgang utenfor working directory
+skipctl chat --allow-all-paths "validate ~/other-project/manifest.yaml"
+
+# Kombinasjoner
+skipctl chat --security=strict --allow-all-paths "list manifests in /tmp"
+```
+
+### Beskyttelse mot farlige operasjoner
+
+Chat-kommandoen beskytter mot:
+
+1. **Path traversal**: Kan ikke lese `/etc/passwd`, `../../secrets.txt`
+2. **Systemfiler**: Blokkerer tilgang til `/etc/`, `/var/`, `/System/`
+3. **For store filer**: Forhindrer å laste inn gigantiske filer
+4. **Uautorisert skriving**: Kan deaktiveres helt
+5. **API misbruk**: Rate limiting forhindrer for mange kall
+
+### Anbefalinger
+
+**For daglig bruk:**
+```bash
+skipctl chat "validate my manifests"  # Standard sikkerhet
+```
+
+**For produksjonsfiler:**
+```bash
+skipctl chat --security=strict "validate prod-manifests/"
+```
+
+**Når du vil formatere filer:**
+```bash
+# Default tillater skriving
+skipctl chat "format testdata/yaml/formatme.yml"
+```
+
+**Når du IKKE vil at AI skal endre noe:**
+```bash
+skipctl chat --read-only "help me understand this manifest"
+```

@@ -68,7 +68,7 @@ func (sc *SecurityConfig) ValidatePath(path string) error {
 		}
 	}
 
-	// Check if file exists and get size
+	// Check if file/directory exists
 	info, err := os.Stat(absPath)
 	if err != nil {
 		if os.IsNotExist(err) {
@@ -77,8 +77,8 @@ func (sc *SecurityConfig) ValidatePath(path string) error {
 		return fmt.Errorf("cannot access file: %w", err)
 	}
 
-	// Check file size
-	if info.Size() > sc.MaxFileSize {
+	// Check file size (only for files, not directories)
+	if !info.IsDir() && info.Size() > sc.MaxFileSize {
 		return fmt.Errorf("file too large: %d bytes (max %d bytes)", info.Size(), sc.MaxFileSize)
 	}
 
@@ -91,4 +91,59 @@ func (sc *SecurityConfig) ValidateWriteOperation(operation string) error {
 		return fmt.Errorf("write operation '%s' is disabled by security policy", operation)
 	}
 	return nil
+}
+
+// ValidatePathForWrite validates both path access and write permissions
+func (sc *SecurityConfig) ValidatePathForWrite(path string, operation string) error {
+	// First validate path access
+	if err := sc.ValidatePath(path); err != nil {
+		return err
+	}
+
+	// Then validate write operation is allowed
+	return sc.ValidateWriteOperation(operation)
+}
+
+// IsSafePath performs basic path safety checks
+func IsSafePath(path string) bool {
+	// Check for suspicious patterns
+	suspicious := []string{
+		"..",        // Directory traversal
+		"~",         // Home directory expansion
+		"/etc/",     // System files
+		"/var/",     // System files
+		"/usr/",     // System files
+		"/bin/",     // System binaries
+		"/sbin/",    // System binaries
+		"/System/",  // macOS system files
+		"/Library/", // macOS system libraries
+	}
+
+	for _, pattern := range suspicious {
+		if strings.Contains(path, pattern) {
+			return false
+		}
+	}
+
+	return true
+}
+
+// NewStrictSecurityConfig returns a very restrictive security config
+func NewStrictSecurityConfig() *SecurityConfig {
+	return &SecurityConfig{
+		AllowedPaths:   []string{},
+		MaxFileSize:    1 * 1024 * 1024, // 1MB
+		DisableWrite:   true,            // Read-only
+		WorkingDirOnly: true,
+	}
+}
+
+// NewRelaxedSecurityConfig returns a more permissive config for development
+func NewRelaxedSecurityConfig() *SecurityConfig {
+	return &SecurityConfig{
+		AllowedPaths:   []string{},
+		MaxFileSize:    50 * 1024 * 1024, // 50MB
+		DisableWrite:   false,
+		WorkingDirOnly: false, // Allow access outside working dir
+	}
 }
