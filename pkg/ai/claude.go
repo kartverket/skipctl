@@ -20,7 +20,7 @@ type ClaudeClient struct {
 	apiKey     string
 	model      string
 	httpClient *http.Client
-}¢
+}
 
 // NewClaudeClient creates a new Claude API client
 func NewClaudeClient(apiKey string, model string) *ClaudeClient {
@@ -52,6 +52,30 @@ type ContentItem struct {
 	Name      string                 `json:"name,omitempty"`
 	Input     map[string]interface{} `json:"input,omitempty"`
 	Content   string                 `json:"content,omitempty"`
+}
+
+// MarshalJSON implements custom JSON marshaling for ContentItem
+func (c ContentItem) MarshalJSON() ([]byte, error) {
+	type Alias ContentItem
+	// For tool_use, always include input field even if empty
+	if c.Type == "tool_use" {
+		if c.Input == nil {
+			c.Input = make(map[string]interface{})
+		}
+		// Create a map to ensure input is always present
+		return json.Marshal(&struct {
+			Type  string                 `json:"type"`
+			ID    string                 `json:"id,omitempty"`
+			Name  string                 `json:"name,omitempty"`
+			Input map[string]interface{} `json:"input"`
+		}{
+			Type:  c.Type,
+			ID:    c.ID,
+			Name:  c.Name,
+			Input: c.Input,
+		})
+	}
+	return json.Marshal((Alias)(c))
 }
 
 // Tool represents a tool that Claude can use
@@ -126,6 +150,13 @@ func (c *ClaudeClient) SendMessage(ctx context.Context, messages []Message, tool
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
 
+	// Fix tool_use items that don't have input field
+	for i, content := range response.Content {
+		if content.Type == "tool_use" && content.Input == nil {
+			response.Content[i].Input = make(map[string]interface{})
+		}
+	}
+
 	return &response, nil
 }
 
@@ -178,6 +209,7 @@ func GetAvailableTools() []Tool {
 				"required": []string{"file"},
 			},
 		},
+
 		{
 			Name:        "format_manifest",
 			Description: "Format a manifest file according to standard conventions (YAML/Jsonnet).",
@@ -201,8 +233,10 @@ func GetAvailableTools() []Tool {
 					"path": map[string]interface{}{
 						"type":        "string",
 						"description": "Directory path to search (default: current directory)",
+						"default":     ".",
 					},
 				},
+				"required": []string{},
 			},
 		},
 	}

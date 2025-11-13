@@ -6,17 +6,29 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"time"
 
 	"github.com/kartverket/skipctl/pkg/logging"
 	"github.com/kartverket/skipctl/pkg/manifest"
 )
 
 // ToolExecutor executes tools that Claude requests
-type ToolExecutor struct{}
+type ToolExecutor struct {
+	security *SecurityConfig
+}
 
-// NewToolExecutor creates a new tool executor
+// NewToolExecutor creates a new tool executor with default security config
 func NewToolExecutor() *ToolExecutor {
-	return &ToolExecutor{}
+	return &ToolExecutor{
+		security: DefaultSecurityConfig(),
+	}
+}
+
+// NewToolExecutorWithSecurity creates a new tool executor with custom security config
+func NewToolExecutorWithSecurity(security *SecurityConfig) *ToolExecutor {
+	return &ToolExecutor{
+		security: security,
+	}
 }
 
 // ExecuteTool executes a tool and returns the result
@@ -43,6 +55,11 @@ func (te *ToolExecutor) renderManifest(input map[string]interface{}) (string, er
 		return "", fmt.Errorf("file parameter required")
 	}
 
+	// Validate file access
+	if err := te.security.ValidatePath(file); err != nil {
+		return "", fmt.Errorf("security validation failed: %w", err)
+	}
+
 	docs, err := manifest.FromFiles([]string{file})
 	if err != nil || len(docs) == 0 {
 		return "", fmt.Errorf("failed to load manifest: %w", err)
@@ -62,6 +79,11 @@ func (te *ToolExecutor) diffManifest(input map[string]interface{}) (string, erro
 	file, ok := input["file"].(string)
 	if !ok {
 		return "", fmt.Errorf("file parameter required")
+	}
+
+	// Validate file access
+	if err := te.security.ValidatePath(file); err != nil {
+		return "", fmt.Errorf("security validation failed: %w", err)
 	}
 
 	ref, ok := input["ref"].(string)
@@ -104,6 +126,11 @@ func (te *ToolExecutor) validateManifest(input map[string]interface{}) (string, 
 		return "", fmt.Errorf("file parameter required")
 	}
 
+	// Validate file access
+	if err := te.security.ValidatePath(file); err != nil {
+		return "", fmt.Errorf("security validation failed: %w", err)
+	}
+
 	docs, err := manifest.FromFiles([]string{file})
 	if err != nil || len(docs) == 0 {
 		return fmt.Sprintf("❌ Invalid manifest %s: %v", file, err), nil
@@ -124,6 +151,16 @@ func (te *ToolExecutor) formatManifest(input map[string]interface{}) (string, er
 	file, ok := input["file"].(string)
 	if !ok {
 		return "", fmt.Errorf("file parameter required")
+	}
+
+	// Validate file access
+	if err := te.security.ValidatePath(file); err != nil {
+		return "", fmt.Errorf("security validation failed: %w", err)
+	}
+
+	// Validate write operation
+	if err := te.security.ValidateWriteOperation("format"); err != nil {
+		return "", fmt.Errorf("write operation validation failed: %w", err)
 	}
 
 	docs, err := manifest.FromFiles([]string{file})
@@ -147,6 +184,11 @@ func (te *ToolExecutor) listManifests(input map[string]interface{}) (string, err
 		if err != nil {
 			return "", err
 		}
+	}
+
+	// Validate path access
+	if err := te.security.ValidatePath(searchPath); err != nil {
+		return "", fmt.Errorf("security validation failed: %w", err)
 	}
 
 	manifests, err := findManifestFiles(searchPath)
@@ -198,22 +240,41 @@ func findManifestFiles(searchPath string) ([]string, error) {
 
 // Agent handles the conversation loop with Claude
 type Agent struct {
-	client   *ClaudeClient
-	executor *ToolExecutor
-	messages []Message
+	client      *ClaudeClient
+	executor    *ToolExecutor
+	rateLimiter *RateLimiter
+	messages    []Message
 }
 
-// NewAgent creates a new AI agent
+// NewAgent creates a new AI agent with default settings
 func NewAgent(apiKey string, model string) *Agent {
 	return &Agent{
-		client:   NewClaudeClient(apiKey, model),
-		executor: NewToolExecutor(),
-		messages: []Message{},
+		client:      NewClaudeClient(apiKey, model),
+		executor:    NewToolExecutor(),
+		rateLimiter: NewRateLimiter(20, time.Minute), // 20 requests per minute
+		messages:    []Message{},
+	}
+}
+
+// NewAgentWithSecurity creates a new AI agent with custom security settings
+func NewAgentWithSecurity(apiKey string, model string, security *SecurityConfig, rateLimiter *RateLimiter) *Agent {
+	return &Agent{
+		client:      NewClaudeClient(apiKey, model),
+		executor:    NewToolExecutorWithSecurity(security),
+		rateLimiter: rateLimiter,
+		messages:    []Message{},
 	}
 }
 
 // Ask sends a question to Claude and handles tool calls
 func (a *Agent) Ask(ctx context.Context, question string) (string, error) {
+	// Check rate limit
+	if a.rateLimiter != nil {
+		if err := a.rateLimiter.Allow(); err != nil {
+			return "", fmt.Errorf("rate limit exceeded: %w", err)
+		}
+	}
+
 	// Add user message
 	a.messages = append(a.messages, Message{
 		Role: "user",
@@ -235,10 +296,20 @@ func (a *Agent) Ask(ctx context.Context, question string) (string, error) {
 			return "", err
 		}
 
-		// Add assistant's response to history
+		// Add assistant's response to history - but fix tool_use input fields
+		assistantContent := make([]ContentItem, len(resp.Content))
+		copy(assistantContent, resp.Content)
+
+		// Ensure all tool_use items have input field for next API call
+		for i, content := range assistantContent {
+			if content.Type == "tool_use" && content.Input == nil {
+				assistantContent[i].Input = make(map[string]interface{})
+			}
+		}
+
 		a.messages = append(a.messages, Message{
 			Role:    "assistant",
-			Content: resp.Content,
+			Content: assistantContent,
 		})
 
 		// Check if Claude wants to use tools
@@ -248,6 +319,11 @@ func (a *Agent) Ask(ctx context.Context, question string) (string, error) {
 		for _, content := range resp.Content {
 			if content.Type == "tool_use" {
 				hasToolUse = true
+
+				// Ensure input is not nil
+				if content.Input == nil {
+					content.Input = make(map[string]interface{})
+				}
 
 				// Execute the tool
 				result, err := a.executor.ExecuteTool(ctx, content.Name, content.Input)
