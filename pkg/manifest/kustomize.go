@@ -7,7 +7,6 @@ import (
 	"path/filepath"
 
 	"github.com/kartverket/skipctl/pkg/diff"
-	"github.com/kartverket/skipctl/pkg/git"
 	"github.com/kartverket/skipctl/pkg/logging"
 	"sigs.k8s.io/kustomize/api/krusty"
 	"sigs.k8s.io/kustomize/api/types"
@@ -109,33 +108,8 @@ func (d *KustomizeDiffer) Diff(file *Document) ([]*diff.ManifestDiff, bool, erro
 	}
 	rendered := d.currentBuffer.String()
 
-	// Get the kustomization file at ref
-	prevFile, err := file.AtRef(d.ctx.Ref())
-	if err != nil {
-		return nil, false, err
-	}
-
-	relKustomizePath, err := git.RepoRelativePath(file.Name)
-	if err != nil {
-		return nil, false, err
-	}
-
-	// Get git directory (on disk, supports Helm)
-	gitDir, err := d.ctx.GitDir()
-	if err != nil {
-		return nil, false, fmt.Errorf("load git directory: %w", err)
-	}
-
-	// Update path to git directory
-	prevFile.Name = filepath.Join(gitDir, relKustomizePath)
-
-	// Render git file from on-disk directory
-	d.gitBuffer.Reset()
-	err = d.gitRenderer.Render(prevFile)
-	if err != nil {
-		return nil, false, err
-	}
-	prevRendered := d.gitBuffer.String()
+	// TODO implement
+	prevRendered := ""
 
 	diffs, hasChanges := diff.LCS(prevRendered, rendered)
 	return diffs, hasChanges, nil

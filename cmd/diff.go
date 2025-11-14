@@ -16,6 +16,7 @@ var (
 	verbosityLevel   string
 	chunkSize        int
 	diffOutputFormat string
+	kustomizeEnabled bool
 )
 
 var diffCmd = &cobra.Command{
@@ -30,6 +31,10 @@ Verbosity levels:
 minimal (output only changed lines)
 chunk (output changed lines with 3 lines of context above and below)
 full (output the entire file)
+
+Kustomize:
+To diff kustomize manifests, you need to set the --kustomize flag and supply a path to a dir where the files to diff against are in --ref.
+If the --kustomize flag is not set, kustomize manifests will be skipped!
 
 Supported formats are: %s.
 
@@ -54,6 +59,12 @@ func runDiff(cmd *cobra.Command, _ []string) error {
 	}
 
 	filenames, err := utils.FindFilesWithSuffixes(path, constants.ManifestSuffixes)
+
+	// ignore kustomize-files if the --kustomize flag is not set
+	if !kustomizeEnabled {
+		filenames = utils.ExcludeSuffixes(filenames, []string{constants.ManifestKustomizeYaml, constants.ManifestKustomizeYml})
+	}
+
 	if err != nil {
 		log.Error("Error collecting files", "error", err.Error())
 		return err
@@ -76,7 +87,6 @@ func runDiff(cmd *cobra.Command, _ []string) error {
 
 	processor := manifest.NewDocumentProcessor()
 	ctx := manifest.NewContext(ref)
-	defer ctx.CleanUp()
 
 	out := logging.RawLogger()
 	differ := manifest.NewDiffer(ctx, out, verbosityLevel, diffOutputFormat, chunkSize)
@@ -91,5 +101,6 @@ func init() {
 	diffCmd.Flags().StringVar(&verbosityLevel, "verbosity", constants.DiffVerbosityFull, "Include entire file contents with diffs")
 	diffCmd.Flags().IntVar(&chunkSize, "chunk-size", constants.DefaultChunkSize, "Number of lines to include above and below a diff line")
 	diffCmd.Flags().StringVar(&diffOutputFormat, "diff-format", constants.DiffOutputPretty, "the output format of the diff (default pretty), allowed (pretty | patch | json)")
+	diffCmd.Flags().BoolVar(&kustomizeEnabled, "kustomize", false, "enable diffing of kustomize, if this flag is set, the --ref is expected to be a dir to diff agains, if not set kustomize files will be skipped (default false)")
 	manifestCmd.AddCommand(diffCmd)
 }
