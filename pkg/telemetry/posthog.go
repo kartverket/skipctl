@@ -99,7 +99,7 @@ func (c *Collector) CaptureCommand(command string, args []string, flags []string
 	}
 
 	envKindVal := envKind()
-	isCI := strings.HasPrefix(envKindVal, "ci")
+	isCI := envKindVal == "ci"
 
 	props := map[string]any{
 		"command":   command,
@@ -112,29 +112,23 @@ func (c *Collector) CaptureCommand(command string, args []string, flags []string
 		"$ip":       "0", // explicit neutral IP
 	}
 
-	// Add detailed CI information as separate properties for easier filtering
+	var ciRepo string
+	// Add GitHub Actions metadata as separate properties for easier filtering
 	if isCI {
-		parts := strings.Split(envKindVal, ":")
-		if len(parts) >= 2 {
-			props["ci_org"] = parts[1] // e.g., "kartverket"
+		if repo := os.Getenv("GITHUB_REPOSITORY"); repo != "" {
+			ciRepo = repo
+			props["ci_repository"] = repo
+			props["ci_org"] = extractOrg(repo)
 		}
-
-		// Add GitHub Actions metadata
 		if workflow := os.Getenv("GITHUB_WORKFLOW"); workflow != "" {
 			props["ci_workflow"] = workflow
-		}
-		if actor := os.Getenv("GITHUB_ACTOR"); actor != "" {
-			props["ci_actor"] = actor
 		}
 		if ref := os.Getenv("GITHUB_REF"); ref != "" {
 			props["ci_ref"] = ref
 		}
-		if repo := os.Getenv("GITHUB_REPOSITORY"); repo != "" {
-			props["ci_repository"] = repo
-		}
 	}
 
-	distinctID, hErr := hostHash(isCI)
+	distinctID, hErr := hostHash(isCI, ciRepo)
 	if hErr != nil {
 		c.log.Error("could not get anonymous identity", "error", hErr)
 	}
@@ -147,22 +141,12 @@ func (c *Collector) CaptureCommand(command string, args []string, flags []string
 	}
 }
 
-// envKind returns the environment kind with additional context for CI environments.
-// For CI, it includes the organization/team information from GitHub Actions.
-// Examples: "local", "ci:kartverket"
+// envKind returns the environment kind: "local" or "ci".
 func envKind() string {
-	if os.Getenv("CI") != "true" {
-		return "local"
+	if os.Getenv("CI") == "true" {
+		return "ci"
 	}
-
-	// GitHub Actions: GITHUB_REPOSITORY is "owner/repo"
-	if ghRepo := os.Getenv("GITHUB_REPOSITORY"); ghRepo != "" {
-		org := extractOrg(ghRepo)
-		return fmt.Sprintf("ci:%s", org)
-	}
-
-	// Fallback if GITHUB_REPOSITORY is not set
-	return "ci:unknown"
+	return "local"
 }
 
 // extractOrg extracts the organization/owner from a "owner/repo" string.
@@ -205,11 +189,17 @@ func readOrCreateLocalID(isCI bool) (string, error) {
 	return hexID, nil
 }
 
-func hostHash(isCI bool) (string, error) {
+func hostHash(isCI bool, ciRepo string) (string, error) {
 	id, err := readOrCreateLocalID(isCI)
 	if err != nil {
 		return "unknown", fmt.Errorf("failed to get local ID: %w", err)
 	}
+	
+	// For CI: include repository in hash to distinguish between different repos
+	if isCI && ciRepo != "" {
+		id = id + ":" + ciRepo
+	}
+	
 	h := sha256.Sum256([]byte(id))
 	return hex.EncodeToString(h[:]), nil
 }
