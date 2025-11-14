@@ -12,6 +12,7 @@ const (
 	colorRed   = "\x1b[31m"
 	colorGreen = "\x1b[32m"
 	colorReset = "\x1b[0m"
+	textBold   = "\033[1m"
 )
 
 var diffSymbolMap = map[string]string{
@@ -131,7 +132,7 @@ func LCS(a, b string) ([]*ManifestDiff, bool) {
 func DiffsToPrettyPrint(diffs []*ManifestDiff, filename string) string {
 	var out strings.Builder
 
-	out.WriteString(fmt.Sprintf("%s\n", filename))
+	out.WriteString(fmt.Sprintf("%s%s%s\n", textBold, filename, colorReset))
 	out.WriteString(formatPrettyHeader(diffs))
 
 	for _, d := range diffs {
@@ -277,7 +278,7 @@ func formatPrettyHeader(diffs []*ManifestDiff) string {
 		startLineRemote = startLineLocal - 1
 	}
 
-	return fmt.Sprintf("@@ %s-%d,%d %s+%d,%d%s @@\n", colorRed, startLineRemote, del+eql, colorGreen, startLineLocal, ins+eql, colorReset)
+	return fmt.Sprintf("%s@@ %s-%d,%d %s+%d,%d @@%s\n", textBold, colorRed, startLineRemote, del+eql, colorGreen, startLineLocal, ins+eql, colorReset)
 }
 
 func filterNonEqualDiffs(diffs []*ManifestDiff) []*ManifestDiff {
