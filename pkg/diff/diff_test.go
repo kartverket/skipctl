@@ -76,7 +76,7 @@ func TestDiffsToPrettyPrint_Basic(t *testing.T) {
 		{Type: constants.Deletion, Text: "del", Line: 3},
 	}
 
-	out := DiffsToPrettyPrint(diffs)
+	out := DiffsToPrettyPrint(diffs, "test-filename.jsonnet")
 
 	// Contains line numbers, symbols, and texts in order
 	wantLines := []string{
