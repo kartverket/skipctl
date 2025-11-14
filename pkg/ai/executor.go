@@ -261,6 +261,24 @@ func NewAgentWithSecurity(apiKey string, model string, security *SecurityConfig,
 	}
 }
 
+// NewAgentWithOptions creates an agent with full customization including system prompt
+func NewAgentWithOptions(apiKey string, model string, systemPrompt string, security *SecurityConfig, rateLimit int, ratePeriod time.Duration) *Agent {
+	client := NewClaudeClientWithSystemPrompt(apiKey, model, systemPrompt)
+	return &Agent{
+		client:      client,
+		executor:    NewToolExecutorWithSecurity(security),
+		rateLimiter: NewRateLimiter(rateLimit, ratePeriod),
+		messages:    []Message{},
+	}
+}
+
+// SetSystemPrompt updates Mai's instructions
+func (a *Agent) SetSystemPrompt(prompt string) {
+	a.client.SetSystemPrompt(prompt)
+	// Reset conversation since context changed
+	a.messages = []Message{}
+}
+
 // Ask sends a question to Claude and handles tool calls
 func (a *Agent) Ask(ctx context.Context, question string) (string, error) {
 	// Check rate limit

@@ -15,11 +15,45 @@ const (
 	claudeAPIVersion = "2023-06-01"
 )
 
+const defaultSystemPrompt = `You are Mai, an AI assistant built into Skipctl - a tool for managing Kubernetes manifests with ArgoKit.
+
+Your role is to help users work with manifest files, validate configurations, and understand their deployments.
+
+## Your personality:
+- You are helpful, concise, and technical
+- You explain things clearly but don't over-explain
+- You use Norwegian when the user speaks Norwegian, English otherwise
+- You never use emojis
+
+## Your capabilities:
+You have access to these tools to help users:
+- render_manifest: Show what a manifest will deploy
+- diff_manifest: Compare changes against git history
+- validate_manifest: Check if manifests are valid
+- format_manifest: Format manifest files
+- list_manifests: Find manifest files in directories
+
+## Guidelines:
+1. Always validate paths before suggesting operations
+2. When showing diffs, explain what changed and why it matters
+3. If a manifest has errors, explain how to fix them
+4. Suggest best practices for ArgoKit when relevant
+5. If you're unsure, say so - don't make up information
+6. Keep responses focused and actionable
+
+## Security:
+- You can only access files in the current working directory
+- You respect read-only mode when enabled
+- You explain security restrictions when they prevent operations
+
+Remember: You're here to make working with Skipctl easier and help users understand their Kubernetes manifests better.`
+
 // ClaudeClient handles communication with Claude API
 type ClaudeClient struct {
-	apiKey     string
-	model      string
-	httpClient *http.Client
+	apiKey       string
+	model        string
+	httpClient   *http.Client
+	systemPrompt string
 }
 
 // NewClaudeClient creates a new Claude API client
@@ -29,12 +63,29 @@ func NewClaudeClient(apiKey string, model string) *ClaudeClient {
 		model = "claude-3-haiku-20240307"
 	}
 	return &ClaudeClient{
-		apiKey: apiKey,
-		model:  model,
-		httpClient: &http.Client{
-			Timeout: 60 * time.Second,
-		},
+		apiKey:       apiKey,
+		model:        model,
+		httpClient:   &http.Client{Timeout: 60 * time.Second},
+		systemPrompt: defaultSystemPrompt,
 	}
+}
+
+// NewClaudeClientWithSystemPrompt creates a client with custom system prompt
+func NewClaudeClientWithSystemPrompt(apiKey string, model string, systemPrompt string) *ClaudeClient {
+	if model == "" {
+		model = "claude-3-haiku-20240307"
+	}
+	return &ClaudeClient{
+		apiKey:       apiKey,
+		model:        model,
+		httpClient:   &http.Client{Timeout: 60 * time.Second},
+		systemPrompt: systemPrompt,
+	}
+}
+
+// SetSystemPrompt updates the system prompt
+func (c *ClaudeClient) SetSystemPrompt(prompt string) {
+	c.systemPrompt = prompt
 }
 
 // Message represents a message in the conversation
@@ -91,6 +142,7 @@ type Request struct {
 	MaxTokens int       `json:"max_tokens"`
 	Messages  []Message `json:"messages"`
 	Tools     []Tool    `json:"tools,omitempty"`
+	System    string    `json:"system,omitempty"`
 }
 
 // Response represents Claude API response
@@ -114,6 +166,7 @@ func (c *ClaudeClient) SendMessage(ctx context.Context, messages []Message, tool
 		MaxTokens: 4096,
 		Messages:  messages,
 		Tools:     tools,
+		System:    c.systemPrompt,
 	}
 
 	jsonData, err := json.Marshal(req)

@@ -13,11 +13,13 @@ import (
 )
 
 var (
-	chatModel           string
-	chatDisableWrite    bool
-	chatMaxFileSize     int64
-	chatAllowAllPaths   bool
-	chatSecurityProfile string
+	chatModel            string
+	chatDisableWrite     bool
+	chatMaxFileSize      int64
+	chatAllowAllPaths    bool
+	chatSecurityProfile  string
+	chatInstructions     string
+	chatInstructionsFile string
 )
 
 var chatCmd = &cobra.Command{
@@ -60,6 +62,18 @@ Interactive mode:
 Get your API key from: https://console.anthropic.com/`)
 		}
 
+		// Load custom instructions
+		var systemPrompt string
+		if chatInstructionsFile != "" {
+			content, err := os.ReadFile(chatInstructionsFile)
+			if err != nil {
+				return fmt.Errorf("failed to read instructions file: %w", err)
+			}
+			systemPrompt = string(content)
+		} else if chatInstructions != "" {
+			systemPrompt = chatInstructions
+		}
+
 		// Create security config based on flags
 		var security *ai.SecurityConfig
 		switch chatSecurityProfile {
@@ -84,12 +98,17 @@ Get your API key from: https://console.anthropic.com/`)
 			security.WorkingDirOnly = false
 		}
 
-		// Create agent with security config
+		// Create agent with security config and custom instructions
 		var agent *ai.Agent
-		if chatSecurityProfile != "" || chatDisableWrite || chatMaxFileSize > 0 || chatAllowAllPaths {
-			rateLimiter := ai.NewRateLimiter(20, time.Minute) // 20 per minute
+		if systemPrompt != "" {
+			// Custom instructions provided
+			agent = ai.NewAgentWithOptions(apiKey, chatModel, systemPrompt, security, 20, time.Minute)
+		} else if chatSecurityProfile != "" || chatDisableWrite || chatMaxFileSize > 0 || chatAllowAllPaths {
+			// Custom security config
+			rateLimiter := ai.NewRateLimiter(20, time.Minute)
 			agent = ai.NewAgentWithSecurity(apiKey, chatModel, security, rateLimiter)
 		} else {
+			// Default config
 			agent = ai.NewAgent(apiKey, chatModel)
 		}
 
@@ -151,6 +170,10 @@ func init() {
 	rootCmd.AddCommand(chatCmd)
 
 	chatCmd.Flags().StringVar(&chatModel, "model", "", "Claude model to use (default: claude-3-haiku-20240307)")
+
+	// Instruction flags
+	chatCmd.Flags().StringVar(&chatInstructions, "instructions", "", "Custom instructions for Mai (overrides default behavior)")
+	chatCmd.Flags().StringVar(&chatInstructionsFile, "instructions-file", "", "Load custom instructions from a file")
 
 	// Security flags
 	chatCmd.Flags().StringVar(&chatSecurityProfile, "security", "default", "Security profile: default, strict, or relaxed")
