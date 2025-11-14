@@ -84,7 +84,7 @@ func runDiff(cmd *cobra.Command, _ []string) error {
 	var source manifest.Source
 	if kustomizeEnabled {
 		// Validate that ref is a directory
-		if finfo, err := os.Stat(ref); err != nil || !finfo.IsDir() {
+		if finfo, ferr := os.Stat(ref); ferr != nil || !finfo.IsDir() {
 			refErr := fmt.Errorf("with --kustomize flag, --ref must be a valid directory path: %s", ref)
 			log.Error(refErr.Error())
 			return refErr
