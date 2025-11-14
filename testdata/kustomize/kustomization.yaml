@@ -3,6 +3,7 @@ resources:
   - application2.yaml
   - application3.yaml
   - application4.yaml
+  - ../patch-1
 patches:
   - path: patch/patch.yaml
     target:

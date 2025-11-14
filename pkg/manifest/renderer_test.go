@@ -35,7 +35,7 @@ ingress: [],
 
 	doc := newTestDocument(validJsonnet, "valid.jsonnet")
 	renderer, buf := newRendererWithLogger()
-	err := renderer.RenderManifest(doc)
+	err := renderer.Render(doc)
 	got := buf.String()
 
 	require.NoError(t, err, "expected no error for valid Jsonnet input")
@@ -52,7 +52,8 @@ ingress = []
 `
 
 	doc := newTestDocument(invalidJsonnet, "invalid.jsonnet")
-	res := NewRenderer().RenderManifest(doc)
+	renderer, _ := newRendererWithLogger()
+	res := renderer.Render(doc)
 	require.Error(t, res, "expected error for invalid Jsonnet input")
 }
 
@@ -67,7 +68,7 @@ application:
 `
 	doc := newTestDocument(inputYaml, "input.yaml")
 	renderer, buf := newRendererWithLogger()
-	err := renderer.RenderManifest(doc)
+	err := renderer.Render(doc)
 	got := buf.String()
 
 	require.NoError(t, err, "expected no error for valid yaml input")
@@ -84,7 +85,8 @@ port: 8080
 `
 
 	doc := newTestDocument(invalidYaml, "invalid.yaml")
-	res := NewRenderer().RenderManifest(doc)
+	renderer, _ := newRendererWithLogger()
+	res := renderer.Render(doc)
 	require.Error(t, res, "expected error for invalid Yaml input")
 }
 func TestRenderManifestValidKustomize(t *testing.T) {
@@ -99,7 +101,7 @@ func TestRenderManifestValidKustomize(t *testing.T) {
 	}
 
 	renderer, buf := newRendererWithLogger()
-	err := renderer.RenderManifest(doc)
+	err := renderer.Render(doc)
 
 	require.NoError(t, err, "expected no error for valid Kustomize")
 	got := buf.String()
@@ -115,8 +117,8 @@ func TestRenderManifestInvalidKustomize(t *testing.T) {
 		FromStdin:   false,
 	}
 
-	renderer := NewRenderer()
-	err := renderer.RenderManifest(doc)
+	renderer, _ := newRendererWithLogger()
+	err := renderer.Render(doc)
 
 	require.Error(t, err, "expected error for non-existent kustomization directory")
 	assert.Contains(t, err.Error(), "kustomize build", "error should mention kustomize build")

@@ -1,70 +1,64 @@
 package manifest
 
 import (
-	"bytes"
 	"fmt"
 	"log/slog"
 
 	"github.com/kartverket/skipctl/pkg/constants"
 	"github.com/kartverket/skipctl/pkg/diff"
-	"github.com/kartverket/skipctl/pkg/logging"
 )
 
+// TypeDiffer handles diffing for a specific manifest type.
+type TypeDiffer interface {
+	Diff(file *Document) ([]*diff.ManifestDiff, bool, error)
+}
+
+// Differ provides a unified interface for diffing all manifest types.
 type Differ struct {
-	rawOutput      *slog.Logger
-	ref            string
-	verbosityLevel string
-	chunkSize      int
-	outputFormat   string
-	renderBuffer   *bytes.Buffer
-	logger         *slog.Logger
-	renderer       *Renderer
+	source          Source
+	jsonnetDiffer   *JsonnetDiffer
+	yamlDiffer      *YamlDiffer
+	kustomizeDiffer *KustomizeDiffer
+	rawOutput       *slog.Logger
+	verbosityLevel  string
+	chunkSize       int
+	outputFormat    string
 }
 
-func NewDiffer(ref string, verbosityLevel string, outputFormat string, chunkSize int) *Differ {
-	buf := &bytes.Buffer{}
-	renderer := NewRenderer(logging.NewRawLoggerTo(buf))
+// NewDiffer creates a new manifest differ facade.
+func NewDiffer(source Source, rawOutput *slog.Logger, verbosityLevel string, outputFormat string, chunkSize int) *Differ {
 	return &Differ{
-		rawOutput:      logging.RawLogger(),
-		logger:         logging.Logger(),
-		ref:            ref,
-		verbosityLevel: verbosityLevel,
-		chunkSize:      chunkSize,
-		outputFormat:   outputFormat,
-		renderBuffer:   buf,
-		renderer:       renderer,
+		source:          source,
+		jsonnetDiffer:   NewJsonnetDiffer(source),
+		yamlDiffer:      NewYamlDiffer(source),
+		kustomizeDiffer: NewKustomizeDiffer(source),
+		rawOutput:       rawOutput,
+		verbosityLevel:  verbosityLevel,
+		chunkSize:       chunkSize,
+		outputFormat:    outputFormat,
 	}
 }
 
-func (d *Differ) DiffManifest(file *Document) error {
-	prevFile, err := file.AtRef(d.ref)
+func (d *Differ) Diff(file *Document) error {
+	var diffs []*diff.ManifestDiff
+	var hasDiff bool
+	var err error
+
+	switch file.Extension {
+	case constants.ManifestSuffixJsonnet:
+		diffs, hasDiff, err = d.jsonnetDiffer.Diff(file)
+	case constants.ManifestSuffixYaml, constants.ManifestSuffixYml:
+		diffs, hasDiff, err = d.yamlDiffer.Diff(file)
+	case constants.ManifestKustomizeYaml, constants.ManifestKustomizeYml:
+		diffs, hasDiff, err = d.kustomizeDiffer.Diff(file)
+	default:
+		return fmt.Errorf("unsupported file extension %s", file.Extension)
+	}
+
 	if err != nil {
 		return err
 	}
-
-	d.renderBuffer.Reset()
-	d.renderer.SetDefaultImporter()
-	d.renderer.DisableYamlSeparator()
-	err = d.renderer.RenderManifest(file)
-	if err != nil {
-		return err
-	}
-	rendered := d.renderBuffer.String()
-	prevRendered := ""
-
-	if prevFile.Content != "" {
-		d.renderBuffer.Reset()
-		d.renderer.SetGitImporter(d.ref)
-		d.renderer.DisableYamlSeparator()
-		err = d.renderer.RenderManifest(prevFile)
-		if err != nil {
-			return err
-		}
-		prevRendered = d.renderBuffer.String()
-	}
-
-	diffs, hasChanges := diff.LCS(prevRendered, rendered)
-	if !hasChanges {
+	if !hasDiff {
 		return nil
 	}
 
@@ -78,9 +72,14 @@ func (d *Differ) DiffManifest(file *Document) error {
 		d.rawOutput.Info(diff.DiffsToPatch(outputDiffs, file.Name))
 		return nil
 	case constants.DiffOutputJSON:
-		d.rawOutput.Info(diff.DiffsToJSON(outputDiffs, file.Name, d.ref))
+		d.rawOutput.Info(diff.DiffsToJSON(outputDiffs, file.Name, d.source.Reference()))
 		return nil
 	default:
 		return fmt.Errorf("invalid format diff output format %s", d.outputFormat)
 	}
+}
+
+// DiffManifest is an alias for Diff for backward compatibility.
+func (d *Differ) DiffManifest(file *Document) error {
+	return d.Diff(file)
 }

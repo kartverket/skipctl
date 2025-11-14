@@ -175,3 +175,30 @@ func DetectFiletype(content []byte) (string, error) {
 		return constants.ManifestSuffixYaml, nil
 	}
 }
+
+func ExcludeSuffixes(filenames []string, suffixes []string) []string {
+	var filtered []string
+	for _, name := range filenames {
+		exclude := false
+		for _, suf := range suffixes {
+			if strings.HasSuffix(name, suf) {
+				exclude = true
+				break
+			}
+		}
+		if !exclude {
+			filtered = append(filtered, name)
+		}
+	}
+	return filtered
+}
+
+func RebasePath(relPath, baseDir, refDir string) string {
+	relPath = filepath.Clean(relPath)
+	baseDir = filepath.Clean(baseDir)
+	refDir = filepath.Clean(refDir)
+
+	filePath, _ := strings.CutPrefix(relPath, baseDir)
+
+	return filepath.Join(refDir, filePath)
+}
