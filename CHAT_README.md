@@ -222,6 +222,78 @@ skipctl chat "show me an example of an ArgoKit application with ingress"
 skipctl chat "what's the difference between Application and SKIPJob?"
 ```
 
+## Tilpass Mai's oppførsel
+
+Du kan tilpasse hvordan Mai svarer ved å gi egendefinerte instruksjoner:
+
+### Med inline instruksjoner:
+```bash
+skipctl chat --instructions "Vær veldig konsis. Bruk punktlister." "list manifester"
+```
+
+### Med instruksjonsfil:
+```bash
+# Bruk en av eksempel-filene
+skipctl chat --instructions-file examples/mai-instructions-norwegian.txt
+
+# Eller lag din egen
+cat > mine-mai-instruksjoner.txt << EOF
+Du er Mai, en ekspert på sikkerhet i Kubernetes.
+Fokuser alltid på sikkerhet når du analyserer manifester.
+Påpek potensielle sikkerhetsproblemer proaktivt.
+EOF
+
+skipctl chat --instructions-file mine-mai-instruksjoner.txt
+```
+
+### Ferdiglagde instruksjonsfiler:
+
+**Norsk modus** ([`examples/mai-instructions-norwegian.txt`](examples/mai-instructions-norwegian.txt)):
+- Forklarer på norsk
+- Vennlig og pedagogisk
+- Bruker eksempler
+
+**Ekspertmodus** ([`examples/mai-instructions-expert.txt`](examples/mai-instructions-expert.txt)):
+- Teknisk og presis
+- Avanserte innsikter
+- Fokus på produksjon
+
+**Nybegynnermodus** ([`examples/mai-instructions-beginner.txt`](examples/mai-instructions-beginner.txt)):
+- Pedagogisk og tålmodig
+- Forklarer konsepter grundig
+- Oppmuntrende tone
+
+**Konsis modus** ([`examples/mai-instructions-concise.txt`](examples/mai-instructions-concise.txt)):
+- Korte svar
+- Ingen forklaringer
+- Direkte til poenget
+
+### Hva du kan tilpasse:
+
+- **Språk**: Norsk, engelsk, eller andre språk
+- **Tone**: Formell, uformell, teknisk, nybegynnervennlig
+- **Fokusområder**: Sikkerhet, ytelse, beste praksis
+- **Svarstil**: Konsis vs detaljert, med/uten eksempler
+- **Personlighet**: Hjelpsom, streng, pedagogisk, etc.
+
+### Tips for gode instruksjoner:
+
+1. **Vær spesifikk**: "Forklar ting enkelt" vs "Bruk tekniske termer"
+2. **Sett forventninger**: Hva skal Mai fokusere på?
+3. **Definer oppførsel**: Hvordan skal Mai svare på feil?
+4. **Gi kontekst**: Er dette for læring eller produksjon?
+
+Eksempel:
+```
+Du er Mai, og hjelper en nybegynner med å lære Kubernetes.
+
+- Forklar konsepter før du viser kommandoer
+- Bruk analogier for å forklare komplekse ting
+- Still oppklarende spørsmål hvis forespørselen er uklar
+- Oppmuntre til eksperimentering i trygge miljøer
+- Påpek vanlige feil proaktivt
+```
+
 ## Tips
 
 1. **Vær spesifikk**: "validate testdata/yaml/valid.yaml" > "validate my file"
@@ -229,6 +301,7 @@ skipctl chat "what's the difference between Application and SKIPJob?"
 3. **Still oppfølgingsspørsmål**: "explain that more" "what about..."
 4. **Be om eksempler**: "show me an example"
 5. **Kombiner operasjoner**: "validate and show me the diff"
+6. **Tilpass Mai**: Bruk `--instructions-file` for din arbeidsflyt
 
 ## Sikkerhet
 
