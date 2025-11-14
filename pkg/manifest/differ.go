@@ -66,7 +66,7 @@ func (f *Differ) Diff(file *Document) error {
 
 	switch f.outputFormat {
 	case constants.DiffOutputPretty:
-		f.rawOutput.Info(diff.DiffsToPrettyPrint(outputDiffs))
+		d.rawOutput.Info(diff.DiffsToPrettyPrint(outputDiffs, file.Name))
 		return nil
 	case constants.DiffOutputPatch:
 		f.rawOutput.Info(diff.DiffsToPatch(outputDiffs, file.Name))

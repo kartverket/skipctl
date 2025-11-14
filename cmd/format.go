@@ -34,7 +34,7 @@ func runFormat(_ *cobra.Command, args []string) error {
 		manifestFiles, err = manifest.FromStdin()
 	} else {
 		var filenames []string
-		filenames, err = utils.FindFilesWithSuffixes(path, constants.ManifestSuffixes)
+		filenames, err = utils.FindFilesWithSuffixes(path, constants.FmtManifestSuffixes)
 		if err == nil {
 			manifestFiles, err = manifest.FromFiles(filenames)
 		}

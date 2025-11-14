@@ -50,10 +50,11 @@ skipctl test probe --hostname=example.com --port=1521 --api-server=myApiServer
 ### Manifests
 
 The `manifests` command group contains commands for working with Skiperator manifests. All commands require a path flag (`--path` or `-p`) pointing to a directory or file containing the manifest(s).
-If a directory is specified, all commands in this group will recursively search the specified path for files with supported file formats. If no specific path is specified, the current working directory will be used.  
+If a directory is specified, all commands in this group will recursively search the specified path for files with supported file formats. If no specific path is specified, the current working directory will be used.
 
 **Supported file formats are:**
 - `.jsonnet`
+- `.libsonnet` (only for `manifests format`)
 - `.yaml`
 - `.yml`
 - `kustomization.yaml`(only for `manifests render`)
@@ -62,7 +63,7 @@ If a directory is specified, all commands in this group will recursively search 
 
 #### Render manifests
 >[!note]
-> When rendering kustomize, the renderer will ignore other `.jsonnet` and `.yaml` files in the same directory and subdirectories. 
+> When rendering kustomize, the renderer will ignore other `.jsonnet` and `.yaml` files in the same directory and subdirectories.
 
 Compiles and renders a Skiperator `.jsonnet` or `.yaml` manifest in the specified directory and alerts if any errors are found.
 ```shell
@@ -70,7 +71,7 @@ skipctl manifests render --path <pathname>
 ```
 #### Format manifests
 
-Formats a `.jsonnet` or `.yaml` manifest in the specified directory and alerts if any errors are found.
+Formats a `.jsonnet`, `.libsonnet` or `.yaml` manifest in the specified directory and alerts if any errors are found.
 ```shell
 skipctl manifests format --path <pathname>
 ```
