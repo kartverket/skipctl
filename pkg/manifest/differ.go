@@ -15,7 +15,7 @@ type TypeDiffer interface {
 
 // Differ provides a unified interface for diffing all manifest types.
 type Differ struct {
-	ctx             *Context
+	source          Source
 	jsonnetDiffer   *JsonnetDiffer
 	yamlDiffer      *YamlDiffer
 	kustomizeDiffer *KustomizeDiffer
@@ -26,12 +26,12 @@ type Differ struct {
 }
 
 // NewDiffer creates a new manifest differ facade.
-func NewDiffer(ctx *Context, rawOutput *slog.Logger, verbosityLevel string, outputFormat string, chunkSize int) *Differ {
+func NewDiffer(source Source, rawOutput *slog.Logger, verbosityLevel string, outputFormat string, chunkSize int) *Differ {
 	return &Differ{
-		ctx:             ctx,
-		jsonnetDiffer:   NewJsonnetDiffer(ctx),
-		yamlDiffer:      NewYamlDiffer(ctx),
-		kustomizeDiffer: NewKustomizeDiffer(ctx),
+		source:          source,
+		jsonnetDiffer:   NewJsonnetDiffer(source),
+		yamlDiffer:      NewYamlDiffer(source),
+		kustomizeDiffer: NewKustomizeDiffer(source),
 		rawOutput:       rawOutput,
 		verbosityLevel:  verbosityLevel,
 		chunkSize:       chunkSize,
@@ -72,7 +72,7 @@ func (f *Differ) Diff(file *Document) error {
 		f.rawOutput.Info(diff.DiffsToPatch(outputDiffs, file.Name))
 		return nil
 	case constants.DiffOutputJSON:
-		f.rawOutput.Info(diff.DiffsToJSON(outputDiffs, file.Name, f.ctx.Ref()))
+		f.rawOutput.Info(diff.DiffsToJSON(outputDiffs, file.Name, f.source.Reference()))
 		return nil
 	default:
 		return fmt.Errorf("invalid format diff output format %s", f.outputFormat)

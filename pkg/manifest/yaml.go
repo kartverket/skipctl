@@ -49,7 +49,7 @@ func (r *YamlRenderer) Render(file *Document) error {
 
 // YamlDiffer diffs yaml files.
 type YamlDiffer struct {
-	ctx             *Context
+	source          Source
 	currentBuffer   *bytes.Buffer
 	gitBuffer       *bytes.Buffer
 	currentRenderer *YamlRenderer
@@ -57,7 +57,7 @@ type YamlDiffer struct {
 }
 
 // NewYamlDiffer creates a new yaml differ.
-func NewYamlDiffer(ctx *Context) *YamlDiffer {
+func NewYamlDiffer(source Source) *YamlDiffer {
 	currentBuf := &bytes.Buffer{}
 	gitBuf := &bytes.Buffer{}
 
@@ -65,7 +65,7 @@ func NewYamlDiffer(ctx *Context) *YamlDiffer {
 	gitLogger := logging.NewRawLoggerTo(gitBuf)
 
 	return &YamlDiffer{
-		ctx:             ctx,
+		source:          source,
 		currentBuffer:   currentBuf,
 		gitBuffer:       gitBuf,
 		currentRenderer: NewYamlRenderer(currentLogger, false),
@@ -74,7 +74,7 @@ func NewYamlDiffer(ctx *Context) *YamlDiffer {
 }
 
 func (d *YamlDiffer) Diff(file *Document) ([]*diff.ManifestDiff, bool, error) {
-	prevFile, err := file.AtRef(d.ctx.Ref())
+	prevFile, err := d.source.GetPreviousDocument(file)
 	if err != nil {
 		return nil, false, err
 	}

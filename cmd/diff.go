@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"os"
 	"strings"
 
 	"github.com/kartverket/skipctl/pkg/constants"
@@ -79,17 +80,30 @@ func runDiff(cmd *cobra.Command, _ []string) error {
 		return nil
 	}
 
-	if !IsValidCommitRef(ref) {
-		refErr := fmt.Errorf("invalid commit ref %s", ref)
-		log.Error(refErr.Error())
-		return refErr
+	// Create appropriate source based on kustomize flag
+	var source manifest.Source
+	if kustomizeEnabled {
+		// Validate that ref is a directory
+		if finfo, err := os.Stat(ref); err != nil || !finfo.IsDir() {
+			refErr := fmt.Errorf("with --kustomize flag, --ref must be a valid directory path: %s", ref)
+			log.Error(refErr.Error())
+			return refErr
+		}
+		source = manifest.NewDirectorySource(ref, path)
+	} else {
+		// Validate that ref is a valid git reference
+		if !IsValidCommitRef(ref) {
+			refErr := fmt.Errorf("invalid commit ref %s", ref)
+			log.Error(refErr.Error())
+			return refErr
+		}
+		source = manifest.NewGitSource(ref)
 	}
 
 	processor := manifest.NewDocumentProcessor()
-	ctx := manifest.NewContext(ref)
 
 	out := logging.RawLogger()
-	differ := manifest.NewDiffer(ctx, out, verbosityLevel, diffOutputFormat, chunkSize)
+	differ := manifest.NewDiffer(source, out, verbosityLevel, diffOutputFormat, chunkSize)
 
 	err = processor.ProcessDocuments(manifestFiles, differ.Diff)
 

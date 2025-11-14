@@ -50,7 +50,7 @@ func (r *JsonnetRenderer) Render(file *Document) error {
 
 // JsonnetDiffer diffs jsonnet files.
 type JsonnetDiffer struct {
-	ctx             *Context
+	source          Source
 	currentBuffer   *bytes.Buffer
 	gitBuffer       *bytes.Buffer
 	currentRenderer *JsonnetRenderer
@@ -58,7 +58,7 @@ type JsonnetDiffer struct {
 }
 
 // NewJsonnetDiffer creates a new jsonnet differ.
-func NewJsonnetDiffer(ctx *Context) *JsonnetDiffer {
+func NewJsonnetDiffer(source Source) *JsonnetDiffer {
 	currentBuf := &bytes.Buffer{}
 	gitBuf := &bytes.Buffer{}
 	cache := NewImportCache()
@@ -67,16 +67,16 @@ func NewJsonnetDiffer(ctx *Context) *JsonnetDiffer {
 	gitLogger := logging.NewRawLoggerTo(gitBuf)
 
 	return &JsonnetDiffer{
-		ctx:             ctx,
+		source:          source,
 		currentBuffer:   currentBuf,
 		gitBuffer:       gitBuf,
 		currentRenderer: NewJsonnetRenderer(currentLogger, cache),
-		gitRenderer:     NewJsonnetRenderer(gitLogger, cache, ctx.Ref()),
+		gitRenderer:     NewJsonnetRenderer(gitLogger, cache, source.Reference()),
 	}
 }
 
 func (d *JsonnetDiffer) Diff(file *Document) ([]*diff.ManifestDiff, bool, error) {
-	prevFile, err := file.AtRef(d.ctx.Ref())
+	prevFile, err := d.source.GetPreviousDocument(file)
 	if err != nil {
 		return nil, false, err
 	}

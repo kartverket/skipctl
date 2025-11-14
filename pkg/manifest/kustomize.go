@@ -75,32 +75,32 @@ func (r *KustomizeRenderer) Render(file *Document, fs ...filesys.FileSystem) err
 
 // KustomizeDiffer diffs kustomize files.
 type KustomizeDiffer struct {
-	ctx             *Context
+	source          Source
 	currentBuffer   *bytes.Buffer
-	gitBuffer       *bytes.Buffer
+	prevBuffer      *bytes.Buffer
 	currentRenderer *KustomizeRenderer
-	gitRenderer     *KustomizeRenderer
+	prevRenderer    *KustomizeRenderer
 }
 
 // NewKustomizeDiffer creates a new kustomize differ.
-func NewKustomizeDiffer(ctx *Context) *KustomizeDiffer {
+func NewKustomizeDiffer(source Source) *KustomizeDiffer {
 	currentBuf := &bytes.Buffer{}
-	gitBuf := &bytes.Buffer{}
+	prevBuf := &bytes.Buffer{}
 
 	currentLogger := logging.NewRawLoggerTo(currentBuf)
-	gitLogger := logging.NewRawLoggerTo(gitBuf)
+	prevLogger := logging.NewRawLoggerTo(prevBuf)
 
 	return &KustomizeDiffer{
-		ctx:             ctx,
+		source:          source,
 		currentBuffer:   currentBuf,
-		gitBuffer:       gitBuf,
+		prevBuffer:      prevBuf,
 		currentRenderer: NewKustomizeRenderer(currentLogger, false),
-		gitRenderer:     NewKustomizeRenderer(gitLogger, false),
+		prevRenderer:    NewKustomizeRenderer(prevLogger, false),
 	}
 }
 
 func (d *KustomizeDiffer) Diff(file *Document) ([]*diff.ManifestDiff, bool, error) {
-	// Render current file
+	// Render current kustomize
 	d.currentBuffer.Reset()
 	err := d.currentRenderer.Render(file)
 	if err != nil {
@@ -108,8 +108,18 @@ func (d *KustomizeDiffer) Diff(file *Document) ([]*diff.ManifestDiff, bool, erro
 	}
 	rendered := d.currentBuffer.String()
 
-	// TODO implement
-	prevRendered := ""
+	prevFile, err := d.source.GetPreviousDocument(file)
+
+	if err != nil {
+		return nil, false, err
+	}
+	// Render previous kustomize
+	d.prevBuffer.Reset()
+	err = d.prevRenderer.Render(prevFile)
+	if err != nil {
+		return nil, false, err
+	}
+	prevRendered := d.prevBuffer.String()
 
 	diffs, hasChanges := diff.LCS(prevRendered, rendered)
 	return diffs, hasChanges, nil
