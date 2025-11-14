@@ -34,18 +34,18 @@ func (s *GitSource) Reference() string {
 
 // DirectorySource retrieves previous versions from a filesystem directory.
 type DirectorySource struct {
-	baseDir   string
-	originDir string
+	refDir  string
+	baseDir string
 }
 
 // NewDirectorySource creates a new DirectorySource.
-func NewDirectorySource(baseDir string, originDir string) *DirectorySource {
-	return &DirectorySource{baseDir: baseDir, originDir: originDir}
+func NewDirectorySource(refDir string, baseDir string) *DirectorySource {
+	return &DirectorySource{refDir: refDir, baseDir: baseDir}
 }
 
-// GetPreviousDocument retrieves a document from the base directory.
+// GetPreviousDocument retrieves a document from the ref directory.
 func (s *DirectorySource) GetPreviousDocument(current *Document) (*Document, error) {
-	rebased := utils.RebasePath(current.Name, s.originDir, s.baseDir)
+	rebased := utils.RebasePath(current.Name, s.baseDir, s.refDir)
 
 	documents, err := FromFiles([]string{rebased})
 	if err != nil {
@@ -61,7 +61,7 @@ func (s *DirectorySource) GetPreviousDocument(current *Document) (*Document, err
 	return doc, nil
 }
 
-// Reference returns the base directory path.
+// Reference returns the ref directory path.
 func (s *DirectorySource) Reference() string {
-	return s.baseDir
+	return s.refDir
 }

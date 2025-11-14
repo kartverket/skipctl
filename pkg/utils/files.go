@@ -193,12 +193,12 @@ func ExcludeSuffixes(filenames []string, suffixes []string) []string {
 	return filtered
 }
 
-func RebasePath(relPath, originDir, baseDir string) string {
+func RebasePath(relPath, baseDir, refDir string) string {
 	relPath = filepath.Clean(relPath)
-	originDir = filepath.Clean(originDir)
 	baseDir = filepath.Clean(baseDir)
+	refDir = filepath.Clean(refDir)
 
-	filePath, _ := strings.CutPrefix(relPath, originDir)
+	filePath, _ := strings.CutPrefix(relPath, baseDir)
 
-	return filepath.Join(baseDir, filePath)
+	return filepath.Join(refDir, filePath)
 }
