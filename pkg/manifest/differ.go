@@ -39,18 +39,18 @@ func NewDiffer(source Source, rawOutput *slog.Logger, verbosityLevel string, out
 	}
 }
 
-func (f *Differ) Diff(file *Document) error {
+func (d *Differ) Diff(file *Document) error {
 	var diffs []*diff.ManifestDiff
 	var hasDiff bool
 	var err error
 
 	switch file.Extension {
 	case constants.ManifestSuffixJsonnet:
-		diffs, hasDiff, err = f.jsonnetDiffer.Diff(file)
+		diffs, hasDiff, err = d.jsonnetDiffer.Diff(file)
 	case constants.ManifestSuffixYaml, constants.ManifestSuffixYml:
-		diffs, hasDiff, err = f.yamlDiffer.Diff(file)
+		diffs, hasDiff, err = d.yamlDiffer.Diff(file)
 	case constants.ManifestKustomizeYaml, constants.ManifestKustomizeYml:
-		diffs, hasDiff, err = f.kustomizeDiffer.Diff(file)
+		diffs, hasDiff, err = d.kustomizeDiffer.Diff(file)
 	default:
 		return fmt.Errorf("unsupported file extension %s", file.Extension)
 	}
@@ -62,24 +62,24 @@ func (f *Differ) Diff(file *Document) error {
 		return nil
 	}
 
-	outputDiffs := diff.FilterDiffs(diffs, f.verbosityLevel, f.chunkSize)
+	outputDiffs := diff.FilterDiffs(diffs, d.verbosityLevel, d.chunkSize)
 
-	switch f.outputFormat {
+	switch d.outputFormat {
 	case constants.DiffOutputPretty:
 		d.rawOutput.Info(diff.DiffsToPrettyPrint(outputDiffs, file.Name))
 		return nil
 	case constants.DiffOutputPatch:
-		f.rawOutput.Info(diff.DiffsToPatch(outputDiffs, file.Name))
+		d.rawOutput.Info(diff.DiffsToPatch(outputDiffs, file.Name))
 		return nil
 	case constants.DiffOutputJSON:
-		f.rawOutput.Info(diff.DiffsToJSON(outputDiffs, file.Name, f.source.Reference()))
+		d.rawOutput.Info(diff.DiffsToJSON(outputDiffs, file.Name, d.source.Reference()))
 		return nil
 	default:
-		return fmt.Errorf("invalid format diff output format %s", f.outputFormat)
+		return fmt.Errorf("invalid format diff output format %s", d.outputFormat)
 	}
 }
 
 // DiffManifest is an alias for Diff for backward compatibility.
-func (f *Differ) DiffManifest(file *Document) error {
-	return f.Diff(file)
+func (d *Differ) DiffManifest(file *Document) error {
+	return d.Diff(file)
 }
