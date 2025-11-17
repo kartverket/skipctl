@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/kartverket/skipctl/pkg/constants"
+	"github.com/kartverket/skipctl/pkg/logging"
 	"github.com/kartverket/skipctl/pkg/manifest"
 	"github.com/kartverket/skipctl/pkg/utils"
 	"github.com/spf13/cobra"
@@ -57,7 +58,7 @@ func runRender(_ *cobra.Command, args []string) error {
 
 	err = processor.ProcessDocuments(
 		manifestFiles,
-		renderer.RenderManifest,
+		renderer.Render,
 	)
 
 	return err
@@ -65,5 +66,5 @@ func runRender(_ *cobra.Command, args []string) error {
 
 func init() {
 	manifestCmd.AddCommand(renderCmd)
-	renderer = manifest.NewRenderer()
+	renderer = manifest.NewRenderer(logging.RawLogger())
 }

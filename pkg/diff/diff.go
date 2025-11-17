@@ -12,6 +12,7 @@ const (
 	colorRed   = "\x1b[31m"
 	colorGreen = "\x1b[32m"
 	colorReset = "\x1b[0m"
+	textBold   = "\033[1m"
 )
 
 var diffSymbolMap = map[string]string{
@@ -128,8 +129,12 @@ func LCS(a, b string) ([]*ManifestDiff, bool) {
 	return diffs, hasDiff
 }
 
-func DiffsToPrettyPrint(diffs []*ManifestDiff) string {
+func DiffsToPrettyPrint(diffs []*ManifestDiff, filename string) string {
 	var out strings.Builder
+
+	out.WriteString(fmt.Sprintf("%s%s%s\n", textBold, filename, colorReset))
+	out.WriteString(formatPrettyHeader(diffs))
+
 	for _, d := range diffs {
 		out.WriteString(fmt.Sprintf("%s%d %s %s%s\n", diffColorMap[d.Type], d.Line, diffSymbolMap[d.Type], d.Text, colorReset))
 	}
@@ -248,6 +253,32 @@ func formatPatchHunk(hunk []*ManifestDiff) string {
 	fmt.Fprintf(&h, "@@ -%d,%d +%d,%d @@\n", startLineRemote, del+eql, startLineLocal, ins+eql)
 	h.WriteString(b.String())
 	return h.String()
+}
+
+func formatPrettyHeader(diffs []*ManifestDiff) string {
+	startLineRemote, startLineLocal := 0, 0
+	ins, del, eql := 0, 0, 0
+	for _, h := range diffs {
+		switch h.Type {
+		case constants.Deletion:
+			if startLineRemote == 0 {
+				startLineRemote = h.Line
+			}
+			del++
+		case constants.Insertion:
+			if startLineLocal == 0 {
+				startLineLocal = h.Line
+			}
+			ins++
+		case constants.Equals:
+			eql++
+		}
+	}
+	if startLineRemote == 0 {
+		startLineRemote = startLineLocal - 1
+	}
+
+	return fmt.Sprintf("%s@@ %s-%d,%d %s+%d,%d @@%s\n", textBold, colorRed, startLineRemote, del+eql, colorGreen, startLineLocal, ins+eql, colorReset)
 }
 
 func filterNonEqualDiffs(diffs []*ManifestDiff) []*ManifestDiff {
