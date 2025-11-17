@@ -151,7 +151,7 @@ func envKind() string {
 
 // extractOrg extracts the organization/owner from a "owner/repo" string.
 func extractOrg(repoSlug string) string {
-	parts := strings.SplitN(repoSlug, "/", 2)
+	parts := strings.SplitN(repoSlug, "/", repoSlugSplitLimit)
 	if len(parts) > 0 && parts[0] != "" {
 		return parts[0]
 	}
@@ -194,12 +194,12 @@ func hostHash(isCI bool, ciRepo string) (string, error) {
 	if err != nil {
 		return "unknown", fmt.Errorf("failed to get local ID: %w", err)
 	}
-	
+
 	// For CI: include repository in hash to distinguish between different repos
 	if isCI && ciRepo != "" {
 		id = id + ":" + ciRepo
 	}
-	
+
 	h := sha256.Sum256([]byte(id))
 	return hex.EncodeToString(h[:]), nil
 }
