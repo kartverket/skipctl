@@ -10,6 +10,7 @@ import (
 	"sync"
 
 	slogcontext "github.com/PumpkinSeed/slog-context"
+	"github.com/fatih/color"
 	"github.com/pkg/errors"
 	"github.com/yannh/kubeconform/pkg/validator"
 )
@@ -30,6 +31,9 @@ type stdoutCtxKey struct{}
 type splitHandler struct {
 	stdout, stderr slog.Handler
 }
+
+// Style used for error messages. Red background with white text.
+var errStyle = color.New(color.FgWhite, color.BgRed).SprintFunc()
 
 func (h *splitHandler) Enabled(ctx context.Context, level slog.Level) bool {
 	// Delegate; assume same levels configured on both.
@@ -134,8 +138,9 @@ func LogValidationErrors(filename string, validationErrors []validator.Validatio
 		return
 	}
 
-	// Print the red ERROR header with filename
-	rawLogger.Error(fmt.Sprintf("\033[37;41mERROR:\033[0m file is invalid at %s\n", filename))
+	rawLogger.Error(
+		errStyle("ERROR:") + fmt.Sprintf(" file is invalid at %s", filename),
+	)
 
 	// Print each validation error
 	for _, ve := range validationErrors {
