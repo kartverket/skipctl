@@ -52,16 +52,26 @@ func (v *Validator) validateJsonnet(file *Document) error {
 		logging.LogValidationErrors(file.Name, nil, err)
 		return err
 	}
-	res, k8err := v.k8s.validateK8sSchema(file.Name, content)
+	res, results, k8err := v.k8s.validateK8sSchema(file.Name, content)
+
+	// Log validation errors for each result
+	for _, result := range results {
+		logging.LogValidationErrors(file.Name, result.ValidationErrors, result.Err)
+	}
 
 	v.countValidateRes(&res)
 	return k8err
 }
 
 func (v *Validator) validateYaml(d *Document) error {
-	result, jerr := v.k8s.validateK8sSchema(d.Name, d.Content)
+	result, results, jerr := v.k8s.validateK8sSchema(d.Name, d.Content)
+
+	// Log validation errors for each result
+	for _, r := range results {
+		logging.LogValidationErrors(d.Name, r.ValidationErrors, r.Err)
+	}
+
 	v.countValidateRes(&result)
-	logging.LogValidationErrors(d.Name, nil, jerr)
 	return jerr
 }
 func (v *Validator) countValidateRes(result *ValidateResult) {
