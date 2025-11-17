@@ -95,11 +95,11 @@ func (k8 *K8sValidator) processValidationResults(filename string, results []vali
 
 		case validator.Invalid:
 			invalidCount++
-			err = fmt.Errorf("file is invalid: filename=%s, error=%v", filename, result.ValidationErrors)
+			err = fmt.Errorf("file is invalid: filename=%s, errors=%v", filename, result.ValidationErrors)
 
 		case validator.Error:
 			errorCount++
-			err = fmt.Errorf("error processing file: filename=%s, error=%v", filename, result.Err.Error())
+			err = fmt.Errorf("error processing file: filename=%s, errors=%v", filename, result.Err.Error())
 
 		case validator.Skipped:
 			skippedCount++
