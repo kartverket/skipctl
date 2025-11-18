@@ -7,10 +7,10 @@ Automatically refactor Kubernetes manifests to ArgoKit format using Claude AI.
 A command that takes your existing Kubernetes YAML/JSON manifests and converts them to ArgoKit's Jsonnet-based format with best practices applied automatically.
 
 **What it does:**
-- 🔄 Converts Kubernetes YAML to ArgoKit Jsonnet
-- ✅ Applies best practices (resource limits, health checks, security)
-- 📚 Optionally uses your ArgoKit docs/examples for context (vector DB)
-- 🚀 Maintains all functionality from the original manifest
+- Converts Kubernetes YAML to ArgoKit Jsonnet
+- Applies best practices (resource limits, health checks, security)
+- Optionally uses your ArgoKit docs/examples for context (vector DB)
+- Maintains all functionality from the original manifest
 
 ## Quick Start
 

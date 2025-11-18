@@ -15,39 +15,6 @@ const (
 	claudeAPIVersion = "2023-06-01"
 )
 
-const defaultSystemPrompt = `You are Mai, an AI assistant built into Skipctl - a tool for managing Kubernetes manifests with ArgoKit.
-
-Your role is to help users work with manifest files, validate configurations, and understand their deployments.
-
-## Your personality:
-- You are helpful, concise, and technical
-- You explain things clearly but don't over-explain
-- You use Norwegian when the user speaks Norwegian, English otherwise
-- You never use emojis
-
-## Your capabilities:
-You have access to these tools to help users:
-- render_manifest: Show what a manifest will deploy
-- diff_manifest: Compare changes against git history
-- validate_manifest: Check if manifests are valid
-- format_manifest: Format manifest files
-- list_manifests: Find manifest files in directories
-
-## Guidelines:
-1. Always validate paths before suggesting operations
-2. When showing diffs, explain what changed and why it matters
-3. If a manifest has errors, explain how to fix them
-4. Suggest best practices for ArgoKit when relevant
-5. If you're unsure, say so - don't make up information
-6. Keep responses focused and actionable
-
-## Security:
-- You can only access files in the current working directory
-- You respect read-only mode when enabled
-- You explain security restrictions when they prevent operations
-
-Remember: You're here to make working with Skipctl easier and help users understand their Kubernetes manifests better.`
-
 // ClaudeClient handles communication with Claude API
 type ClaudeClient struct {
 	apiKey       string
@@ -63,10 +30,9 @@ func NewClaudeClient(apiKey string, model string) *ClaudeClient {
 		model = "claude-3-haiku-20240307"
 	}
 	return &ClaudeClient{
-		apiKey:       apiKey,
-		model:        model,
-		httpClient:   &http.Client{Timeout: 60 * time.Second},
-		systemPrompt: defaultSystemPrompt,
+		apiKey:     apiKey,
+		model:      model,
+		httpClient: &http.Client{Timeout: 60 * time.Second},
 	}
 }
 
@@ -211,86 +177,4 @@ func (c *ClaudeClient) SendMessage(ctx context.Context, messages []Message, tool
 	}
 
 	return &response, nil
-}
-
-// GetAvailableTools returns the tools that can be used with skipctl
-func GetAvailableTools() []Tool {
-	return []Tool{
-		{
-			Name:        "render_manifest",
-			Description: "Render a manifest file (Jsonnet/YAML/Kustomize) to see the final YAML output. Use this to preview what will be deployed.",
-			InputSchema: map[string]interface{}{
-				"type": "object",
-				"properties": map[string]interface{}{
-					"file": map[string]interface{}{
-						"type":        "string",
-						"description": "Path to manifest file (relative or absolute)",
-					},
-				},
-				"required": []string{"file"},
-			},
-		},
-		{
-			Name:        "diff_manifest",
-			Description: "Compare manifest changes between current state and a git reference. Shows what will change if the manifest is applied.",
-			InputSchema: map[string]interface{}{
-				"type": "object",
-				"properties": map[string]interface{}{
-					"file": map[string]interface{}{
-						"type":        "string",
-						"description": "Path to manifest file",
-					},
-					"ref": map[string]interface{}{
-						"type":        "string",
-						"description": "Git reference to compare against (default: HEAD)",
-					},
-				},
-				"required": []string{"file"},
-			},
-		},
-		{
-			Name:        "validate_manifest",
-			Description: "Validate manifest syntax and structure. Checks if the file can be parsed and rendered.",
-			InputSchema: map[string]interface{}{
-				"type": "object",
-				"properties": map[string]interface{}{
-					"file": map[string]interface{}{
-						"type":        "string",
-						"description": "Path to manifest file",
-					},
-				},
-				"required": []string{"file"},
-			},
-		},
-
-		{
-			Name:        "format_manifest",
-			Description: "Format a manifest file according to standard conventions (YAML/Jsonnet).",
-			InputSchema: map[string]interface{}{
-				"type": "object",
-				"properties": map[string]interface{}{
-					"file": map[string]interface{}{
-						"type":        "string",
-						"description": "Path to manifest file",
-					},
-				},
-				"required": []string{"file"},
-			},
-		},
-		{
-			Name:        "list_manifests",
-			Description: "List all manifest files in the current directory or workspace.",
-			InputSchema: map[string]interface{}{
-				"type": "object",
-				"properties": map[string]interface{}{
-					"path": map[string]interface{}{
-						"type":        "string",
-						"description": "Directory path to search (default: current directory)",
-						"default":     ".",
-					},
-				},
-				"required": []string{},
-			},
-		},
-	}
 }
