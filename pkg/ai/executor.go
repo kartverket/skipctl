@@ -68,7 +68,7 @@ func (te *ToolExecutor) renderManifest(input map[string]interface{}) (string, er
 
 	buf := &bytes.Buffer{}
 	renderer := manifest.NewRenderer(logging.NewRawLoggerTo(buf))
-	if err := renderer.RenderManifest(doc); err != nil {
+	if err := renderer.Render(doc); err != nil {
 		return "", fmt.Errorf("failed to render manifest: %w", err)
 	}
 
@@ -99,7 +99,8 @@ func (te *ToolExecutor) diffManifest(input map[string]interface{}) (string, erro
 
 	// Create differ with pretty output
 	buf := &bytes.Buffer{}
-	differ := manifest.NewDiffer(ref, "high", "pretty", 3)
+	gitSource := manifest.NewGitSource(ref)
+	differ := manifest.NewDiffer(gitSource, logging.NewRawLoggerTo(buf), "high", "pretty", 3)
 
 	// Temporarily capture output
 	oldLogger := logging.RawLogger()
@@ -140,7 +141,7 @@ func (te *ToolExecutor) validateManifest(input map[string]interface{}) (string, 
 	// Try to render to validate further
 	buf := &bytes.Buffer{}
 	renderer := manifest.NewRenderer(logging.NewRawLoggerTo(buf))
-	if err := renderer.RenderManifest(doc); err != nil {
+	if err := renderer.Render(doc); err != nil {
 		return fmt.Sprintf("❌ Manifest %s failed to render: %v", file, err), nil
 	}
 

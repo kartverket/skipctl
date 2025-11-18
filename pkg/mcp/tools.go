@@ -218,7 +218,7 @@ func (s *Server) renderManifest(ctx context.Context, args json.RawMessage) (Tool
 
 	buf := &bytes.Buffer{}
 	renderer := manifest.NewRenderer(logging.NewRawLoggerTo(buf))
-	if err := renderer.RenderManifest(doc); err != nil {
+	if err := renderer.Render(doc); err != nil {
 		return ToolCallResult{}, fmt.Errorf("failed to render manifest: %w", err)
 	}
 
@@ -267,9 +267,11 @@ func (s *Server) diffManifest(ctx context.Context, args json.RawMessage) (ToolCa
 	doc := docs[0]
 
 	// Create differ with pretty output (easier for AI to read)
-	differ := manifest.NewDiffer(params.Ref, "high", "pretty", 3)
+	buf := &bytes.Buffer{}
+	gitSource := manifest.NewGitSource(params.Ref)
+	differ := manifest.NewDiffer(gitSource, logging.NewRawLoggerTo(buf), "high", "pretty", 3)
 
-	if err := differ.DiffManifest(doc); err != nil {
+	if err := differ.Diff(doc); err != nil {
 		return ToolCallResult{}, fmt.Errorf("failed to diff manifest: %w", err)
 	}
 
@@ -310,7 +312,7 @@ func (s *Server) validateManifest(ctx context.Context, args json.RawMessage) (To
 	// Try to render to validate further
 	buf := &bytes.Buffer{}
 	renderer := manifest.NewRenderer(logging.NewRawLoggerTo(buf))
-	if err := renderer.RenderManifest(doc); err != nil {
+	if err := renderer.Render(doc); err != nil {
 		return ToolCallResult{
 			Content: []ContentBlock{
 				{
