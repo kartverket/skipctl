@@ -118,7 +118,9 @@ func (c *Collector) CaptureCommand(command string, args []string, flags []string
 		if repo := os.Getenv("GITHUB_REPOSITORY"); repo != "" {
 			ciRepo = repo
 			props["ci_repository"] = repo
-			props["ci_org"] = extractOrg(repo)
+		}
+		if org := os.Getenv("GITHUB_REPOSITORY_OWNER"); org != "" {
+			props["ci_org"] = org
 		}
 		if workflow := os.Getenv("GITHUB_WORKFLOW"); workflow != "" {
 			props["ci_workflow"] = workflow
