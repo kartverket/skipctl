@@ -10,7 +10,6 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
-	"strings"
 	"time"
 
 	"github.com/kartverket/skipctl/pkg/logging"
@@ -149,15 +148,6 @@ func envKind() string {
 		return "ci"
 	}
 	return "local"
-}
-
-// extractOrg extracts the organization/owner from a "owner/repo" string.
-func extractOrg(repoSlug string) string {
-	parts := strings.SplitN(repoSlug, "/", repoSlugSplitLimit)
-	if len(parts) > 0 && parts[0] != "" {
-		return parts[0]
-	}
-	return "unknown"
 }
 
 func readOrCreateLocalID(isCI bool) (string, error) {
