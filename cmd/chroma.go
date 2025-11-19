@@ -62,9 +62,9 @@ Examples:
 			return fmt.Errorf("Chroma server not available at %s\n\nStart with: docker-compose -f docker-compose.chroma.yml up -d", chromaURL)
 		}
 
-		fmt.Printf("📊 Chroma Server: %s\n", chromaURL)
-		fmt.Printf("📁 Documentation: %s\n", docsPath)
-		fmt.Printf("📚 Collection: %s\n\n", chromaCollection)
+		fmt.Printf("Chroma Server: %s\n", chromaURL)
+		fmt.Printf("Documentation: %s\n", docsPath)
+		fmt.Printf("Collection: %s\n\n", chromaCollection)
 
 		// Get or create collection
 		collection, err := client.GetOrCreateCollection(ctx, chromaCollection)
@@ -72,16 +72,16 @@ Examples:
 			return fmt.Errorf("failed to create collection: %w", err)
 		}
 
-		fmt.Printf("✅ Collection ready (ID: %s)\n\n", collection.ID)
+		fmt.Printf("Collection ready (ID: %s)\n\n", collection.ID)
 
 		// Index documents
-		fmt.Println("📚 Indexing documents...")
+		fmt.Println("Indexing documents...")
 		count, err := client.LoadDocumentsFromDirectory(ctx, collection.Name, docsPath)
 		if err != nil {
 			return fmt.Errorf("failed to index documents: %w", err)
 		}
 
-		fmt.Printf("\n✅ Indexed %d documents into collection '%s'\n\n", count, chromaCollection)
+		fmt.Printf("\nIndexed %d documents into collection '%s'\n\n", count, chromaCollection)
 		fmt.Println("Now you can use refactor with this collection:")
 		fmt.Printf("  skipctl refactor deployment.yaml --collection %s -o app.jsonnet\n", chromaCollection)
 
@@ -111,7 +111,7 @@ Examples:
 			return fmt.Errorf("Chroma server not available at %s", chromaURL)
 		}
 
-		fmt.Printf("🔍 Searching: \"%s\"\n", query)
+		fmt.Printf("Searching: \"%s\"\n", query)
 		fmt.Printf("Collection: %s\n\n", chromaCollection)
 
 		results, err := client.Query(ctx, chromaCollection, query, numResults)

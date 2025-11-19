@@ -149,7 +149,7 @@ Then try refactoring again.`, refactorCollection, refactorCollection)
 		}
 
 		if len(docs) == 0 {
-			return fmt.Errorf(`❌ No ArgoKit documentation found in collection '%s'.
+			return fmt.Errorf(`No ArgoKit documentation found in collection '%s'.
 
 Please index your ArgoKit documentation first:
   skipctl chroma index ./argokit-knowledge --collection %s
@@ -159,7 +159,7 @@ Or use the example docs in the repo:
 		}
 
 		vectorContext := strings.Join(docs, "\n\n---\n\n")
-		fmt.Printf("✅ Retrieved %d relevant ArgoKit patterns\n", len(docs))
+		fmt.Printf("Retrieved %d relevant ArgoKit patterns\n", len(docs))
 
 		// Build system prompt with ArgoKit context
 		systemPrompt := refactorSystemPrompt
@@ -211,7 +211,7 @@ Or use the example docs in the repo:
 
 		// Dry-run: print to stdout
 		if refactorDryRun {
-			fmt.Println("\n✅ Refactored ArgoKit code (dry-run):\n")
+			fmt.Println("\nRefactored ArgoKit code (dry-run):\n")
 			fmt.Println(refactoredCode)
 			return nil
 		}
@@ -235,8 +235,8 @@ Or use the example docs in the repo:
 			return fmt.Errorf("failed to write output file: %w", err)
 		}
 
-		fmt.Printf("✅ Refactored manifest written to: %s\n", outputFile)
-		fmt.Printf("📊 Input tokens: %d, Output tokens: %d\n", resp.Usage.InputTokens, resp.Usage.OutputTokens)
+		fmt.Printf("Refactored manifest written to: %s\n", outputFile)
+		fmt.Printf("Input tokens: %d, Output tokens: %d\n", resp.Usage.InputTokens, resp.Usage.OutputTokens)
 
 		return nil
 	},
