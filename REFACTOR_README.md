@@ -39,6 +39,27 @@ skipctl refactor deployment.yaml -o argokit/app.jsonnet
 skipctl refactor deployment.yaml --dry-run
 ```
 
+### 3. Use Vector Database for Better Results (Optional)
+
+```bash
+# Start Chroma DB
+docker run -d -p 8000:8000 chromadb/chroma
+
+# Index your ArgoKit documentation once
+skipctl refactor dummy.yaml \
+  --vector-db ./argokit-docs \
+  --index-docs \
+  --collection my-argokit \
+  --dry-run
+
+# Refactor with intelligent context
+skipctl refactor deployment.yaml \
+  --collection my-argokit \
+  -o app.jsonnet
+```
+
+**📖 See [CHROMA_SETUP.md](./CHROMA_SETUP.md) for complete vector database guide.**
+
 ## Usage Examples
 
 ### Basic Refactoring

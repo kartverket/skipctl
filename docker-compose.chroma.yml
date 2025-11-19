@@ -1,0 +1,40 @@
+version: '3.8'
+
+services:
+  chroma:
+    image: chromadb/chroma:latest
+    container_name: skipctl-chroma
+    ports:
+      - "8000:8000"
+    volumes:
+      # Persistent storage for your vector database
+      - ./chroma-data:/chroma/chroma
+    environment:
+      - IS_PERSISTENT=TRUE
+      - ANONYMIZED_TELEMETRY=FALSE
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/v1/heartbeat"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+# Usage:
+# 
+# Start Chroma:
+#   docker-compose up -d
+#
+# View logs:
+#   docker-compose logs -f chroma
+#
+# Stop Chroma:
+#   docker-compose down
+#
+# Stop and remove data:
+#   docker-compose down -v
+#   rm -rf chroma-data/
+#
+# Check status:
+#   docker-compose ps
+#   curl http://localhost:8000/api/v1/heartbeat
