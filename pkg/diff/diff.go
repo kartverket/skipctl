@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/kartverket/skipctl/pkg/constants"
+	"github.com/sergi/go-diff/diffmatchpatch"
 )
 
 const (
@@ -39,94 +40,93 @@ type JSONOutput struct {
 	Diffs []*ManifestDiff `json:"diffs"`
 }
 
-func lcs(a, b []string) [][]int {
-	// Returns a 2D table of LCS lengths
-	m, n := len(a), len(b)
-	dp := make([][]int, m+1)
-	for i := range dp {
-		dp[i] = make([]int, n+1)
-	}
-	for i := m - 1; i >= 0; i-- {
-		for j := n - 1; j >= 0; j-- {
-			switch {
-			case a[i] == b[j]:
-				dp[i][j] = dp[i+1][j+1] + 1
-			case dp[i+1][j] >= dp[i][j+1]:
-				dp[i][j] = dp[i+1][j]
-			default:
-				dp[i][j] = dp[i][j+1]
-			}
-		}
-	}
-
-	return dp
-}
-
 func splitLines(s string) []string {
 	if s == "" {
 		return []string{}
 	}
 	return strings.Split(s, "\n")
 }
-
-func LCS(a, b string) ([]*ManifestDiff, bool) {
-	linesA := splitLines(a)
-	linesB := splitLines(b)
-
-	dp := lcs(linesA, linesB)
-	i, j := 0, 0
-	diffs := []*ManifestDiff{}
+func convertToManifestDiff(dmpDiffs []diffmatchpatch.Diff) ([]*ManifestDiff, bool) {
+	diffs := make([]*ManifestDiff, 0)
 	hasDiff := false
+	lineA := 1
+	lineB := 1
 
-	for i < len(linesA) && j < len(linesB) {
-		switch {
-		case linesA[i] == linesB[j]:
-			diffs = append(diffs, &ManifestDiff{
-				Type: constants.Equals,
-				Text: linesA[i],
-				Line: i + 1,
-			})
-			i++
-			j++
-		case dp[i+1][j] >= dp[i][j+1]:
-			diffs = append(diffs, &ManifestDiff{
-				Type: constants.Deletion,
-				Text: linesA[i],
-				Line: i + 1,
-			})
+	for _, d := range dmpDiffs {
+		lines := splitLines(d.Text)
+		switch d.Type {
+		case diffmatchpatch.DiffEqual:
+			diffs, lineA, lineB = processEqualLines(diffs, lines, lineA, lineB)
+		case diffmatchpatch.DiffDelete:
+			diffs, lineA = processDeletionLines(diffs, lines, lineA)
 			hasDiff = true
-			i++
-		default:
-			diffs = append(diffs, &ManifestDiff{
-				Type: constants.Insertion,
-				Text: linesB[j],
-				Line: j + 1,
-			})
+		case diffmatchpatch.DiffInsert:
+			diffs, lineB = processInsertionLines(diffs, lines, lineB)
 			hasDiff = true
-			j++
 		}
 	}
+	return diffs, hasDiff
+}
 
-	// Handle trailing insertions/deletions
-	for i < len(linesA) {
+func processEqualLines(diffs []*ManifestDiff, lines []string, lineA, lineB int) ([]*ManifestDiff, int, int) {
+	for i, line := range lines {
+		if shouldSkipLine(i, len(lines), line) {
+			continue
+		}
+		diffs = append(diffs, &ManifestDiff{
+			Type: constants.Equals,
+			Text: line,
+			Line: lineA,
+		})
+		lineA++
+		lineB++
+	}
+	return diffs, lineA, lineB
+}
+
+func processDeletionLines(diffs []*ManifestDiff, lines []string, lineA int) ([]*ManifestDiff, int) {
+	for i, line := range lines {
+		if shouldSkipLine(i, len(lines), line) {
+			continue
+		}
 		diffs = append(diffs, &ManifestDiff{
 			Type: constants.Deletion,
-			Text: linesA[i],
-			Line: i,
+			Text: line,
+			Line: lineA,
 		})
-		hasDiff = true
-		i++
+		lineA++
 	}
-	for j < len(linesB) {
+	return diffs, lineA
+}
+
+func processInsertionLines(diffs []*ManifestDiff, lines []string, lineB int) ([]*ManifestDiff, int) {
+	for i, line := range lines {
+		if shouldSkipLine(i, len(lines), line) {
+			continue
+		}
 		diffs = append(diffs, &ManifestDiff{
 			Type: constants.Insertion,
-			Text: linesB[j],
-			Line: j,
+			Text: line,
+			Line: lineB,
 		})
-		hasDiff = true
-		j++
+		lineB++
 	}
-	return diffs, hasDiff
+	return diffs, lineB
+}
+
+func shouldSkipLine(index, totalLines int, line string) bool {
+	// Skip the last empty line if text ended with newline
+	return index == totalLines-1 && line == ""
+}
+func MainDiff(a, b string) ([]*ManifestDiff, bool) {
+	dmp := diffmatchpatch.New()
+	// Convert to runes for fast diff algorithm with DiffMainRunes
+	textA, textB, lineArray := dmp.DiffLinesToRunes(a, b)
+	dmpDiffs := dmp.DiffMainRunes(textA, textB, true)
+
+	// Convert back from encoded strings to lines
+	dmpDiffs = dmp.DiffCharsToLines(dmpDiffs, lineArray)
+	return convertToManifestDiff(dmpDiffs)
 }
 
 func DiffsToPrettyPrint(diffs []*ManifestDiff, filename string) string {

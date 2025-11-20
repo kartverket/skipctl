@@ -4,7 +4,9 @@ import (
 	"bytes"
 	"fmt"
 	"log/slog"
+	"os"
 	"path/filepath"
+	"runtime/pprof"
 
 	"github.com/kartverket/skipctl/pkg/diff"
 	"github.com/kartverket/skipctl/pkg/logging"
@@ -121,6 +123,13 @@ func (d *KustomizeDiffer) Diff(file *Document) ([]*diff.ManifestDiff, bool, erro
 	}
 	prevRendered := d.prevBuffer.String()
 
-	diffs, hasChanges := diff.LCS(prevRendered, rendered)
+	diffs, hasChanges := diff.MainDiff(prevRendered, rendered)
+
+	dir := filepath.Dir(file.Name)
+	folder := filepath.Base(dir)
+	f, _ := os.Create(fmt.Sprintf("./profiles/%s-after-diff.prof", folder))
+	defer f.Close()
+	_ = pprof.WriteHeapProfile(f)
+
 	return diffs, hasChanges, nil
 }
