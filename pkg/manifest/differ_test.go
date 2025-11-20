@@ -62,7 +62,7 @@ func TestDiffManifestJsonnetEqual(t *testing.T) {
 }
 `
 	// Mock diffs with two equal manifests
-	_, hasChanges := diff.LCS(jsonnetManifest1, jsonnetManifest2)
+	_, hasChanges := diff.CalculateDiff(jsonnetManifest1, jsonnetManifest2)
 	require.False(t, hasChanges, "unepected should have zero changes but registered some")
 }
 
@@ -94,7 +94,7 @@ spec:
     max: 5
 `
 	// Mock diffs with two equal manifests
-	_, hasChanges := diff.LCS(yamlManifest1, yamlManifest2)
+	_, hasChanges := diff.CalculateDiff(yamlManifest1, yamlManifest2)
 	require.False(t, hasChanges, "unepected should have zero changes but registered some")
 }
 
@@ -132,7 +132,7 @@ func TestDiffManifestJsonnetUnequal(t *testing.T) {
   },
 }`
 	// Mock diffs with two different manifests
-	diffs, hasChanges := diff.LCS(jsonnetManifest1, jsonnetManifest2)
+	diffs, hasChanges := diff.CalculateDiff(jsonnetManifest1, jsonnetManifest2)
 	require.True(t, hasChanges, "expected changes but none were registered")
 	// Count diff types, this should be 3 insertions and deletions from these manifests
 	insertionCount, deletionCount, equalCount := countDiffTypes(diffs)
@@ -168,7 +168,7 @@ spec:
     max: 15`
 
 	// Mock diffs with two different manifests
-	diffs, hasChanges := diff.LCS(yamlManifest1, yamlManifest2)
+	diffs, hasChanges := diff.CalculateDiff(yamlManifest1, yamlManifest2)
 	require.True(t, hasChanges, "expected changes but none were registered")
 	// Count diff types, this should be 3 insertions and deletions from these manifests
 	insertionCount, deletionCount, equalCount := countDiffTypes(diffs)
@@ -194,7 +194,7 @@ spec:
     max: 15`
 
 	// Mock diffs with two different manifests
-	diffs, hasChanges := diff.LCS(yamlManifest1, yamlManifest2)
+	diffs, hasChanges := diff.CalculateDiff(yamlManifest1, yamlManifest2)
 	require.True(t, hasChanges, "expected changes but none were registered")
 	// Count diff types, this should be 3 insertions and deletions from these manifests
 	insertionCount, deletionCount, equalCount := countDiffTypes(diffs)

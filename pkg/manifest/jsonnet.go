@@ -97,6 +97,6 @@ func (d *JsonnetDiffer) Diff(file *Document) ([]*diff.ManifestDiff, bool, error)
 	}
 	prevRendered := d.gitBuffer.String()
 
-	diffs, hasChanges := diff.LCS(prevRendered, rendered)
+	diffs, hasChanges := diff.CalculateDiff(prevRendered, rendered)
 	return diffs, hasChanges, nil
 }
