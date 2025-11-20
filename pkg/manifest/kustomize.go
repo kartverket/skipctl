@@ -121,7 +121,7 @@ func (d *KustomizeDiffer) Diff(file *Document) ([]*diff.ManifestDiff, bool, erro
 	}
 	prevRendered := d.prevBuffer.String()
 
-	diffs, hasChanges := diff.MainDiff(prevRendered, rendered)
+	diffs, hasChanges := diff.CalculateDiff(prevRendered, rendered)
 
 	return diffs, hasChanges, nil
 }

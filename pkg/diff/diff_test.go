@@ -9,11 +9,11 @@ import (
 	"github.com/kartverket/skipctl/pkg/constants"
 )
 
-func TestMainDiff_NoDiff(t *testing.T) {
+func TestCalculateDiff_NoDiff(t *testing.T) {
 	a := "line1\nline2\nline3"
 	b := "line1\nline2\nline3"
 
-	diffs, hasDiff := MainDiff(a, b)
+	diffs, hasDiff := CalculateDiff(a, b)
 
 	if hasDiff {
 		t.Fatalf("expected hasDiff=false, got true")
@@ -30,7 +30,7 @@ func TestMainDiff_NoDiff(t *testing.T) {
 		}
 	}
 }
-func TestMainDiff_InsertDelete(t *testing.T) {
+func TestCalculateDiff_InsertDelete(t *testing.T) {
 	old := `{
   person: {
 	name: 'Alice',
@@ -54,7 +54,7 @@ func TestMainDiff_InsertDelete(t *testing.T) {
   },
 }
 `
-	diffs, hasDiff := MainDiff(old, updated)
+	diffs, hasDiff := CalculateDiff(old, updated)
 	if !hasDiff {
 		t.Fatalf("expected hasDiff=true, but got false")
 	}
@@ -110,11 +110,11 @@ func TestMainDiff_InsertDelete(t *testing.T) {
 		t.Fatalf("unexpected text sequence:\ngot:  %v\nwant: %v", gotTexts, expectedTexts)
 	}
 }
-func TestMainDiffOneString_InsertDelete(t *testing.T) {
+func TestCalculateDiffOneString_InsertDelete(t *testing.T) {
 	a := "a1\na2\na3"
 	b := "a1\nb2\na3\nb4"
 
-	diffs, hasDiff := MainDiff(a, b)
+	diffs, hasDiff := CalculateDiff(a, b)
 	if !hasDiff {
 		t.Fatalf("expected hasDiff=true, got false")
 	}

@@ -118,7 +118,7 @@ func shouldSkipLine(index, totalLines int, line string) bool {
 	// Skip the last empty line if text ended with newline
 	return index == totalLines-1 && line == ""
 }
-func MainDiff(a, b string) ([]*ManifestDiff, bool) {
+func CalculateDiff(a, b string) ([]*ManifestDiff, bool) {
 	dmp := diffmatchpatch.New()
 	// Convert to runes for fast diff algorithm with DiffMainRunes
 	textA, textB, lineArray := dmp.DiffLinesToRunes(a, b)
