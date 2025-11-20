@@ -192,7 +192,7 @@
     {
       "group": "security.istio.io",
       "kind": "PeerAuthentication",
-      "version": "v1beta1"
+      "version": "v1"
     }
   ]
 }
