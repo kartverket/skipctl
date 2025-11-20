@@ -110,11 +110,15 @@
               "type": "string"
             },
             "logoutPath": {
-              "description": "LogoutPath specifies which URI to redirect the user to when signing out.\nThis will end the session for the application, but not end the session towards the configured identity provider.\nThis feature will hopefully soon be available in later releases of Istio, ref. [envoy/envoyproxy](https://github.com/envoyproxy/envoy/commit/c12fefc11f7adc9cd404287eb674ba838c2c8bd0).",
+              "description": "LogoutPath specifies which URI to redirect the user to when signing out.\nThis will end the session for the application and also redirect the user\nto log out towards the configured identity provider (RP-initiated logout).\nIf omitted, a default path of /logout is used.",
+              "type": "string"
+            },
+            "postLogoutRedirectUri": {
+              "description": "PostLogoutRedirectURI specifies which URI to redirect the user to after\nsuccessfully signed out towards the configured identity provider (RP-initiated logout).\nIf omitted, no post_logout_redirect_uri will be used.",
               "type": "string"
             },
             "redirectPath": {
-              "description": "RedirectPath specifies which path to redirect the user to after completing the OIDC flow.",
+              "description": "RedirectPath specifies which path to redirect the user to after completing the OIDC flow.\nIf omitted, a default path of /oauth2/callback is used.",
               "type": "string"
             },
             "scopes": {
@@ -127,8 +131,6 @@
           },
           "required": [
             "enabled",
-            "logoutPath",
-            "redirectPath",
             "scopes"
           ],
           "type": "object"
