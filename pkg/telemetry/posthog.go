@@ -96,18 +96,40 @@ func (c *Collector) CaptureCommand(command string, args []string, flags []string
 	if runErr != nil {
 		errMsg = runErr.Error()
 	}
+
+	envKindVal := envKind()
+	isCI := envKindVal == "ci"
+
 	props := map[string]any{
 		"command":   command,
 		"args":      args,
 		"flags":     flags,
 		"had_error": runErr != nil,
 		"error_msg": errMsg,
-		"env_kind":  envKind(),
+		"env_kind":  envKindVal,
 		"time":      time.Now().UTC(),
 		"$ip":       "0", // explicit neutral IP
 	}
-	isCI := envKind() == "ci"
-	distinctID, hErr := hostHash(isCI)
+
+	var ciRepo string
+	// Add GitHub Actions metadata as separate properties for easier filtering
+	if isCI {
+		if repo := os.Getenv("GITHUB_REPOSITORY"); repo != "" {
+			ciRepo = repo
+			props["ci_repository"] = repo
+		}
+		if org := os.Getenv("GITHUB_REPOSITORY_OWNER"); org != "" {
+			props["ci_org"] = org
+		}
+		if workflow := os.Getenv("GITHUB_WORKFLOW"); workflow != "" {
+			props["ci_workflow"] = workflow
+		}
+		if ref := os.Getenv("GITHUB_REF"); ref != "" {
+			props["ci_ref"] = ref
+		}
+	}
+
+	distinctID, hErr := hostHash(isCI, ciRepo)
 	if hErr != nil {
 		c.log.Error("could not get anonymous identity", "error", hErr)
 	}
@@ -120,8 +142,9 @@ func (c *Collector) CaptureCommand(command string, args []string, flags []string
 	}
 }
 
+// envKind returns the environment kind: "local" or "ci".
 func envKind() string {
-	if os.Getenv("CI") == "true" { // this is true for Githhub runners
+	if os.Getenv("CI") == "true" {
 		return "ci"
 	}
 	return "local"
@@ -158,11 +181,17 @@ func readOrCreateLocalID(isCI bool) (string, error) {
 	return hexID, nil
 }
 
-func hostHash(isCI bool) (string, error) {
+func hostHash(isCI bool, ciRepo string) (string, error) {
 	id, err := readOrCreateLocalID(isCI)
 	if err != nil {
 		return "unknown", fmt.Errorf("failed to get local ID: %w", err)
 	}
+
+	// For CI: include repository in hash to distinguish between different repos
+	if isCI && ciRepo != "" {
+		id = id + ":" + ciRepo
+	}
+
 	h := sha256.Sum256([]byte(id))
 	return hex.EncodeToString(h[:]), nil
 }
