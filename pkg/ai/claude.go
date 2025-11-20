@@ -104,11 +104,12 @@ type Tool struct {
 
 // Request represents a request to Claude API
 type Request struct {
-	Model     string    `json:"model"`
-	MaxTokens int       `json:"max_tokens"`
-	Messages  []Message `json:"messages"`
-	Tools     []Tool    `json:"tools,omitempty"`
-	System    string    `json:"system,omitempty"`
+	Model       string    `json:"model"`
+	MaxTokens   int       `json:"max_tokens"`
+	Temperature float64   `json:"temperature,omitempty"`
+	Messages    []Message `json:"messages"`
+	Tools       []Tool    `json:"tools,omitempty"`
+	System      string    `json:"system,omitempty"`
 }
 
 // Response represents Claude API response
@@ -128,11 +129,12 @@ type Response struct {
 // SendMessage sends a message to Claude and returns the response
 func (c *ClaudeClient) SendMessage(ctx context.Context, messages []Message, tools []Tool) (*Response, error) {
 	req := Request{
-		Model:     c.model,
-		MaxTokens: 4096,
-		Messages:  messages,
-		Tools:     tools,
-		System:    c.systemPrompt,
+		Model:       c.model,
+		MaxTokens:   4096,
+		Temperature: 0.3, // Low temperature for factual, deterministic output
+		Messages:    messages,
+		Tools:       tools,
+		System:      c.systemPrompt,
 	}
 
 	jsonData, err := json.Marshal(req)
