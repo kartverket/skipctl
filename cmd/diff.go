@@ -59,24 +59,16 @@ func runDiff(cmd *cobra.Command, _ []string) error {
 	}
 
 	filenames, err := utils.FindFilesWithSuffixes(path, constants.ManifestSuffixes)
+	if err != nil {
+		log.Error("Error collecting files", "error", err.Error())
+		return err
+	}
 
 	// ignore kustomize-files if the --kustomize flag is not set
 	if !kustomizeEnabled {
 		filenames = utils.ExcludeSuffixes(filenames, []string{constants.ManifestKustomizeYaml, constants.ManifestKustomizeYml})
 	}
 
-	isValidDirectoryRef := utils.IsValidDirectoryRef(ref)
-	// If kustomize is enabled, ref must be a valid directory
-	if kustomizeEnabled && !isValidDirectoryRef {
-		refErr := fmt.Errorf("with --kustomize flag, --ref must be a valid directory path: %s", ref)
-		log.Error(refErr.Error())
-		return refErr
-	}
-
-	if err != nil {
-		log.Error("Error collecting files", "error", err.Error())
-		return err
-	}
 	manifestFiles, merr := manifest.FromFiles(filenames)
 	if merr != nil {
 		log.Error("Error collecting manifest files from filenames", "error", merr.Error())
@@ -90,7 +82,15 @@ func runDiff(cmd *cobra.Command, _ []string) error {
 	// Create appropriate source based on ref type
 	var source manifest.Source
 
-	// Try ref as directory first,
+	isValidDirectoryRef := utils.IsValidDirectoryRef(ref)
+	// If kustomize is enabled, ref must be a valid directory
+	if kustomizeEnabled && !isValidDirectoryRef {
+		refErr := fmt.Errorf("with --kustomize flag, --ref must be a valid directory path: %s", ref)
+		log.Error(refErr.Error())
+		return refErr
+	}
+
+	// Try ref as directory first
 	if isValidDirectoryRef {
 		source = manifest.NewDirectorySource(ref, path)
 	} else {
@@ -114,7 +114,7 @@ func runDiff(cmd *cobra.Command, _ []string) error {
 }
 
 func init() {
-	diffCmd.Flags().StringVar(&ref, "ref", "HEAD", "git ref to diff against, use commit hash or branch name (default HEAD)")
+	diffCmd.Flags().StringVar(&ref, "ref", "HEAD", "ref to diff against, use commit hash, branch name or a directory path (default HEAD)")
 	diffCmd.Flags().StringVar(&verbosityLevel, "verbosity", constants.DiffVerbosityFull, "Include entire file contents with diffs")
 	diffCmd.Flags().IntVar(&chunkSize, "chunk-size", constants.DefaultChunkSize, "Number of lines to include above and below a diff line")
 	diffCmd.Flags().StringVar(&diffOutputFormat, "diff-format", constants.DiffOutputPretty, "the output format of the diff (default pretty), allowed (pretty | patch | json)")
