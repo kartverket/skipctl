@@ -152,7 +152,7 @@ func LogValidationErrors(filename string, validationErrors []validator.Validatio
 		errMsg := strings.TrimSpace(err.Error())
 		// Split error message to show hint on separate lines for better readability
 		if strings.Contains(errMsg, "Hint:") {
-			parts := strings.Split(errMsg, "Hint:")
+			parts := strings.SplitN(errMsg, "Hint:", 2)
 			rawLogger.Error(fmt.Sprintf("  — %s\n", parts[0]))
 			rawLogger.Error(fmt.Sprintf("   Hint:%s\n", parts[1]))
 		} else {
