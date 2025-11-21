@@ -94,7 +94,7 @@ func (k8 *K8sValidator) checkIfValidSchema(result validator.Result) error {
 				return fmt.Errorf("%s Hint: The schema for %s with version '%s' was not found.\n   Please verify that the apiVersion is correct and supported.\n   Common causes:\n   • Incorrect apiVersion (e.g., v1beta1)\n   • Unsupported or deprecated API version\n   • Missing CRD schema",
 					errMsg, sig.Kind, sig.Version)
 			}
-			return fmt.Errorf("%s Hint: The schema for %s was not found.\n   Please verify that the apiVersion is correct and supported\n   Common causes:\n   • Incorrect apiVersion (e.g., v1beta1)\n   • Unsupported or deprecated API version\n   • Missing CRD schema",
+			return fmt.Errorf("%s Hint: The schema for %s was not found.\n   Please verify that the apiVersion is correct and supported.\n   Common causes:\n   • Incorrect apiVersion (e.g., v1beta1)\n   • Unsupported or deprecated API version\n   • Missing CRD schema",
 				errMsg, sig.Kind)
 		}
 	}
