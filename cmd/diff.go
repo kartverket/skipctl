@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"fmt"
-	"os"
 	"strings"
 
 	"github.com/kartverket/skipctl/pkg/constants"
@@ -66,6 +65,14 @@ func runDiff(cmd *cobra.Command, _ []string) error {
 		filenames = utils.ExcludeSuffixes(filenames, []string{constants.ManifestKustomizeYaml, constants.ManifestKustomizeYml})
 	}
 
+	isValidDirectoryRef := utils.IsValidDirectoryRef(ref)
+	// If kustomize is enabled, ref must be a valid directory
+	if kustomizeEnabled && !isValidDirectoryRef {
+		refErr := fmt.Errorf("with --kustomize flag, --ref must be a valid directory path: %s", ref)
+		log.Error(refErr.Error())
+		return refErr
+	}
+
 	if err != nil {
 		log.Error("Error collecting files", "error", err.Error())
 		return err
@@ -80,24 +87,20 @@ func runDiff(cmd *cobra.Command, _ []string) error {
 		return nil
 	}
 
-	// Create appropriate source based on kustomize flag
+	// Create appropriate source based on ref type
 	var source manifest.Source
-	if kustomizeEnabled {
-		// Validate that ref is a directory
-		if finfo, ferr := os.Stat(ref); ferr != nil || !finfo.IsDir() {
-			refErr := fmt.Errorf("with --kustomize flag, --ref must be a valid directory path: %s", ref)
-			log.Error(refErr.Error())
-			return refErr
-		}
+
+	// Try ref as directory first,
+	if isValidDirectoryRef {
 		source = manifest.NewDirectorySource(ref, path)
 	} else {
-		// Validate that ref is a valid git reference
-		if !IsValidCommitRef(ref) {
+		if IsValidCommitRef(ref) {
+			source = manifest.NewGitSource(ref)
+		} else {
 			refErr := fmt.Errorf("invalid commit ref %s", ref)
 			log.Error(refErr.Error())
 			return refErr
 		}
-		source = manifest.NewGitSource(ref)
 	}
 
 	processor := manifest.NewDocumentProcessor()

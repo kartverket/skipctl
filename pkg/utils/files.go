@@ -65,6 +65,15 @@ func isKustomizeDir(kustomizeDirs map[string]bool, path string) bool {
 	}
 	return inKustomizeDir
 }
+
+func IsValidDirectoryRef(ref string) bool {
+	finfo, err := os.Stat(ref)
+	if err != nil || !finfo.IsDir() {
+		return false
+	}
+	return true
+}
+
 func FindFilesWithSuffixes(directory string, suffixes []string) ([]string, error) {
 	kustomizeDirs, findKustomizeErr := findKustomizeDirs(directory)
 	if findKustomizeErr != nil {
