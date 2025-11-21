@@ -85,7 +85,7 @@ func (k8 *K8sValidator) checkIfValidSchema(result validator.Result) error {
 	}
 
 	errMsg := result.Err.Error()
-	// Give a hint about api version if we find 'could not find schema
+	// Give a hint about api version if we find 'could not find schema'
 	if strings.Contains(errMsg, "could not find schema") {
 		// Get the resource signature to extract schema kind and version (apiVersion)
 		sig, sigErr := result.Resource.Signature()
