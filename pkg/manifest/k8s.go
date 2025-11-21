@@ -138,10 +138,6 @@ func (k8 *K8sValidator) processValidationResults(filename string, results []vali
 		}
 	}
 
-	if err != nil {
-		k8.log.Error(err.Error())
-	}
-
 	return ValidateResult{
 		ValidCount:   validCount,
 		InvalidCount: invalidCount,
