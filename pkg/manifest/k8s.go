@@ -79,6 +79,28 @@ func (k8 *K8sValidator) validateResourceArray(filename string, resources []json.
 	return k8.processValidationResults(filename, allResults)
 }
 
+func (k8 *K8sValidator) checkIfValidSchema(result validator.Result) error {
+	if result.Err == nil {
+		return nil
+	}
+
+	errMsg := result.Err.Error()
+	// Give a hint about api version if we find 'could not find schema
+	if strings.Contains(errMsg, "could not find schema") {
+		// Get the resource signature to extract schema kind and version (apiVersion)
+		sig, sigErr := result.Resource.Signature()
+		if sigErr == nil && sig.Kind != "" {
+			if sig.Version != "" {
+				return fmt.Errorf("%s Hint: The schema for %s with version '%s' was not found.\n   Please verify that the apiVersion is correct and supported.\n   Common causes:\n   • Incorrect apiVersion (e.g., v1beta1)\n   • Unsupported or deprecated API version\n   • Missing CRD schema",
+					errMsg, sig.Kind, sig.Version)
+			}
+			return fmt.Errorf("%s Hint: The schema for %s was not found.\n   Please verify that the apiVersion is correct and supported\n   Common causes:\n   • Incorrect apiVersion (e.g., v1beta1)\n   • Unsupported or deprecated API version\n   • Missing CRD schema",
+				errMsg, sig.Kind)
+		}
+	}
+	return result.Err
+}
+
 // processValidationResults processes the results of the validation.
 //
 // Counts the number of valid, invalid, error, and skipped resources,
@@ -87,6 +109,13 @@ func (k8 *K8sValidator) processValidationResults(filename string, results []vali
 	// Initialize counters for each status
 	var validCount, invalidCount, errorCount, skippedCount int
 	var err error
+
+	// Check if valid api version in results
+	for i := range results {
+		if results[i].Status == validator.Error {
+			results[i].Err = k8.checkIfValidSchema(results[i])
+		}
+	}
 
 	for _, result := range results {
 		switch result.Status {
