@@ -4,6 +4,7 @@ import (
 	"github.com/google/go-jsonnet"
 	"github.com/kartverket/skipctl/pkg/constants"
 	"github.com/kartverket/skipctl/pkg/logging"
+	"github.com/yannh/kubeconform/pkg/validator"
 )
 
 type Validator struct {
@@ -56,7 +57,9 @@ func (v *Validator) validateJsonnet(file *Document) error {
 
 	// Log validation errors for each result
 	for _, result := range results {
-		logging.LogValidationErrors(file.Name, result.ValidationErrors, result.Err)
+		if result.Status != validator.Valid {
+			logging.LogValidationErrors(file.Name, result.ValidationErrors, result.Err)
+		}
 	}
 
 	v.countValidateRes(&res)
