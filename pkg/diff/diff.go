@@ -29,9 +29,11 @@ var diffColorMap = map[string]string{
 }
 
 type ManifestDiff struct {
-	Type string `json:"type"`
-	Text string `json:"text"`
-	Line int    `json:"line"`
+	Type    string `json:"type"`
+	Text    string `json:"text"`
+	Line    int    `json:"line"`
+	OldLine int    `json:"old_line"`
+	NewLine int    `json:"new_line"`
 }
 
 type JSONOutput struct {
@@ -58,10 +60,10 @@ func convertToManifestDiff(dmpDiffs []diffmatchpatch.Diff) ([]*ManifestDiff, boo
 		case diffmatchpatch.DiffEqual:
 			diffs, lineA, lineB = processEqualLines(diffs, lines, lineA, lineB)
 		case diffmatchpatch.DiffDelete:
-			diffs, lineA = processDeletionLines(diffs, lines, lineA)
+			diffs, lineA = processDeletionLines(diffs, lines, lineA, lineB)
 			hasDiff = true
 		case diffmatchpatch.DiffInsert:
-			diffs, lineB = processInsertionLines(diffs, lines, lineB)
+			diffs, lineB = processInsertionLines(diffs, lines, lineB, lineA)
 			hasDiff = true
 		}
 	}
@@ -74,9 +76,11 @@ func processEqualLines(diffs []*ManifestDiff, lines []string, lineA, lineB int) 
 			continue
 		}
 		diffs = append(diffs, &ManifestDiff{
-			Type: constants.Equals,
-			Text: line,
-			Line: lineA,
+			Type:    constants.Equals,
+			Text:    line,
+			Line:    lineA,
+			OldLine: lineA,
+			NewLine: lineB,
 		})
 		lineA++
 		lineB++
@@ -84,30 +88,34 @@ func processEqualLines(diffs []*ManifestDiff, lines []string, lineA, lineB int) 
 	return diffs, lineA, lineB
 }
 
-func processDeletionLines(diffs []*ManifestDiff, lines []string, lineA int) ([]*ManifestDiff, int) {
+func processDeletionLines(diffs []*ManifestDiff, lines []string, lineA, lineB int) ([]*ManifestDiff, int) {
 	for i, line := range lines {
 		if shouldSkipLine(i, len(lines), line) {
 			continue
 		}
 		diffs = append(diffs, &ManifestDiff{
-			Type: constants.Deletion,
-			Text: line,
-			Line: lineA,
+			Type:    constants.Deletion,
+			Text:    line,
+			Line:    lineA,
+			OldLine: lineA,
+			NewLine: lineB,
 		})
 		lineA++
 	}
 	return diffs, lineA
 }
 
-func processInsertionLines(diffs []*ManifestDiff, lines []string, lineB int) ([]*ManifestDiff, int) {
+func processInsertionLines(diffs []*ManifestDiff, lines []string, lineB, lineA int) ([]*ManifestDiff, int) {
 	for i, line := range lines {
 		if shouldSkipLine(i, len(lines), line) {
 			continue
 		}
 		diffs = append(diffs, &ManifestDiff{
-			Type: constants.Insertion,
-			Text: line,
-			Line: lineB,
+			Type:    constants.Insertion,
+			Text:    line,
+			Line:    lineB,
+			OldLine: lineA,
+			NewLine: lineB,
 		})
 		lineB++
 	}
@@ -218,8 +226,11 @@ func FilterDiffs(diffs []*ManifestDiff, verbosityLevel string, chunkSize int) []
 }
 
 func formatPatchHunk(hunk []*ManifestDiff) string {
+	if len(hunk) == 0 {
+		return ""
+	}
 	var b strings.Builder
-	startLineRemote, startLineLocal := 0, 0
+	startLineRemote, startLineLocal := hunk[0].OldLine, hunk[0].NewLine
 	ins, del, eql := 0, 0, 0
 	for _, h := range hunk {
 		switch h.Type {
@@ -246,8 +257,11 @@ func formatPatchHunk(hunk []*ManifestDiff) string {
 			eql++
 		}
 	}
-	if startLineRemote == 0 {
-		startLineRemote = startLineLocal - 1
+	if del+eql == 0 {
+		startLineRemote = startLineRemote - 1
+	}
+	if ins+eql == 0 {
+		startLineLocal = startLineLocal - 1
 	}
 	var h strings.Builder
 	fmt.Fprintf(&h, "@@ -%d,%d +%d,%d @@\n", startLineRemote, del+eql, startLineLocal, ins+eql)
@@ -256,7 +270,7 @@ func formatPatchHunk(hunk []*ManifestDiff) string {
 }
 
 func formatPrettyHeader(diffs []*ManifestDiff) string {
-	startLineRemote, startLineLocal := 0, 0
+	startLineRemote, startLineLocal := diffs[0].OldLine, diffs[0].NewLine
 	ins, del, eql := 0, 0, 0
 	for _, h := range diffs {
 		switch h.Type {
@@ -274,8 +288,11 @@ func formatPrettyHeader(diffs []*ManifestDiff) string {
 			eql++
 		}
 	}
-	if startLineRemote == 0 {
-		startLineRemote = startLineLocal - 1
+	if del+eql == 0 {
+		startLineRemote = startLineRemote - 1
+	}
+	if ins+eql == 0 {
+		startLineLocal = startLineLocal - 1
 	}
 
 	return fmt.Sprintf("%s@@ %s-%d,%d %s+%d,%d @@%s\n", textBold, colorRed, startLineRemote, del+eql, colorGreen, startLineLocal, ins+eql, colorReset)
