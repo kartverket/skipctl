@@ -71,7 +71,9 @@ func (v *Validator) validateYaml(d *Document) error {
 
 	// Log validation errors for each result
 	for _, r := range results {
-		logging.LogValidationErrors(d.Name, r.ValidationErrors, r.Err)
+		if r.Status != validator.Valid {
+			logging.LogValidationErrors(d.Name, r.ValidationErrors, r.Err)
+		}
 	}
 
 	v.countValidateRes(&result)
