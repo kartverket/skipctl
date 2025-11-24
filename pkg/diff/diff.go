@@ -258,10 +258,10 @@ func formatPatchHunk(hunk []*ManifestDiff) string {
 		}
 	}
 	if del+eql == 0 {
-		startLineRemote = startLineRemote - 1
+		startLineRemote--
 	}
 	if ins+eql == 0 {
-		startLineLocal = startLineLocal - 1
+		startLineLocal--
 	}
 	var h strings.Builder
 	fmt.Fprintf(&h, "@@ -%d,%d +%d,%d @@\n", startLineRemote, del+eql, startLineLocal, ins+eql)
@@ -289,10 +289,10 @@ func formatPrettyHeader(diffs []*ManifestDiff) string {
 		}
 	}
 	if del+eql == 0 {
-		startLineRemote = startLineRemote - 1
+		startLineRemote--
 	}
 	if ins+eql == 0 {
-		startLineLocal = startLineLocal - 1
+		startLineLocal--
 	}
 
 	return fmt.Sprintf("%s@@ %s-%d,%d %s+%d,%d @@%s\n", textBold, colorRed, startLineRemote, del+eql, colorGreen, startLineLocal, ins+eql, colorReset)
