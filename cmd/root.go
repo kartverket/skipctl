@@ -54,7 +54,7 @@ func Execute() error {
 		schemasText.WriteString(fmt.Sprintf(" - %s\n", schema))
 	}
 
-	rootCmd.SetVersionTemplate(fmt.Sprintf("skipctl %s (%s)\n\n%s", GitTag, GitCommitHash, schemasText.String()))
+	rootCmd.SetVersionTemplate(fmt.Sprintf("skipctl %s\n", GitTag))
 
 	executed, err := rootCmd.ExecuteC()
 	if executed != nil && isTrackable(executed) {
