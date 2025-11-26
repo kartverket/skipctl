@@ -40,7 +40,7 @@ func FormatYaml(d *manifest.Document) error {
 	return nil
 }
 
-func Manifest(file *manifest.Document) error {
+func FormatManifest(file *manifest.Document) error {
 	switch file.Extension {
 	case constants.ManifestSuffixJsonnet, constants.ManifestSuffixLibsonnet:
 		return FormatJsonnet(file)

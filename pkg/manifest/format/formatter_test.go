@@ -32,7 +32,7 @@ ingress = []
 `
 
 	doc := manifest.NewTestDocument(invalidJsonnet, "invalid.jsonnet")
-	res := format.Manifest(doc)
+	res := format.FormatManifest(doc)
 	require.Error(t, res, "expected error for invalid Jsonnet input")
 }
 
@@ -46,7 +46,7 @@ application:
 `
 
 	doc := manifest.NewTestDocument(validYaml, "valid.yaml")
-	res := format.Manifest(doc)
+	res := format.FormatManifest(doc)
 	require.NoError(t, res, "expected no error for valid Yaml input")
 }
 
