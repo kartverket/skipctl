@@ -16,10 +16,11 @@ import (
 )
 
 var (
-	logger    *slog.Logger
-	rawLogger *slog.Logger
-	leveler   *slog.LevelVar
-	lock      sync.Mutex
+	logger     *slog.Logger
+	rawLogger  *slog.Logger
+	leveler    *slog.LevelVar
+	lock       sync.Mutex
+	outputMode OutputMode
 
 	ctxStdoutKey stdoutCtxKey
 
@@ -77,6 +78,8 @@ func ConfigureLogging(mode string, isDebug bool) *slog.Logger {
 		panic(err)
 	}
 
+	outputMode = parsedMode
+
 	if isDebug {
 		leveler.Set(slog.LevelDebug)
 	}
@@ -130,6 +133,11 @@ func RawLogger() *slog.Logger {
 }
 
 func LogValidationErrors(filename string, validationErrors []validator.ValidationError, err error) {
+	// Skip colored raw output when in JSON mode - errors are already logged via the structured logger
+	if outputMode == OutputModeJSON {
+		return
+	}
+
 	if rawLogger == nil {
 		panic("logger not initialized")
 	}
