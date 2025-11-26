@@ -1,4 +1,4 @@
-package manifest
+package manifestdiff
 
 import (
 	"fmt"
@@ -6,19 +6,20 @@ import (
 
 	"github.com/kartverket/skipctl/pkg/constants"
 	"github.com/kartverket/skipctl/pkg/diff"
+	"github.com/kartverket/skipctl/pkg/manifest"
 )
 
 // TypeDiffer handles diffing for a specific manifest type.
 type TypeDiffer interface {
-	Diff(file *Document) ([]*diff.ManifestDiff, bool, error)
+	Diff(file *manifest.Document) ([]*diff.ManifestDiff, bool, error)
 }
 
 // Differ provides a unified interface for diffing all manifest types.
 type Differ struct {
-	source          Source
-	jsonnetDiffer   *JsonnetDiffer
-	yamlDiffer      *YamlDiffer
-	kustomizeDiffer *KustomizeDiffer
+	source          manifest.Source
+	jsonnetDiffer   *manifest.JsonnetDiffer
+	yamlDiffer      *manifest.YamlDiffer
+	kustomizeDiffer *manifest.KustomizeDiffer
 	rawOutput       *slog.Logger
 	verbosityLevel  string
 	chunkSize       int
@@ -26,12 +27,12 @@ type Differ struct {
 }
 
 // NewDiffer creates a new manifest differ facade.
-func NewDiffer(source Source, rawOutput *slog.Logger, verbosityLevel string, outputFormat string, chunkSize int) *Differ {
+func NewDiffer(source manifest.Source, rawOutput *slog.Logger, verbosityLevel string, outputFormat string, chunkSize int) *Differ {
 	return &Differ{
 		source:          source,
-		jsonnetDiffer:   NewJsonnetDiffer(source),
-		yamlDiffer:      NewYamlDiffer(source),
-		kustomizeDiffer: NewKustomizeDiffer(source),
+		jsonnetDiffer:   manifest.NewJsonnetDiffer(source),
+		yamlDiffer:      manifest.NewYamlDiffer(source),
+		kustomizeDiffer: manifest.NewKustomizeDiffer(source),
 		rawOutput:       rawOutput,
 		verbosityLevel:  verbosityLevel,
 		chunkSize:       chunkSize,
@@ -39,7 +40,7 @@ func NewDiffer(source Source, rawOutput *slog.Logger, verbosityLevel string, out
 	}
 }
 
-func (d *Differ) Diff(file *Document) error {
+func (d *Differ) Diff(file *manifest.Document) error {
 	var diffs []*diff.ManifestDiff
 	var hasDiff bool
 	var err error
@@ -80,6 +81,6 @@ func (d *Differ) Diff(file *Document) error {
 }
 
 // DiffManifest is an alias for Diff for backward compatibility.
-func (d *Differ) DiffManifest(file *Document) error {
+func (d *Differ) DiffManifest(file *manifest.Document) error {
 	return d.Diff(file)
 }

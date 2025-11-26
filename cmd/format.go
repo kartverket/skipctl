@@ -6,6 +6,7 @@ import (
 
 	"github.com/kartverket/skipctl/pkg/constants"
 	"github.com/kartverket/skipctl/pkg/manifest"
+	"github.com/kartverket/skipctl/pkg/manifest/format"
 	"github.com/kartverket/skipctl/pkg/utils"
 	"github.com/spf13/cobra"
 )
@@ -49,7 +50,7 @@ func runFormat(_ *cobra.Command, args []string) error {
 	}
 
 	processor := manifest.NewDocumentProcessor()
-	err = processor.ProcessDocuments(manifestFiles, manifest.FormatManifest)
+	err = processor.ProcessDocuments(manifestFiles, format.Manifest)
 
 	return err
 }

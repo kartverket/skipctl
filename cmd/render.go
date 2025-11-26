@@ -7,12 +7,13 @@ import (
 	"github.com/kartverket/skipctl/pkg/constants"
 	"github.com/kartverket/skipctl/pkg/logging"
 	"github.com/kartverket/skipctl/pkg/manifest"
+	"github.com/kartverket/skipctl/pkg/manifest/render"
 	"github.com/kartverket/skipctl/pkg/utils"
 	"github.com/spf13/cobra"
 )
 
 var (
-	renderer *manifest.Renderer
+	renderer *render.Renderer
 )
 
 var renderCmd = &cobra.Command{
@@ -66,5 +67,5 @@ func runRender(_ *cobra.Command, args []string) error {
 
 func init() {
 	manifestCmd.AddCommand(renderCmd)
-	renderer = manifest.NewRenderer(logging.RawLogger())
+	renderer = render.NewRenderer(logging.RawLogger())
 }

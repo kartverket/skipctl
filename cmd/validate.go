@@ -9,6 +9,7 @@ import (
 	"github.com/kartverket/skipctl/pkg/constants"
 	"github.com/kartverket/skipctl/pkg/logging"
 	"github.com/kartverket/skipctl/pkg/manifest"
+	"github.com/kartverket/skipctl/pkg/manifest/validate"
 	"github.com/kartverket/skipctl/pkg/utils"
 	"github.com/spf13/cobra"
 )
@@ -58,7 +59,7 @@ func runValidate(_ *cobra.Command, args []string) error {
 	}
 
 	processor := manifest.NewDocumentProcessor()
-	validator := manifest.NewValidator(tempDir)
+	validator := validate.NewValidator(tempDir)
 
 	err = processor.ProcessDocuments(manifestFiles, validator.ValidateManifest)
 

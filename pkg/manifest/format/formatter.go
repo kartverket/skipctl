@@ -1,14 +1,15 @@
-package manifest
+package format
 
 import (
 	"fmt"
 
 	"github.com/google/go-jsonnet/formatter"
 	"github.com/kartverket/skipctl/pkg/constants"
+	"github.com/kartverket/skipctl/pkg/manifest"
 	"go.yaml.in/yaml/v4"
 )
 
-func formatJsonnet(file *Document) error {
+func FormatJsonnet(file *manifest.Document) error {
 	formatted, err := formatter.Format(file.Name, file.Content, formatter.DefaultOptions())
 	if err != nil {
 		return err
@@ -21,7 +22,7 @@ func formatJsonnet(file *Document) error {
 	return nil
 }
 
-func formatYaml(d *Document) error {
+func FormatYaml(d *manifest.Document) error {
 	var out any
 	if err := yaml.Unmarshal([]byte(d.Content), &out); err != nil {
 		return err
@@ -38,12 +39,13 @@ func formatYaml(d *Document) error {
 
 	return nil
 }
-func FormatManifest(file *Document) error {
+
+func Manifest(file *manifest.Document) error {
 	switch file.Extension {
 	case constants.ManifestSuffixJsonnet, constants.ManifestSuffixLibsonnet:
-		return formatJsonnet(file)
+		return FormatJsonnet(file)
 	case constants.ManifestSuffixYaml, constants.ManifestSuffixYml:
-		return formatYaml(file)
+		return FormatYaml(file)
 	default:
 		return fmt.Errorf("invalid file format in file %s", file.Name)
 	}
