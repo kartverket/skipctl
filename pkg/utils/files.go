@@ -28,6 +28,8 @@ func FindManifestFiles(path string) ([]string, error) {
 
 	return files, nil
 }
+
+// Find a file. Specific for the refactor function.
 func findKustomizeDirs(directory string) (map[string]bool, error) {
 	kustomizeDirs := make(map[string]bool)
 
