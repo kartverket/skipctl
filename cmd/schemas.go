@@ -2,8 +2,10 @@ package cmd
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/kartverket/skipctl/pkg/crd"
+	"github.com/kartverket/skipctl/pkg/logging"
 	"github.com/spf13/cobra"
 )
 
@@ -20,10 +22,12 @@ func runSchemas(_ *cobra.Command, _ []string) error {
 		return err
 	}
 
-	fmt.Println("Supported schemas:")
+	var sb strings.Builder
+	sb.WriteString("Supported schemas:\n")
 	for _, schema := range schemas {
-		fmt.Printf(" - %s\n", schema)
+		sb.WriteString(fmt.Sprintf(" - %s\n", schema))
 	}
+	logging.RawLogger().Info(sb.String())
 	return nil
 }
 
