@@ -50,7 +50,7 @@ func runFormat(_ *cobra.Command, args []string) error {
 	}
 
 	processor := manifest.NewDocumentProcessor()
-	err = processor.ProcessDocuments(manifestFiles, format.FormatManifest)
+	err = processor.ProcessDocuments(manifestFiles, format.Manifest)
 
 	return err
 }
