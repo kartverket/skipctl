@@ -35,6 +35,7 @@ const (
 )
 const (
 	DefaultChunkSize = 3
+	YamlIndent       = 2
 )
 
 const (

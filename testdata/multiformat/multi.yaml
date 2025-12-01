@@ -1,0 +1,24 @@
+apiVersion: skiperator.kartverket.no/v1alpha1
+kind: Application
+metadata:
+  name: valid-manifest-patch-1
+  namespace: devex
+
+---
+
+apiVersion: skiperator.kartverket.no/v1alpha1
+kind: Application
+metadata:
+  name: valid-manifest-patch-2
+  namespace: devex
+
+---
+
+baz:
+          - 1
+          - 2
+          - 3
+foo: bar
+settings:
+          enabled: true
+          retries: 5
