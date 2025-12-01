@@ -12,7 +12,8 @@ import (
 )
 
 var (
-	renderer *manifest.Renderer
+	renderer   *manifest.Renderer
+	renderPath string
 )
 
 var renderCmd = &cobra.Command{
@@ -35,7 +36,15 @@ func runRender(_ *cobra.Command, args []string) error {
 	var manifestFiles []*manifest.Document
 	var err error
 
-	if isStdin(args) {
+	// priority: -p flag > positional arg > current directory
+	path = "."
+	if renderPath != "" {
+		path = renderPath
+	} else if len(args) > 0 {
+		path = args[0]
+	}
+
+	if path == "-" {
 		manifestFiles, err = manifest.FromStdin()
 	} else {
 		var filenames []string
@@ -67,4 +76,5 @@ func runRender(_ *cobra.Command, args []string) error {
 func init() {
 	manifestCmd.AddCommand(renderCmd)
 	renderer = manifest.NewRenderer(logging.RawLogger())
+	renderCmd.Flags().StringVarP(&renderPath, "path", "p", "", "path to render (default: current directory)")
 }
