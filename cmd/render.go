@@ -28,7 +28,7 @@ Any valid output will be printed raw to stdout, error messages to stderr. Return
 correctly, otherwise return code 1 is used to indicate failure.`,
 		strings.Join(constants.ManifestSuffixes, ", ")),
 	RunE:         runRender,
-	Args:         cobra.RangeArgs(0, 1),
+	Args:         cobra.MaximumNArgs(1),
 	SilenceUsage: true,
 }
 
