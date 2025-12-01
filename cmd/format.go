@@ -10,6 +10,10 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var (
+	formatPath string
+)
+
 var formatCmd = &cobra.Command{
 	Use:     "format",
 	Aliases: []string{"f", "fmt"},
@@ -29,8 +33,15 @@ correctly, otherwise return code 1 is used to indicate failure.`,
 func runFormat(_ *cobra.Command, args []string) error {
 	var manifestFiles []*manifest.Document
 	var err error
+	// priority: -p flag > positional arg > current directory
+	path = "."
+	if formatPath != "" {
+		path = formatPath
+	} else if len(args) > 0 {
+		path = args[0]
+	}
 
-	if isStdin(args) {
+	if path == "-" {
 		manifestFiles, err = manifest.FromStdin()
 	} else {
 		var filenames []string
@@ -55,4 +66,5 @@ func runFormat(_ *cobra.Command, args []string) error {
 }
 func init() {
 	manifestCmd.AddCommand(formatCmd)
+	formatCmd.Flags().StringVarP(&formatPath, "path", "p", "", "path to format (default: current directory)")
 }
