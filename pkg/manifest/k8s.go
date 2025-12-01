@@ -24,6 +24,7 @@ type ValidateResult struct {
 	InvalidCount int
 	ErrorCount   int
 	SkippedCount int
+	Result       []validator.Result
 }
 
 func (vr *ValidateResult) GetTotalResources() int {
@@ -43,14 +44,14 @@ func isJSONArray(content string) bool {
 //
 // The content can be either in form JSON or YAML.
 // It handles both single resources and arrays of resources.
-func (k8 *K8sValidator) validateK8sSchema(filename string, content string) (ValidateResult, []validator.Result, error) {
+func (k8 *K8sValidator) validateK8sSchema(filename string, content string) (ValidateResult, error) {
 	content = strings.TrimSpace(content)
 
 	if isJSONArray(content) {
 		// Parse the content as an array of raw JSON messages
 		var resources []json.RawMessage
 		if err := json.Unmarshal([]byte(content), &resources); err != nil {
-			return ValidateResult{}, nil, fmt.Errorf("failed to parse JSON array: %w", err)
+			return ValidateResult{}, fmt.Errorf("failed to parse JSON array: %w", err)
 		}
 
 		// Validate each resource in the array
@@ -66,7 +67,7 @@ func (k8 *K8sValidator) validateK8sSchema(filename string, content string) (Vali
 //
 // For each resource, it creates a reader and validates it individually.
 // Only for JSON arrays.
-func (k8 *K8sValidator) validateResourceArray(filename string, resources []json.RawMessage) (ValidateResult, []validator.Result, error) {
+func (k8 *K8sValidator) validateResourceArray(filename string, resources []json.RawMessage) (ValidateResult, error) {
 	var allResults []validator.Result
 
 	for i, resource := range resources {
@@ -105,7 +106,7 @@ func (k8 *K8sValidator) checkIfValidSchema(result validator.Result) error {
 //
 // Counts the number of valid, invalid, error, and skipped resources,
 // and returns the errors encountered during validation along with the results.
-func (k8 *K8sValidator) processValidationResults(filename string, results []validator.Result) (ValidateResult, []validator.Result, error) {
+func (k8 *K8sValidator) processValidationResults(filename string, results []validator.Result) (ValidateResult, error) {
 	// Initialize counters for each status
 	var validCount, invalidCount, errorCount, skippedCount int
 	var err error
@@ -143,7 +144,8 @@ func (k8 *K8sValidator) processValidationResults(filename string, results []vali
 		InvalidCount: invalidCount,
 		ErrorCount:   errorCount,
 		SkippedCount: skippedCount,
-	}, results, err
+		Result:       results,
+	}, err
 }
 
 // initValidator initializes the Kubernetes schema validator.
