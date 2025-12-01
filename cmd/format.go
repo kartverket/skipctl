@@ -15,7 +15,7 @@ var (
 )
 
 var formatCmd = &cobra.Command{
-	Use:     "format",
+	Use:     "format [path]",
 	Aliases: []string{"f", "fmt"},
 	Short:   "Format manifest in place",
 	Long: fmt.Sprintf(`Recursively formats manifest files in the specified path.
@@ -34,18 +34,18 @@ func runFormat(_ *cobra.Command, args []string) error {
 	var manifestFiles []*manifest.Document
 	var err error
 	// priority: -p flag > positional arg > current directory
-	path = "."
+	filePath := "."
 	if formatPath != "" {
-		path = formatPath
+		filePath = formatPath
 	} else if len(args) > 0 {
-		path = args[0]
+		filePath = args[0]
 	}
 
-	if path == "-" {
+	if filePath == "-" {
 		manifestFiles, err = manifest.FromStdin()
 	} else {
 		var filenames []string
-		filenames, err = utils.FindFilesWithSuffixes(path, constants.FmtManifestSuffixes)
+		filenames, err = utils.FindFilesWithSuffixes(filePath, constants.FmtManifestSuffixes)
 		if err == nil {
 			manifestFiles, err = manifest.FromFiles(filenames)
 		}

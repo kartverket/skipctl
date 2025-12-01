@@ -32,20 +32,20 @@ var (
 
 func runValidate(_ *cobra.Command, args []string) error {
 	// priority: -p flag > positional arg > current directory
-	path = "."
+	filePath := "."
 	if validatePath != "" {
-		path = validatePath
+		filePath = validatePath
 	} else if len(args) > 0 {
-		path = args[0]
+		filePath = args[0]
 	}
 
 	var err error
 	var manifestFiles []*manifest.Document
-	if path == "-" {
+	if filePath == "-" {
 		manifestFiles, err = manifest.FromStdin()
 	} else {
 		var filenames []string
-		filenames, err = utils.FindFilesWithSuffixes(path, constants.ManifestSuffixes)
+		filenames, err = utils.FindFilesWithSuffixes(filePath, constants.ManifestSuffixes)
 		if err == nil {
 			manifestFiles, err = manifest.FromFiles(filenames)
 		}

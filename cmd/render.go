@@ -17,7 +17,7 @@ var (
 )
 
 var renderCmd = &cobra.Command{
-	Use:     "render",
+	Use:     "render [path]",
 	Aliases: []string{"r"},
 	Short:   "Render manifest files to stdout",
 	Long: fmt.Sprintf(`Recursively validates manifest files in the specified path.
@@ -37,18 +37,18 @@ func runRender(_ *cobra.Command, args []string) error {
 	var err error
 
 	// priority: -p flag > positional arg > current directory
-	path = "."
+	filePath := "."
 	if renderPath != "" {
-		path = renderPath
+		filePath = renderPath
 	} else if len(args) > 0 {
-		path = args[0]
+		filePath = args[0]
 	}
 
-	if path == "-" {
+	if filePath == "-" {
 		manifestFiles, err = manifest.FromStdin()
 	} else {
 		var filenames []string
-		filenames, err = utils.FindFilesWithSuffixes(path, constants.ManifestSuffixes)
+		filenames, err = utils.FindFilesWithSuffixes(filePath, constants.ManifestSuffixes)
 		if err == nil {
 			manifestFiles, err = manifest.FromFiles(filenames)
 		}
