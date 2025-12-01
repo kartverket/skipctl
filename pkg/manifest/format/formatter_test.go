@@ -1,4 +1,4 @@
-package format
+package format_test
 
 import (
 	"testing"
@@ -18,7 +18,7 @@ ingress: [],
 `
 
 	doc := manifest.NewTestDocument(validJsonnet, "valid.jsonnet")
-	res := FormatManifest(doc)
+	res := format.FormatManifest(doc)
 	require.NoError(t, res, "expected no error for valid Jsonnet input")
 }
 
@@ -60,7 +60,7 @@ port: 8080
 `
 
 	doc := manifest.NewTestDocument(invalidYaml, "invalid.yaml")
-	res := FormatManifest(doc)
+	res := format.FormatManifest(doc)
 	require.Error(t, res, "expected error for invalid Yaml input")
 }
 
@@ -74,7 +74,7 @@ ingress: [],
 `
 
 	doc := manifest.NewTestDocument(validLibsonnet, "valid.libsonnet")
-	res := FormatManifest(doc)
+	res := format.FormatManifest(doc)
 	require.NoError(t, res, "expected no error for valid Libsonnet input")
 }
 
@@ -88,6 +88,6 @@ ingress = []
 `
 
 	doc := manifest.NewTestDocument(invalidLibsonnet, "invalid.libsonnet")
-	res := FormatManifest(doc)
+	res := format.FormatManifest(doc)
 	require.Error(t, res, "expected error for invalid Libsonnet input")
 }
