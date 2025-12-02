@@ -7,31 +7,38 @@ import (
 
 	"github.com/kartverket/skipctl/pkg/manifest"
 	"github.com/kartverket/skipctl/pkg/prompts"
+	"golang.org/x/oauth2/google"
 	"google.golang.org/api/aiplatform/v1"
 	"google.golang.org/api/option"
 )
 
 func refactorJsonnet(doc *manifest.Document) error {
-	projectID := os.Getenv("GCP_PROJECT_ID") // TODO: Get from config
+	ctx := context.Background()
+	projectID := "kv-spire-devex-ksde" // TODO: Get from config
 	if projectID == "" {
 		return fmt.Errorf("there are no project id")
 	}
-	location := "europe-north1"   // TODO: Get from config
-	model := "gemini-1.5-pro-001" // TODO: Get from config
-	apiKey := os.Getenv("GCP_API_KEY")
-	if apiKey == "" {
-		return fmt.Errorf("there are no GCP API key here")
-
+	location := "europe-north1"      // TODO: Get from config
+	model := "gemini-2.5-flash-lite" // TODO: Get from config
+	client, err := google.DefaultClient(ctx, aiplatform.CloudPlatformScope)
+	if err != nil {
+		return fmt.Errorf("failed to create google default client: %w", err)
 	}
-	ctx := context.Background()
 
-	aiplatformService, err := aiplatform.NewService(ctx, option.WithAPIKey(apiKey))
+	aiplatformService, err := aiplatform.NewService(ctx, option.WithHTTPClient(client))
 	if err != nil {
 		return fmt.Errorf("failed to create new aiplatform service: %w", err)
 	}
-
 	// Construct the request
 	endpoint := fmt.Sprintf("projects/%s/locations/%s/publishers/google/models/%s", projectID, location, model)
+	// Replace with your actual Vertex AI Search Datastore ID and location
+	vertexAISearchDatastoreID := "argokit-v2-knowledge_1764338186592"
+	vertexAISearchDatastoreLocation := "eu" // Or the specific location of your datastore
+
+	// Construct the full resource name for the Vertex AI Search datastore
+	datastoreResourceName := fmt.Sprintf("projects/%s/locations/%s/dataStores/%s",
+		projectID, vertexAISearchDatastoreLocation, vertexAISearchDatastoreID)
+
 	req := &aiplatform.GoogleCloudAiplatformV1GenerateContentRequest{
 		SystemInstruction: &aiplatform.GoogleCloudAiplatformV1Content{
 			Parts: []*aiplatform.GoogleCloudAiplatformV1Part{
@@ -50,8 +57,16 @@ func refactorJsonnet(doc *manifest.Document) error {
 				},
 			},
 		},
+		Tools: []*aiplatform.GoogleCloudAiplatformV1Tool{
+			{
+				Retrieval: &aiplatform.GoogleCloudAiplatformV1Retrieval{
+					VertexAiSearch: &aiplatform.GoogleCloudAiplatformV1VertexAISearch{
+						Datastore: da,
+					},
+				},
+			},
+		},
 	}
-
 	// Send the request
 	resp, err := aiplatformService.Projects.Locations.Publishers.Models.GenerateContent(endpoint, req).Do()
 	if err != nil {
