@@ -151,6 +151,62 @@ Returns status code `1` if there are failures or `0` for successful validation
 skipctl manifests validate --path <pathname>
 ```
 
+#### Refactor manifests (Experimental)
+
+The `refactor` command uses AI (Google Vertex AI with Gemini) to automatically refactor manifests. This is an experimental feature currently in development.
+
+##### Prerequisites
+
+Before using the refactor command, you need to:
+
+1. **Install Google Cloud SDK**
+   ```shell
+   # macOS (via Homebrew)
+   brew install --cask google-cloud-sdk
+   
+   # Other platforms: https://cloud.google.com/sdk/docs/install
+   ```
+
+2. **Authenticate with Google Cloud**
+   ```shell
+   gcloud auth application-default login
+   ```
+   This will open a browser window for OAuth authentication and save credentials to `~/.config/gcloud/application_default_credentials.json`.
+
+3. **Configure Vertex AI Search Datastore**
+   
+   The refactor command requires a Vertex AI Search datastore. Currently, the following values are hardcoded in `pkg/refactor/refactorer.go`:
+   - Project ID: `kv-spire-devex-ksde`
+   - Location: `europe-north1`
+   - Model: `gemini-2.5-flash-lite`
+   - Datastore ID: `argokit-v2-knowledge_1764338186592`
+   - Datastore Location: `eu`
+   
+   **To use this command, you need to either:**
+   - Have access to the specified Google Cloud project and datastore, OR
+   - Modify these values in the source code to match your own Vertex AI Search setup
+
+##### Known Issues
+
+- The datastore resource name format may need adjustment. The correct format for Vertex AI Search datastores is:
+  ```
+  projects/{project}/locations/{location}/collections/default_collection/dataStores/{datastore_id}
+  ```
+  If you encounter `[FIELD_INVALID] Invalid Vertex AI datastore resource name` errors, the code may need to be updated to include `/collections/default_collection/` in the path.
+
+##### Usage
+
+```shell
+skipctl refactor <pathname>
+```
+
+This command will:
+1. Find the manifest file (`.json`) in the specified path
+2. Send the file to Vertex AI for AI-powered refactoring
+3. Write the refactored output to `test.refactored.jsonnet`
+
+**Note:** This is an experimental feature and the API/behavior may change.
+
 ## Analytics & Privacy
 
 `skipctl` collects anonymous usage analytics by **default** to help us understand how the tool is being used and improve the user experience.
