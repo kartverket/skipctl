@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/kartverket/skipctl/pkg/manifest"
 	"github.com/kartverket/skipctl/pkg/prompts"
@@ -18,6 +19,7 @@ func RefactorManifest(doc *manifest.Document) error {
 	if projectID == "" {
 		return fmt.Errorf("there are no project id")
 	}
+
 	location := "europe-north1"      // TODO: Get from config
 	model := "gemini-2.5-flash-lite" // TODO: Get from config
 	client, err := google.DefaultClient(ctx, aiplatform.CloudPlatformScope)
@@ -76,9 +78,10 @@ func RefactorManifest(doc *manifest.Document) error {
 
 	if len(resp.Candidates) > 0 && len(resp.Candidates[0].Content.Parts) > 0 {
 		if text := resp.Candidates[0].Content.Parts[0].Text; text != "" {
-			// Create a new file path for the refactored content
-			ext := ".jsonnet"
-			newPath := fmt.Sprintf("%s.refactored%s", "test", ext)
+			// Create a new file path for the refactored content based on the original filename
+			// Strip the extension and add .refactored.jsonnet
+			nameWithoutExt := strings.TrimSuffix(doc.Name, doc.Extension)
+			newPath := fmt.Sprintf("%s.refactored.jsonnet", nameWithoutExt)
 
 			// Write the refactored content to the new file
 			err := os.WriteFile(newPath, []byte(text), 0644)
