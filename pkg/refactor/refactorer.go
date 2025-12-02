@@ -12,7 +12,7 @@ import (
 	"google.golang.org/api/option"
 )
 
-func refactorJsonnet(doc *manifest.Document) error {
+func RefactorManifest(doc *manifest.Document) error {
 	ctx := context.Background()
 	projectID := "kv-spire-devex-ksde" // TODO: Get from config
 	if projectID == "" {
@@ -90,7 +90,4 @@ func refactorJsonnet(doc *manifest.Document) error {
 	}
 
 	return fmt.Errorf("no content generated or unexpected response format")
-}
-func RefactorManifest(file *manifest.Document) error {
-	return refactorJsonnet(file)
 }
