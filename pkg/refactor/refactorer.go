@@ -61,7 +61,7 @@ func refactorJsonnet(doc *manifest.Document) error {
 			{
 				Retrieval: &aiplatform.GoogleCloudAiplatformV1Retrieval{
 					VertexAiSearch: &aiplatform.GoogleCloudAiplatformV1VertexAISearch{
-						Datastore: da,
+						Datastore: datastoreResourceName,
 					},
 				},
 			},
