@@ -36,7 +36,8 @@ func refactorJsonnet(doc *manifest.Document) error {
 	vertexAISearchDatastoreLocation := "eu" // Or the specific location of your datastore
 
 	// Construct the full resource name for the Vertex AI Search datastore
-	datastoreResourceName := fmt.Sprintf("projects/%s/locations/%s/dataStores/%s",
+	// Format: projects/{project}/locations/{location}/collections/default_collection/dataStores/{datastore_id}
+	datastoreResourceName := fmt.Sprintf("projects/%s/locations/%s/collections/default_collection/dataStores/%s",
 		projectID, vertexAISearchDatastoreLocation, vertexAISearchDatastoreID)
 
 	req := &aiplatform.GoogleCloudAiplatformV1GenerateContentRequest{
