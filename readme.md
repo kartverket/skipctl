@@ -170,8 +170,9 @@ Before using the refactor command, you need to:
 2. **Authenticate with Google Cloud**
    ```shell
    gcloud auth application-default login
+   gcloud auth application-default set-quota-project kv-spire-devex-ksde
    ```
-   This will open a browser window for OAuth authentication and save credentials to `~/.config/gcloud/application_default_credentials.json`.
+   This will open a browser window for OAuth authentication and save credentials to `~/.config/gcloud/application_default_credentials.json`. The quota project must be set to ensure API calls are properly billed.
 
 3. **Configure Vertex AI Search Datastore**
    
@@ -186,24 +187,35 @@ Before using the refactor command, you need to:
    - Have access to the specified Google Cloud project and datastore, OR
    - Modify these values in the source code to match your own Vertex AI Search setup
 
-##### Known Issues
+##### How It Works
 
-- The datastore resource name format may need adjustment. The correct format for Vertex AI Search datastores is:
-  ```
-  projects/{project}/locations/{location}/collections/default_collection/dataStores/{datastore_id}
-  ```
-  If you encounter `[FIELD_INVALID] Invalid Vertex AI datastore resource name` errors, the code may need to be updated to include `/collections/default_collection/` in the path.
+The refactor command uses Vertex AI Search for grounding, which means:
+1. Your manifest content is sent to the Gemini model
+2. The model searches the Vertex AI Search datastore for relevant ArgoKit v2 documentation
+3. The retrieved documentation is used as context to generate accurate refactorings
+4. The refactored content is written to `<original-filename>.refactored.jsonnet`
+
+The datastore contains ArgoKit v2 knowledge and examples to guide the refactoring process.
 
 ##### Usage
 
 ```shell
-skipctl refactor <pathname>
+# Single file
+skipctl refactor <file>
+skipctl refactor --path <file>
+
+# Multiple files (first is target, rest is context)
+skipctl refactor target.yaml context1.jsonnet context2.libsonnet
 ```
 
-This command will:
-1. Find the manifest file (`.json`) in the specified path
-2. Send the file to Vertex AI for AI-powered refactoring
-3. Write the refactored output to `test.refactored.jsonnet`
+The first file is refactored, additional files provide context. Output is written to `<first-file>.refactored.jsonnet`.
+
+**Examples:**
+```shell
+skipctl refactor app.jsonnet
+skipctl refactor app.yaml lib/common.libsonnet
+skipctl refactor old-app.yaml reference.argokit.jsonnet
+```
 
 **Note:** This is an experimental feature and the API/behavior may change.
 

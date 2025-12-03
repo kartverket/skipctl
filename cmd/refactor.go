@@ -13,10 +13,10 @@ var refactorCmd = &cobra.Command{
 	Use:     "refactor <target-file> [context-files...]",
 	Aliases: []string{"re", "r"},
 	Short:   "Refactor manifest using AI",
-	Long: `Refactor a manifest to ArgoKit v2 format using AI (Vertex AI with Gemini).
+	Long: `Refactor a manifest to ArgoKit v2 format using AI.
 
-The first file is the target to refactor. Additional files provide context (libraries, configs, references).
-Output is written to '<first-file>.refactored.jsonnet'.`,
+		The first file is the target to refactor. Additional files provide context (libraries, configs, references).
+		Output is written to '<first-file>.refactored.jsonnet'.`,
 	RunE:         runRefactor,
 	Args:         cobra.MinimumNArgs(0),
 	SilenceUsage: true,
