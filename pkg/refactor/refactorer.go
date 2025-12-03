@@ -13,7 +13,11 @@ import (
 	"google.golang.org/api/option"
 )
 
-func RefactorManifest(doc *manifest.Document) error {
+func RefactorManifest(docs []*manifest.Document) error {
+	if len(docs) == 0 {
+		return fmt.Errorf("no documents provided for refactoring")
+	}
+
 	ctx := context.Background()
 	projectID := "kv-spire-devex-ksde" // TODO: Get from config
 	if projectID == "" {
@@ -42,6 +46,16 @@ func RefactorManifest(doc *manifest.Document) error {
 	datastoreResourceName := fmt.Sprintf("projects/%s/locations/%s/collections/default_collection/dataStores/%s",
 		projectID, vertexAISearchDatastoreLocation, vertexAISearchDatastoreID)
 
+	// Combine all document contents as context
+	var combinedContent strings.Builder
+	for i, doc := range docs {
+		if i > 0 {
+			combinedContent.WriteString("\n\n---\n\n")
+		}
+		combinedContent.WriteString(fmt.Sprintf("File: %s\n\n", doc.Name))
+		combinedContent.WriteString(doc.Content)
+	}
+
 	req := &aiplatform.GoogleCloudAiplatformV1GenerateContentRequest{
 		SystemInstruction: &aiplatform.GoogleCloudAiplatformV1Content{
 			Parts: []*aiplatform.GoogleCloudAiplatformV1Part{
@@ -55,7 +69,7 @@ func RefactorManifest(doc *manifest.Document) error {
 				Role: "user",
 				Parts: []*aiplatform.GoogleCloudAiplatformV1Part{
 					{
-						Text: string(doc.Content),
+						Text: combinedContent.String(),
 					},
 				},
 			},
@@ -78,9 +92,9 @@ func RefactorManifest(doc *manifest.Document) error {
 
 	if len(resp.Candidates) > 0 && len(resp.Candidates[0].Content.Parts) > 0 {
 		if text := resp.Candidates[0].Content.Parts[0].Text; text != "" {
-			// Create a new file path for the refactored content based on the original filename
-			// Strip the extension and add .refactored.jsonnet
-			nameWithoutExt := strings.TrimSuffix(doc.Name, doc.Extension)
+			// Use the first document's name for the output file
+			firstDoc := docs[0]
+			nameWithoutExt := strings.TrimSuffix(firstDoc.Name, firstDoc.Extension)
 			newPath := fmt.Sprintf("%s.refactored.jsonnet", nameWithoutExt)
 
 			// Write the refactored content to the new file
