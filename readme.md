@@ -49,7 +49,7 @@ skipctl test probe --hostname=example.com --port=1521 --api-server=myApiServer
 
 ### Manifests
 
-The `manifests` command group contains commands for working with Skiperator manifests. All commands require a path flag (`--path` or `-p`) pointing to a directory or file containing the manifest(s).
+The `manifests` command group contains commands for working with Skiperator manifests. All commands require a path pointing to a directory or file containing the manifest(s).
 If a directory is specified, all commands in this group will recursively search the specified path for files with supported file formats. If no specific path is specified, the current working directory will be used.
 
 **Supported file formats are:**
@@ -67,13 +67,13 @@ If a directory is specified, all commands in this group will recursively search 
 
 Compiles and renders a Skiperator `.jsonnet` or `.yaml` manifest in the specified directory and alerts if any errors are found.
 ```shell
-skipctl manifests render --path <pathname>
+skipctl manifests render <pathname>
 ```
 #### Format manifests
 
 Formats a `.jsonnet`, `.libsonnet` or `.yaml` manifest in the specified directory and alerts if any errors are found.
 ```shell
-skipctl manifests format --path <pathname>
+skipctl manifests format <pathname>
 ```
 
 ##### Format quick guide
@@ -93,10 +93,10 @@ Behavior:
 Examples:
 ```shell
 # Format everything under current directory
-skipctl manifests format --path .
+skipctl manifests format .
 
 # Format a single file
-skipctl manifests format --path ./app/manifest.yaml
+skipctl manifests format ./app/manifest.yaml
 
 # Format from stdin (outputs the formatted content to stdout)
 cat manifest.yaml | skipctl manifests format -
@@ -148,7 +148,7 @@ The API reference for these types can be found in the [SKIP docs](https://skip.k
 Returns status code `1` if there are failures or `0` for successful validation
 
 ```shell
-skipctl manifests validate --path <pathname>
+skipctl manifests validate <pathname>
 ```
 
 ## Analytics & Privacy

@@ -7,6 +7,8 @@ import (
 	"strings"
 
 	"github.com/kartverket/skipctl/pkg/discovery"
+	"github.com/kartverket/skipctl/pkg/manifest"
+	"github.com/kartverket/skipctl/pkg/utils"
 	"github.com/spf13/cobra"
 )
 
@@ -87,4 +89,29 @@ func IsValidCommitRef(ref string) bool {
 		return true
 	}
 	return false
+}
+
+func determineDocuments(pathFlag string, args []string, suffixes []string) ([]*manifest.Document, error) {
+	var manifestFiles []*manifest.Document
+	var err error
+
+	// priority: -p flag > positional arg > current directory
+	filePath := "."
+	if pathFlag != "" {
+		filePath = pathFlag
+	} else if len(args) > 0 {
+		filePath = args[0]
+	}
+
+	if filePath == "-" {
+		manifestFiles, err = manifest.FromStdin()
+	} else {
+		var filenames []string
+		filenames, err = utils.FindFilesWithSuffixes(filePath, suffixes)
+		if err == nil {
+			manifestFiles, err = manifest.FromFiles(filenames)
+		}
+	}
+
+	return manifestFiles, err
 }
