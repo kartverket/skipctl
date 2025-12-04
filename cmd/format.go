@@ -6,7 +6,6 @@ import (
 
 	"github.com/kartverket/skipctl/pkg/constants"
 	"github.com/kartverket/skipctl/pkg/manifest"
-	"github.com/kartverket/skipctl/pkg/utils"
 	"github.com/spf13/cobra"
 )
 
@@ -31,25 +30,8 @@ correctly, otherwise return code 1 is used to indicate failure.`,
 }
 
 func runFormat(_ *cobra.Command, args []string) error {
-	var manifestFiles []*manifest.Document
-	var err error
-	// priority: -p flag > positional arg > current directory
-	filePath := "."
-	if formatPath != "" {
-		filePath = formatPath
-	} else if len(args) > 0 {
-		filePath = args[0]
-	}
+	manifestFiles, err := determineDocuments(formatPath, args, constants.FmtManifestSuffixes)
 
-	if filePath == "-" {
-		manifestFiles, err = manifest.FromStdin()
-	} else {
-		var filenames []string
-		filenames, err = utils.FindFilesWithSuffixes(filePath, constants.FmtManifestSuffixes)
-		if err == nil {
-			manifestFiles, err = manifest.FromFiles(filenames)
-		}
-	}
 	if err != nil {
 		log.Error("Error collecting files", "error", err.Error())
 		return err

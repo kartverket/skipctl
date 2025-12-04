@@ -7,7 +7,6 @@ import (
 	"github.com/kartverket/skipctl/pkg/constants"
 	"github.com/kartverket/skipctl/pkg/logging"
 	"github.com/kartverket/skipctl/pkg/manifest"
-	"github.com/kartverket/skipctl/pkg/utils"
 	"github.com/spf13/cobra"
 )
 
@@ -33,26 +32,7 @@ correctly, otherwise return code 1 is used to indicate failure.`,
 }
 
 func runRender(_ *cobra.Command, args []string) error {
-	var manifestFiles []*manifest.Document
-	var err error
-
-	// priority: -p flag > positional arg > current directory
-	filePath := "."
-	if renderPath != "" {
-		filePath = renderPath
-	} else if len(args) > 0 {
-		filePath = args[0]
-	}
-
-	if filePath == "-" {
-		manifestFiles, err = manifest.FromStdin()
-	} else {
-		var filenames []string
-		filenames, err = utils.FindFilesWithSuffixes(filePath, constants.ManifestSuffixes)
-		if err == nil {
-			manifestFiles, err = manifest.FromFiles(filenames)
-		}
-	}
+	manifestFiles, err := determineDocuments(renderPath, args, constants.ManifestSuffixes)
 
 	if err != nil {
 		log.Error("Error collecting files", "error", err.Error())
