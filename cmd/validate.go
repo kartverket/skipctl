@@ -14,14 +14,15 @@ import (
 )
 
 var (
-	tempDir     string
-	validateCmd = &cobra.Command{
-		Use:     "validate",
+	tempDir      string
+	validatePath string
+	validateCmd  = &cobra.Command{
+		Use:     "validate [path]",
 		Aliases: []string{"v"},
 		Short:   "Validate manifest files against well-known Kubernetes schemas",
 		Long:    fmt.Sprintf("Recursively validates %s files in the specified path", strings.Join(constants.ManifestSuffixes, ", ")),
 		RunE:    runValidate,
-		Args:    cobra.RangeArgs(0, 1),
+		Args:    cobra.MaximumNArgs(1),
 		// SilenceErrors and SilenceUsage are set to true to prevent Cobra from printing errors and usage messages automatically.
 		// This allows for custom error handling and logging within the command's execution logic.
 		SilenceErrors: true,
@@ -30,17 +31,7 @@ var (
 )
 
 func runValidate(_ *cobra.Command, args []string) error {
-	var err error
-	var manifestFiles []*manifest.Document
-	if isStdin(args) {
-		manifestFiles, err = manifest.FromStdin()
-	} else {
-		var filenames []string
-		filenames, err = utils.FindFilesWithSuffixes(path, constants.ManifestSuffixes)
-		if err == nil {
-			manifestFiles, err = manifest.FromFiles(filenames)
-		}
-	}
+	manifestFiles, err := determineDocuments(validatePath, args, constants.ManifestSuffixes)
 
 	if err != nil {
 		log.Error("Error collecting files", "error", err.Error())
@@ -93,6 +84,7 @@ func runValidate(_ *cobra.Command, args []string) error {
 
 func init() {
 	manifestCmd.AddCommand(validateCmd)
+	validateCmd.Flags().StringVarP(&validatePath, "path", "p", "", "path to validate (default: current directory)")
 }
 
 func cleanUp() {
