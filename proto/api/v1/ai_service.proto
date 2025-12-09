@@ -1,0 +1,29 @@
+syntax = "proto3";
+
+package api.v1;
+
+option go_package = "github.com/kartverket/skipctl/pkg/api/v1;apiv1";
+
+// The AI service definition.
+service AIService {
+  // Analyze a file with Vertex AI
+  rpc AnalyzeFile(stream AnalyzeFileRequest) returns (AnalyzeFileResponse);
+}
+
+// Request message for streaming file upload
+message AnalyzeFileRequest {
+  // File chunk data
+  bytes chunk = 1;
+  // File name (sent in first chunk)
+  string file_name = 2;
+  // MIME type (sent in first chunk)
+  string mime_type = 3;
+  // Analysis prompt (sent in first chunk)
+  string prompt = 4;
+}
+
+// Response message for file analysis
+message AnalyzeFileResponse {
+  // AI-generated response
+  string response = 1;
+}
