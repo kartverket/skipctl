@@ -25,7 +25,7 @@ import (
 var log *slog.Logger
 
 // Serve starts a new API server capable of performing various probes for clients.
-func Serve(addr string, metricsAddr string, timeout time.Duration, idTokenOrg string) error {
+func Serve(addr string, metricsAddr string, timeout time.Duration, idTokenOrg string, projectID string, location string) error {
 	// Basic validation
 	if log == nil {
 		log = logging.Logger()
@@ -33,6 +33,14 @@ func Serve(addr string, metricsAddr string, timeout time.Duration, idTokenOrg st
 
 	if len(idTokenOrg) == 0 {
 		return errors.New("missing ID token organization")
+	}
+
+	if len(projectID) == 0 {
+		return errors.New("missing GCP project ID")
+	}
+
+	if len(location) == 0 {
+		return errors.New("missing GCP location")
 	}
 
 	// Metrics
@@ -53,16 +61,28 @@ func Serve(addr string, metricsAddr string, timeout time.Duration, idTokenOrg st
 	grpcSrv := grpc.NewServer(opts...)
 	srvMetrics.InitializeMetrics(grpcSrv)
 
+	ctx := context.Background()
+
 	// Register actual services
 	ds, err := NewDiagnosticService(reg, timeout)
 	if err != nil {
-		return err
+		log.Warn("diagnostic service unavailable (requires elevated permissions)", "error", err)
+		log.Info("continuing without diagnostic service - only AI service will be available")
+	} else {
+		api.RegisterDiagnosticServiceServer(grpcSrv, ds)
+		log.Info("diagnostic service registered")
 	}
-	api.RegisterDiagnosticServiceServer(grpcSrv, ds)
+
+	// Register AI service
+	aiService, err := NewAIService(ctx, reg, timeout, projectID, location)
+	if err != nil {
+		return fmt.Errorf("failed to create AI service: %w", err)
+	}
+	defer aiService.Close()
+	api.RegisterAIServiceServer(grpcSrv, aiService)
+	log.Info("AI service registered")
 
 	reflection.Register(grpcSrv)
-
-	ctx := context.Background()
 
 	// Binding
 	g := &run.Group{}

@@ -9,6 +9,10 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var (
+	serverAddr string
+)
+
 var refactorCmd = &cobra.Command{
 	Use:     "refactor <target-file> [context-files...]",
 	Aliases: []string{"re", "r"},
@@ -62,11 +66,12 @@ func runRefactor(cmd *cobra.Command, args []string) error {
 		return nil
 	}
 
-	// Pass all files as context together for refactoring
-	err = refactor.RefactorManifest(manifestFiles)
+	// Pass all files as context together for refactoring via gRPC server
+	err = refactor.RefactorManifest(cmd.Context(), manifestFiles, serverAddr)
 	return err
 }
 func init() {
-	refactorCmd.PersistentFlags().StringVarP(&path, "path", "p", ".", "path to file/directory containing manifest")
+	refactorCmd.PersistentFlags().StringVarP(&path, "path", "p", ".", "Path to file/directory containing manifest")
+	refactorCmd.PersistentFlags().StringVarP(&serverAddr, "server", "s", "localhost:3514", "Address of the skipctl server")
 	rootCmd.AddCommand(refactorCmd)
 }

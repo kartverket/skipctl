@@ -15,7 +15,7 @@ var serveCmd = &cobra.Command{
 	Long: `Intended to be run inside a SKIP cluster in order to help product teams
 debug various connectivity issues.`,
 	Run: func(_ *cobra.Command, _ []string) {
-		if err := server.Serve(addr, metricsAddr, globalTimeout, idTokenOrg); err != nil {
+		if err := server.Serve(addr, metricsAddr, globalTimeout, idTokenOrg, gcpProjectID, gcpLocation); err != nil {
 			log.Error("could not start server", "error", err)
 		}
 	},
@@ -26,6 +26,8 @@ var (
 	metricsAddr   string
 	globalTimeout time.Duration
 	idTokenOrg    string
+	gcpProjectID  string
+	gcpLocation   string
 )
 
 func init() {
@@ -35,4 +37,6 @@ func init() {
 	serveCmd.Flags().StringVar(&metricsAddr, "metrics-addr", "0.0.0.0:3515", "Address to listen for metrics on")
 	serveCmd.Flags().DurationVar(&globalTimeout, "global-timeout", constants.DefaultServerTestTimeout, "Max timeout for all client probes")
 	serveCmd.Flags().StringVar(&idTokenOrg, "id-token-organization", constants.DefaultGoogleOrgID, "The organization that is present in valid OIDC ID tokens")
+	serveCmd.Flags().StringVar(&gcpProjectID, "gcp-project-id", "", "GCP project ID for Vertex AI")
+	serveCmd.Flags().StringVar(&gcpLocation, "gcp-location", "us-central1", "GCP location for Vertex AI")
 }

@@ -3,48 +3,33 @@ package refactor
 import (
 	"context"
 	"fmt"
+	"io"
 	"os"
 	"strings"
 
+	api "github.com/kartverket/skipctl/pkg/api/v1"
 	"github.com/kartverket/skipctl/pkg/manifest"
 	"github.com/kartverket/skipctl/pkg/prompts"
-	"golang.org/x/oauth2/google"
-	"google.golang.org/api/aiplatform/v1"
-	"google.golang.org/api/option"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 )
 
-func RefactorManifest(docs []*manifest.Document) error {
+const chunkSize = 64 * 1024 // 64KB chunks
+
+// RefactorManifest sends manifest files to the server for AI refactoring via gRPC
+func RefactorManifest(ctx context.Context, docs []*manifest.Document, serverAddr string) error {
 	if len(docs) == 0 {
 		return fmt.Errorf("no documents provided for refactoring")
 	}
 
-	ctx := context.Background()
-	projectID := "kv-spire-devex-ksde" // TODO: Get from config
-	if projectID == "" {
-		return fmt.Errorf("there are no project id")
-	}
-
-	location := "europe-north1"      // TODO: Get from config
-	model := "gemini-2.5-flash-lite" // TODO: Get from config
-	client, err := google.DefaultClient(ctx, aiplatform.CloudPlatformScope)
+	// Connect to the server
+	conn, err := grpc.NewClient(serverAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
-		return fmt.Errorf("failed to create google default client: %w", err)
+		return fmt.Errorf("failed to connect to server: %w", err)
 	}
+	defer conn.Close()
 
-	aiplatformService, err := aiplatform.NewService(ctx, option.WithHTTPClient(client))
-	if err != nil {
-		return fmt.Errorf("failed to create new aiplatform service: %w", err)
-	}
-	// Construct the request
-	endpoint := fmt.Sprintf("projects/%s/locations/%s/publishers/google/models/%s", projectID, location, model)
-	// Replace with your actual Vertex AI Search Datastore ID and location
-	vertexAISearchDatastoreID := "argokit-v2-knowledge_1764338186592"
-	vertexAISearchDatastoreLocation := "eu" // Or the specific location of your datastore
-
-	// Construct the full resource name for the Vertex AI Search datastore
-	// Format: projects/{project}/locations/{location}/collections/default_collection/dataStores/{datastore_id}
-	datastoreResourceName := fmt.Sprintf("projects/%s/locations/%s/collections/default_collection/dataStores/%s",
-		projectID, vertexAISearchDatastoreLocation, vertexAISearchDatastoreID)
+	client := api.NewAIServiceClient(conn)
 
 	// Combine all document contents as context
 	var combinedContent strings.Builder
@@ -56,55 +41,63 @@ func RefactorManifest(docs []*manifest.Document) error {
 		combinedContent.WriteString(doc.Content)
 	}
 
-	req := &aiplatform.GoogleCloudAiplatformV1GenerateContentRequest{
-		SystemInstruction: &aiplatform.GoogleCloudAiplatformV1Content{
-			Parts: []*aiplatform.GoogleCloudAiplatformV1Part{
-				{
-					Text: prompts.RefactorSystemPrompt,
-				},
-			},
-		},
-		Contents: []*aiplatform.GoogleCloudAiplatformV1Content{
-			{
-				Role: "user",
-				Parts: []*aiplatform.GoogleCloudAiplatformV1Part{
-					{
-						Text: combinedContent.String(),
-					},
-				},
-			},
-		},
-		Tools: []*aiplatform.GoogleCloudAiplatformV1Tool{
-			{
-				Retrieval: &aiplatform.GoogleCloudAiplatformV1Retrieval{
-					VertexAiSearch: &aiplatform.GoogleCloudAiplatformV1VertexAISearch{
-						Datastore: datastoreResourceName,
-					},
-				},
-			},
-		},
-	}
-	// Send the request
-	resp, err := aiplatformService.Projects.Locations.Publishers.Models.GenerateContent(endpoint, req).Do()
+	contentBytes := []byte(combinedContent.String())
+
+	// Create the prompt with system instruction
+	prompt := prompts.RefactorSystemPrompt + "\n\n" + "Please refactor the following manifest files:\n\n" + combinedContent.String()
+
+	// Open stream
+	stream, err := client.AnalyzeFile(ctx)
 	if err != nil {
-		return fmt.Errorf("failed to generate content: %w", err)
+		return fmt.Errorf("failed to open stream: %w", err)
 	}
 
-	if len(resp.Candidates) > 0 && len(resp.Candidates[0].Content.Parts) > 0 {
-		if text := resp.Candidates[0].Content.Parts[0].Text; text != "" {
-			// Use the first document's name for the output file
-			firstDoc := docs[0]
-			nameWithoutExt := strings.TrimSuffix(firstDoc.Name, firstDoc.Extension)
-			newPath := fmt.Sprintf("%s.refactored.jsonnet", nameWithoutExt)
+	// Send file in chunks
+	firstDoc := docs[0]
+	for offset := 0; offset < len(contentBytes); offset += chunkSize {
+		end := offset + chunkSize
+		if end > len(contentBytes) {
+			end = len(contentBytes)
+		}
 
-			// Write the refactored content to the new file
-			err := os.WriteFile(newPath, []byte(text), 0644)
-			if err != nil {
-				return fmt.Errorf("failed to write refactored content to file: %w", err)
-			}
-			return nil
+		req := &api.AnalyzeFileRequest{
+			Chunk: contentBytes[offset:end],
+		}
+
+		// Send metadata in first chunk
+		if offset == 0 {
+			req.FileName = firstDoc.Name
+			req.MimeType = "text/plain"
+			req.Prompt = prompt
+		}
+
+		if err := stream.Send(req); err != nil {
+			return fmt.Errorf("failed to send chunk: %w", err)
 		}
 	}
 
-	return fmt.Errorf("no content generated or unexpected response format")
+	// Close and receive response
+	resp, err := stream.CloseAndRecv()
+	if err != nil {
+		if err == io.EOF {
+			return fmt.Errorf("unexpected EOF from server")
+		}
+		return fmt.Errorf("failed to receive response: %w", err)
+	}
+
+	// Write the refactored content to file
+	if resp.Response != "" {
+		nameWithoutExt := strings.TrimSuffix(firstDoc.Name, firstDoc.Extension)
+		newPath := fmt.Sprintf("%s.refactored.jsonnet", nameWithoutExt)
+
+		err := os.WriteFile(newPath, []byte(resp.Response), 0644)
+		if err != nil {
+			return fmt.Errorf("failed to write refactored content to file: %w", err)
+		}
+
+		fmt.Printf("Successfully refactored to: %s\n", newPath)
+		return nil
+	}
+
+	return fmt.Errorf("empty response from server")
 }

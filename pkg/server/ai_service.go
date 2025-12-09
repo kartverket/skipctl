@@ -6,11 +6,12 @@ import (
 	"io"
 	"time"
 
-	"cloud.google.com/go/vertexai/genai"
 	slogcontext "github.com/PumpkinSeed/slog-context"
 	api "github.com/kartverket/skipctl/pkg/api/v1"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
+	"golang.org/x/oauth2/google"
+	"google.golang.org/api/aiplatform/v1"
 	"google.golang.org/api/option"
 )
 
@@ -22,25 +23,33 @@ var (
 
 type AIService struct {
 	api.UnimplementedAIServiceServer
-	globalTimeout time.Duration
-	projectID     string
-	location      string
-	client        *genai.Client
+	globalTimeout     time.Duration
+	projectID         string
+	location          string
+	model             string
+	aiplatformService *aiplatform.Service
 }
 
 func NewAIService(ctx context.Context, reg *prometheus.Registry, globalTimeout time.Duration, projectID, location string, opts ...option.ClientOption) (*AIService, error) {
-	client, err := genai.NewClient(ctx, projectID, location, opts...)
+	// Create authenticated client using Application Default Credentials
+	client, err := google.DefaultClient(ctx, aiplatform.CloudPlatformScope)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create vertex ai client: %w", err)
+		return nil, fmt.Errorf("failed to create google default client: %w", err)
+	}
+
+	aiplatformService, err := aiplatform.NewService(ctx, option.WithHTTPClient(client))
+	if err != nil {
+		return nil, fmt.Errorf("failed to create aiplatform service: %w", err)
 	}
 
 	defineAIMetrics(reg)
 
 	return &AIService{
-		globalTimeout: globalTimeout,
-		projectID:     projectID,
-		location:      location,
-		client:        client,
+		globalTimeout:     globalTimeout,
+		projectID:         projectID,
+		location:          location,
+		model:             "gemini-2.5-flash-lite",
+		aiplatformService: aiplatformService,
 	}, nil
 }
 
@@ -122,40 +131,43 @@ func (s *AIService) AnalyzeFile(stream api.AIService_AnalyzeFileServer) error {
 }
 
 func (s *AIService) analyzeWithVertexAI(ctx context.Context, fileData []byte, mimeType, prompt string) (string, error) {
-	model := s.client.GenerativeModel("gemini-1.5-flash")
+	// Construct the endpoint for the model
+	endpoint := fmt.Sprintf("projects/%s/locations/%s/publishers/google/models/%s",
+		s.projectID, s.location, s.model)
 
-	// Create file part
-	filePart := genai.FileData{
-		MIMEType: mimeType,
-		FileURI:  "", // For inline data
+	// Create the request
+	req := &aiplatform.GoogleCloudAiplatformV1GenerateContentRequest{
+		Contents: []*aiplatform.GoogleCloudAiplatformV1Content{
+			{
+				Role: "user",
+				Parts: []*aiplatform.GoogleCloudAiplatformV1Part{
+					{
+						Text: prompt,
+					},
+				},
+			},
+		},
 	}
 
-	// If you need to upload file first, use:
-	// file, err := s.client.UploadFile(ctx, "", bytes.NewReader(fileData), &genai.UploadFileOptions{
-	// 	MIMEType: mimeType,
-	// })
-
-	// Generate content
-	resp, err := model.GenerateContent(ctx, genai.Text(prompt), filePart)
+	// Send the request to Vertex AI
+	resp, err := s.aiplatformService.Projects.Locations.Publishers.Models.GenerateContent(endpoint, req).Do()
 	if err != nil {
 		return "", fmt.Errorf("failed to generate content: %w", err)
 	}
 
+	// Extract the response text
 	if len(resp.Candidates) == 0 || len(resp.Candidates[0].Content.Parts) == 0 {
 		return "", fmt.Errorf("no response from vertex ai")
 	}
 
-	// Extract text response
-	var result string
-	for _, part := range resp.Candidates[0].Content.Parts {
-		if text, ok := part.(genai.Text); ok {
-			result += string(text)
-		}
+	if text := resp.Candidates[0].Content.Parts[0].Text; text != "" {
+		return text, nil
 	}
 
-	return result, nil
+	return "", fmt.Errorf("empty response from vertex ai")
 }
 
 func (s *AIService) Close() error {
-	return s.client.Close()
+	// No cleanup needed for REST API client
+	return nil
 }
