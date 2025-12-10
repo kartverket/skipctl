@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"log/slog"
 	"os"
 	"strings"
 
@@ -39,6 +40,18 @@ func RefactorManifest(ctx context.Context, docs []*manifest.Document, serverAddr
 		}
 		combinedContent.WriteString(fmt.Sprintf("File: %s\n\n", doc.Name))
 		combinedContent.WriteString(doc.Content)
+
+		// If it's a Jsonnet file, render it to JSON and include the output
+		if isJsonnetFile(doc.Path) && !doc.Rendered {
+			renderedContent, err := renderDocument(ctx, doc)
+			if err != nil {
+				// Log the error but continue - we'll still have the original Jsonnet
+				fmt.Fprintf(os.Stderr, "Warning: failed to render %s: %v\n", doc.Path, err)
+			} else {
+				combinedContent.WriteString("\n\nRendered JSON output:\n")
+				combinedContent.WriteString(renderedContent)
+			}
+		}
 	}
 
 	contentBytes := []byte(combinedContent.String())
@@ -100,4 +113,33 @@ func RefactorManifest(ctx context.Context, docs []*manifest.Document, serverAddr
 	}
 
 	return fmt.Errorf("empty response from server")
+}
+
+func isJsonnetFile(path string) bool {
+	lowerPath := strings.ToLower(path)
+	return strings.HasSuffix(lowerPath, ".jsonnet") || strings.HasSuffix(lowerPath, ".libsonnet")
+}
+
+func renderDocument(ctx context.Context, doc *manifest.Document) (string, error) {
+	// Create a copy of the document for rendering
+	docCopy := &manifest.Document{
+		Name:      doc.Name,
+		Content:   doc.Content,
+		Extension: doc.Extension,
+		Path:      doc.Path,
+		Rendered:  doc.Rendered,
+	}
+
+	// Create a discard logger to suppress render output
+	discardLogger := slog.New(slog.NewTextHandler(io.Discard, nil))
+	renderer := manifest.NewRenderer(discardLogger)
+
+	// Render the document in-place
+	err := renderer.Render(docCopy)
+	if err != nil {
+		return "", fmt.Errorf("failed to render: %w", err)
+	}
+
+	// Return the rendered content
+	return docCopy.Content, nil
 }

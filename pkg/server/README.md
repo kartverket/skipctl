@@ -18,6 +18,12 @@ go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
 export PATH="$PATH:$(go env GOPATH)/bin"
 ```
 
+## Running server locally
+
+```bash
+export GOOGLE_APPLICATION_CREDENTIALS=~/.config/gcloud/skipctl-sa-key.json && ./skipctl serve --gcp-project-id=kv-spire-devex-ksde --gcp-location=europe-north1
+```
+
 ## Creating a New Service
 
 ### 1. Define the Protocol Buffer Service

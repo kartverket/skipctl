@@ -19,7 +19,9 @@ type Document struct {
 	Extension   string
 	Permissions os.FileMode
 	Content     string
+	Path        string
 	FromStdin   bool
+	Rendered    bool
 }
 
 func (d *Document) AtRef(ref string) (*Document, error) {
