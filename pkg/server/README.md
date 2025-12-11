@@ -22,7 +22,7 @@ export PATH="$PATH:$(go env GOPATH)/bin"
 
 ### 1. Set HOME to path
 ```bash
-export PATH="$PATH:/path/to/your/folder"
+export PATH="$PATH:$HOME/bin"
  ```
 ### 2. Generate service accout key
 
