@@ -20,14 +20,10 @@ export PATH="$PATH:$(go env GOPATH)/bin"
 
 ## Authenticate server
 
-### 1. Set HOME to path
-```bash
-export PATH="$PATH:$HOME/bin"
- ```
-### 2. Generate service accout key
+### Generate service accout key
 
 ```bash
-gcloud iam service-accounts keys create ~/.config/gcloud/skipctl-sa-key.json \
+gcloud iam service-accounts keys create $HOME/.config/gcloud/skipctl-sa-key.json \
   --iam-account=skipctl@kv-spire-devex-ksde.iam.gserviceaccount.com
  ```
 
