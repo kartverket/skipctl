@@ -4,7 +4,7 @@ This guide covers how to develop new gRPC services for skipctl.
 
 ## Prerequisites
 
-Install the required tools:
+Install the required tools for development:
 
 ```bash
 # Install protobuf compiler
@@ -17,6 +17,19 @@ go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
 # Ensure Go binaries are in PATH
 export PATH="$PATH:$(go env GOPATH)/bin"
 ```
+
+## Authenticate server
+
+### 1. Set HOME to path
+```bash
+export PATH="$PATH:/path/to/your/folder"
+ ```
+### 2. Generate service accout key
+
+```bash
+gcloud iam service-accounts keys create ~/.config/gcloud/skipctl-sa-key.json \
+  --iam-account=skipctl@kv-spire-devex-ksde.iam.gserviceaccount.com
+ ```
 
 ## Running server locally
 
