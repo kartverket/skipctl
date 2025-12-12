@@ -56,13 +56,16 @@ func RefactorManifest(ctx context.Context, docs []*manifest.Document, serverAddr
 		combinedContent.WriteString(doc.Content)
 
 		// If it's a Jsonnet file, render it to JSON and include the output
-		if isJsonnetFile(doc.Path) && !doc.Rendered {
+		if isJsonnetFile(doc.Extension) && !doc.Rendered {
+			slog.InfoContext(ctx, "Attempting to render Jsonnet file", "file", doc.Name, "extension", doc.Extension)
 			renderedContent, err := renderDocument(doc)
 			if err != nil {
 				// Log the error but continue - we'll still have the original Jsonnet
+				slog.WarnContext(ctx, "Failed to render Jsonnet file", "file", doc.Name, "error", err.Error())
 				fmt.Fprintf(os.Stderr, "Warning: failed to render %s: %v\n", doc.Path, err)
 			} else {
-				combinedContent.WriteString("\n\nRendered JSON output:\n")
+				slog.InfoContext(ctx, "Successfully rendered Jsonnet file", "file", doc.Name, "size", len(renderedContent))
+				combinedContent.WriteString("\n\n---\n\nRendered JSON output:\n")
 				combinedContent.WriteString(renderedContent)
 			}
 		}
@@ -71,7 +74,7 @@ func RefactorManifest(ctx context.Context, docs []*manifest.Document, serverAddr
 	contentBytes := []byte(combinedContent.String())
 
 	// Create the prompt with system instruction
-	prompt := prompts.RefactorSystemPrompt + "\n\n" + "Please refactor the following manifest files:\n\n" + combinedContent.String()
+	prompt := prompts.RefactorSystemPrompt + "\n\n" + "Please refactor the manifest file in the /application, and use the other files for context:\n\n" + combinedContent.String()
 
 	// Open stream
 	stream, err := client.RefactorToArgokitv2(ctx)
@@ -87,7 +90,7 @@ func RefactorManifest(ctx context.Context, docs []*manifest.Document, serverAddr
 			end = len(contentBytes)
 		}
 
-		req := &api.AnalyzeFileRequest{
+		req := &api.RefactorToArgokitv2Request{
 			Chunk: contentBytes[offset:end],
 		}
 
@@ -203,6 +206,8 @@ func renderDocument(doc *manifest.Document) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("failed to render: %w", err)
 	}
+
+	slog.Info("Rendered content", "content", docCopy.Content)
 
 	// Return the rendered content
 	return docCopy.Content, nil
