@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"time"
@@ -30,7 +31,7 @@ type AIService struct {
 	aiplatformService *aiplatform.Service
 }
 
-func NewAIService(ctx context.Context, reg *prometheus.Registry, globalTimeout time.Duration, projectID, location string, opts ...option.ClientOption) (*AIService, error) {
+func NewAIService(ctx context.Context, reg *prometheus.Registry, globalTimeout time.Duration, projectID, location string) (*AIService, error) {
 	// Create authenticated client using Application Default Credentials
 	client, err := google.DefaultClient(ctx, aiplatform.CloudPlatformScope)
 	if err != nil {
@@ -77,7 +78,7 @@ func (s *AIService) AnalyzeFile(stream api.AIService_AnalyzeFileServer) error {
 	log.InfoContext(reqCtx, "received file analysis request")
 
 	// Create timeout context
-	netCtx, cancel := globalTimeoutContext(reqCtx, s.globalTimeout)
+	_, cancel := globalTimeoutContext(reqCtx, s.globalTimeout)
 	defer cancel()
 
 	// Receive file chunks from client
@@ -88,7 +89,7 @@ func (s *AIService) AnalyzeFile(stream api.AIService_AnalyzeFileServer) error {
 
 	for {
 		req, err := stream.Recv()
-		if err == io.EOF {
+		if errors.Is(err, io.EOF) {
 			break
 		}
 		if err != nil {
@@ -114,7 +115,7 @@ func (s *AIService) AnalyzeFile(stream api.AIService_AnalyzeFileServer) error {
 	log.InfoContext(reqCtx, "file received", "size", len(fileData))
 
 	// Analyze file with Vertex AI
-	response, err := s.analyzeWithVertexAI(netCtx, fileData, mimeType, prompt)
+	response, err := s.analyzeWithVertexAI(prompt)
 	if err != nil {
 		aiRequestsFailed.Inc()
 		log.ErrorContext(reqCtx, "vertex ai analysis failed", "error", err)
@@ -130,7 +131,7 @@ func (s *AIService) AnalyzeFile(stream api.AIService_AnalyzeFileServer) error {
 	})
 }
 
-func (s *AIService) analyzeWithVertexAI(ctx context.Context, fileData []byte, mimeType, prompt string) (string, error) {
+func (s *AIService) analyzeWithVertexAI(prompt string) (string, error) {
 	// Construct the endpoint for the model
 	endpoint := fmt.Sprintf("projects/%s/locations/%s/publishers/google/models/%s",
 		s.projectID, s.location, s.model)

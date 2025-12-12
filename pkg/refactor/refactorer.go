@@ -2,13 +2,17 @@ package refactor
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"log/slog"
 	"os"
+	"path/filepath"
+	"regexp"
 	"strings"
 
 	api "github.com/kartverket/skipctl/pkg/api/v1"
+	"github.com/kartverket/skipctl/pkg/logging"
 	"github.com/kartverket/skipctl/pkg/manifest"
 	"github.com/kartverket/skipctl/pkg/prompts"
 	"google.golang.org/grpc"
@@ -32,6 +36,16 @@ func RefactorManifest(ctx context.Context, docs []*manifest.Document, serverAddr
 
 	client := api.NewAIServiceClient(conn)
 
+	mainDoc := docs[0]
+
+	// Extract imported files
+	importedDocs, err := extractImportedFiles(mainDoc)
+	if err != nil {
+		slog.WarnContext(ctx, "Failed to extract imports", "error", err.Error())
+	} else {
+		docs = append(docs, importedDocs...)
+	}
+
 	// Combine all document contents as context
 	var combinedContent strings.Builder
 	for i, doc := range docs {
@@ -43,7 +57,7 @@ func RefactorManifest(ctx context.Context, docs []*manifest.Document, serverAddr
 
 		// If it's a Jsonnet file, render it to JSON and include the output
 		if isJsonnetFile(doc.Path) && !doc.Rendered {
-			renderedContent, err := renderDocument(ctx, doc)
+			renderedContent, err := renderDocument(doc)
 			if err != nil {
 				// Log the error but continue - we'll still have the original Jsonnet
 				fmt.Fprintf(os.Stderr, "Warning: failed to render %s: %v\n", doc.Path, err)
@@ -92,7 +106,7 @@ func RefactorManifest(ctx context.Context, docs []*manifest.Document, serverAddr
 	// Close and receive response
 	resp, err := stream.CloseAndRecv()
 	if err != nil {
-		if err == io.EOF {
+		if errors.Is(err, io.EOF) {
 			return fmt.Errorf("unexpected EOF from server")
 		}
 		return fmt.Errorf("failed to receive response: %w", err)
@@ -115,12 +129,64 @@ func RefactorManifest(ctx context.Context, docs []*manifest.Document, serverAddr
 	return fmt.Errorf("empty response from server")
 }
 
+func extractImportedFiles(doc *manifest.Document) ([]*manifest.Document, error) {
+	{
+		// Matches: import 'file.libsonnet', importstr 'file.txt', import "file.libsonnet"
+		importRegex := regexp.MustCompile(`(?:import|importstr)\s+['"]([^'"]+)['"]`)
+
+		matches := importRegex.FindAllStringSubmatch(doc.Content, -1)
+		if len(matches) == 0 {
+			return nil, nil
+		}
+
+		var importedDocs []*manifest.Document
+		baseDir := filepath.Dir(doc.Path)
+		seen := make(map[string]bool)
+
+		for _, match := range matches {
+			if len(match) < 2 {
+				continue
+			}
+
+			importPath := match[1]
+
+			// Resolve relative path
+			absPath := filepath.Join(baseDir, importPath)
+
+			// Avoid duplicates
+			if seen[absPath] {
+				continue
+			}
+			seen[absPath] = true
+
+			// Read the imported file
+			content, err := os.ReadFile(absPath)
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "Warning: failed to read imported file %s: %v\n", absPath, err)
+				continue
+			}
+
+			importedDoc := &manifest.Document{
+				Name:      filepath.Base(absPath),
+				Content:   string(content),
+				Extension: filepath.Ext(absPath),
+				Path:      absPath,
+				Rendered:  false,
+			}
+
+			importedDocs = append(importedDocs, importedDoc)
+		}
+
+		return importedDocs, nil
+	}
+}
+
 func isJsonnetFile(path string) bool {
 	lowerPath := strings.ToLower(path)
 	return strings.HasSuffix(lowerPath, ".jsonnet") || strings.HasSuffix(lowerPath, ".libsonnet")
 }
 
-func renderDocument(ctx context.Context, doc *manifest.Document) (string, error) {
+func renderDocument(doc *manifest.Document) (string, error) {
 	// Create a copy of the document for rendering
 	docCopy := &manifest.Document{
 		Name:      doc.Name,
@@ -130,9 +196,7 @@ func renderDocument(ctx context.Context, doc *manifest.Document) (string, error)
 		Rendered:  doc.Rendered,
 	}
 
-	// Create a discard logger to suppress render output
-	discardLogger := slog.New(slog.NewTextHandler(io.Discard, nil))
-	renderer := manifest.NewRenderer(discardLogger)
+	renderer := manifest.NewRenderer(logging.Logger())
 
 	// Render the document in-place
 	err := renderer.Render(docCopy)
