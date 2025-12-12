@@ -20,7 +20,7 @@ export PATH="$PATH:$(go env GOPATH)/bin"
 
 ## Authenticate server
 
-### Generate service accout key
+### Generate service account key
 
 ```bash
 gcloud iam service-accounts keys create $HOME/.config/gcloud/skipctl-sa-key.json \

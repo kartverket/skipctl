@@ -74,7 +74,7 @@ func RefactorManifest(ctx context.Context, docs []*manifest.Document, serverAddr
 	prompt := prompts.RefactorSystemPrompt + "\n\n" + "Please refactor the following manifest files:\n\n" + combinedContent.String()
 
 	// Open stream
-	stream, err := client.AnalyzeFile(ctx)
+	stream, err := client.RefactorToArgokitv2(ctx)
 	if err != nil {
 		return fmt.Errorf("failed to open stream: %w", err)
 	}

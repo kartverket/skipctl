@@ -6,12 +6,12 @@ option go_package = "github.com/kartverket/skipctl/pkg/api/v1;apiv1";
 
 // The AI service definition.
 service AIService {
-  // Analyze a file with Vertex AI
-  rpc AnalyzeFile(stream AnalyzeFileRequest) returns (AnalyzeFileResponse);
+  // Refactor a file to Argokit v2 with Vertex AI
+  rpc RefactorToArgokitv2(stream RefactorToArgokitv2Request) returns (RefactorToArgokitv2Response);
 }
 
 // Request message for streaming file upload
-message AnalyzeFileRequest {
+message RefactorToArgokitv2Request {
   // File chunk data
   bytes chunk = 1;
   // File name (sent in first chunk)
@@ -23,7 +23,7 @@ message AnalyzeFileRequest {
 }
 
 // Response message for file analysis
-message AnalyzeFileResponse {
+message RefactorToArgokitv2Response {
   // AI-generated response
   string response = 1;
 }
