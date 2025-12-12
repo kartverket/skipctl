@@ -69,13 +69,13 @@ func defineAIMetrics(reg *prometheus.Registry) {
 	})
 }
 
-func (s *AIService) AnalyzeFile(stream api.AIService_AnalyzeFileServer) error {
+func (s *AIService) RefactorToArgokitv2(stream api.AIService_RefactorToArgokitv2Server) error {
 	ctx := stream.Context()
-	reqCtx := slogcontext.WithValue(ctx, "service", "ai_analyze_file")
+	reqCtx := slogcontext.WithValue(ctx, "service", "ai_refactor_to_argokitv2")
 
 	defer aiRequestsProcessed.Inc()
 
-	log.InfoContext(reqCtx, "received file analysis request")
+	log.InfoContext(reqCtx, "received refactor to argokitv2 request")
 
 	// Create timeout context
 	_, cancel := globalTimeoutContext(reqCtx, s.globalTimeout)
@@ -123,10 +123,10 @@ func (s *AIService) AnalyzeFile(stream api.AIService_AnalyzeFileServer) error {
 	}
 
 	aiRequestsOK.Inc()
-	log.InfoContext(reqCtx, "file analysis completed successfully")
+	log.InfoContext(reqCtx, "refactor to argokitv2 completed successfully")
 
 	// Send response back to client
-	return stream.SendAndClose(&api.AnalyzeFileResponse{
+	return stream.SendAndClose(&api.RefactorToArgokitv2Response{
 		Response: response,
 	})
 }
