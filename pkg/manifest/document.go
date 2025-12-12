@@ -76,6 +76,7 @@ func FromFiles(filenames []string) ([]*Document, error) {
 			Extension:   ext,
 			Permissions: finfo.Mode().Perm(),
 			Content:     string(fileContent),
+			Path:        filename,
 			FromStdin:   false,
 		})
 	}

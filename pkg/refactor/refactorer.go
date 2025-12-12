@@ -74,7 +74,7 @@ func RefactorManifest(ctx context.Context, docs []*manifest.Document, serverAddr
 	contentBytes := []byte(combinedContent.String())
 
 	// Create the prompt with system instruction
-	prompt := prompts.RefactorSystemPrompt + "\n\n" + "Please refactor the manifest file in the /application, and use the other files for context:\n\n" + combinedContent.String()
+	prompt := prompts.RefactorSystemPrompt + "\n\n" + "Please refactor the libsonnet file in the /application, and use the other files for context:\n\n" + combinedContent.String()
 
 	// Open stream
 	stream, err := client.RefactorToArgokitv2(ctx)
@@ -117,8 +117,7 @@ func RefactorManifest(ctx context.Context, docs []*manifest.Document, serverAddr
 
 	// Write the refactored content to file
 	if resp.Response != "" {
-		nameWithoutExt := strings.TrimSuffix(firstDoc.Name, firstDoc.Extension)
-		newPath := fmt.Sprintf("%s.refactored.jsonnet", nameWithoutExt)
+		newPath := fmt.Sprintf("%s.libsonnet", "vertexAI_output")
 
 		err := os.WriteFile(newPath, []byte(resp.Response), 0644)
 		if err != nil {
@@ -143,7 +142,13 @@ func extractImportedFiles(doc *manifest.Document) ([]*manifest.Document, error) 
 		}
 
 		var importedDocs []*manifest.Document
-		baseDir := filepath.Dir(doc.Path)
+
+		// Get absolute path to the directory containing the main document
+		absDocPath, err := filepath.Abs(doc.Path)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get absolute path for %s: %w", doc.Path, err)
+		}
+		baseDir := filepath.Dir(absDocPath)
 		seen := make(map[string]bool)
 
 		for _, match := range matches {
@@ -153,8 +158,17 @@ func extractImportedFiles(doc *manifest.Document) ([]*manifest.Document, error) 
 
 			importPath := match[1]
 
-			// Resolve relative path
+			// Resolve relative path - filepath.Join handles ./ and ../ correctly
 			absPath := filepath.Join(baseDir, importPath)
+
+			// Clean the path to resolve . and .. properly
+			absPath = filepath.Clean(absPath)
+
+			slog.Info("Import path resolution",
+				"importPath", importPath,
+				"baseDir", baseDir,
+				"absPath", absPath,
+				"docPath", doc.Path)
 
 			// Avoid duplicates
 			if seen[absPath] {
@@ -162,7 +176,7 @@ func extractImportedFiles(doc *manifest.Document) ([]*manifest.Document, error) 
 			}
 			seen[absPath] = true
 
-			// Read the imported file
+			// Read the imported file using the absolute path
 			content, err := os.ReadFile(absPath)
 			if err != nil {
 				fmt.Fprintf(os.Stderr, "Warning: failed to read imported file %s: %v\n", absPath, err)
