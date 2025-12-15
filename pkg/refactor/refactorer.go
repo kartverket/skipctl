@@ -164,12 +164,6 @@ func extractImportedFiles(doc *manifest.Document) ([]*manifest.Document, error) 
 			// Clean the path to resolve . and .. properly
 			absPath = filepath.Clean(absPath)
 
-			slog.Info("Import path resolution",
-				"importPath", importPath,
-				"baseDir", baseDir,
-				"absPath", absPath,
-				"docPath", doc.Path)
-
 			// Avoid duplicates
 			if seen[absPath] {
 				continue

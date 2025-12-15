@@ -99,12 +99,23 @@ If probes exist, define as local variable BEFORE the function:
     + application.withLiveness(probe)    // ONLY if livenessProbe exists
     + application.withReadiness(probe)   // ONLY if readinessProbe exists
 
-Probe parameters (extract from manifest):
-  - path: from httpGet.path in manifest
-  - port: from httpGet.port in manifest
-  - failureThreshold: from manifest (default 3)
-  - timeout: from timeoutSeconds in manifest (default 1)
-  - initialDelay: from initialDelaySeconds in manifest (default 0)
+CRITICAL PROBE RULES:
+  - ONLY include fields that exist in the original manifest
+  - DO NOT add default values for failureThreshold, timeout, or initialDelay unless they are explicitly in the manifest
+  - Match the exact probe configuration from the source - no more, no less
+
+Probe parameters (extract ONLY if present in manifest):
+  - path: from httpGet.path in manifest (REQUIRED)
+  - port: from httpGet.port in manifest (REQUIRED)
+  - failureThreshold: ONLY if specified in manifest
+  - timeout: ONLY if timeoutSeconds is specified in manifest
+  - initialDelay: ONLY if initialDelaySeconds is specified in manifest
+
+Example with minimal probe (most common):
+  local probe = application.probe(path='/health', port=8080);
+
+Example with all fields (only if all exist in manifest):
+  local probe = application.probe(path='/health', port=8080, failureThreshold=3, timeout=1, initialDelay=0);
 
 ### 5. ACCESS POLICIES
 
@@ -168,6 +179,13 @@ Note: Use conditional logic (if/else) for environment-specific values.
 
 For features not supported by ArgoKit, use object composition at the end:
 
+CRITICAL: When adding raw Kubernetes objects, follow these rules:
+  1. Match resource names EXACTLY from the source manifest
+  2. Use EXACT field names from Kubernetes specs (e.g., env[].name NOT env[].key)
+  3. DO NOT add extra fields or default values unless they exist in the source
+  4. Preserve string formatting and concatenation patterns from the source
+
+Example:
   + {
     application+: {
       spec+: {
@@ -190,7 +208,7 @@ For features not supported by ArgoKit, use object composition at the end:
       {
         apiVersion: 'networking.istio.io/v1',
         kind: 'DestinationRule',
-        metadata: {name: 'istio-sticky-' + name},
+        metadata: {name: 'istio-sticky-' + name},  // Match exact name pattern from source
         spec: {
           host: name,
           trafficPolicy: {
@@ -204,6 +222,12 @@ For features not supported by ArgoKit, use object composition at the end:
       },
     ],
   }
+
+KUBERNETES SCHEMA REQUIREMENTS:
+  - Environment variables MUST use env[].name, never env[].key
+  - Resource names MUST match exactly (including any prefixes/suffixes)
+  - Only include fields that exist in the source manifest
+  - Preserve exact string values and concatenation patterns
 
 ### 9. NO HALLUCINATION - VALID FUNCTIONS ONLY
 
@@ -321,6 +345,22 @@ CRITICAL: DO NOT ADD FEATURES NOT IN THE ORIGINAL MANIFEST!
   - NO access policies unless NetworkPolicy or similar exists
   - ONLY refactor what is actually present - do not invent or assume features
 
+CRITICAL SCHEMA CORRECTNESS:
+  - Environment variables MUST use "name" field: {name: "KEY", value: "val"}
+  - NEVER use "key" field: {key: "KEY", value: "val"} ❌ WRONG
+  - Match resource names EXACTLY including prefixes (e.g., "istio-sticky-" not "istio-sticky")
+  - DO NOT add default values for probe fields (failureThreshold, timeout, initialDelay) unless they exist in source
+  - Match the EXACT list and order of environment variables from the source manifest
+  - DO NOT add extra fields that aren't in the source manifest
+
+CRITICAL MATCHING RULES:
+  1. Resource names must match EXACTLY (character-by-character)
+  2. Environment variable list must match EXACTLY (same vars, same order, same values)
+  3. Probe configuration must match EXACTLY (only include fields present in source)
+  4. String concatenation patterns must match EXACTLY (e.g., 'istio-sticky-' + name)
+  5. Do not add "helpful" defaults or extra configuration
+  6. When in doubt, match the target structure byte-for-byte
+
 PARAMETER NAMING:
   - env: environment (dev/prod)
   - name: application name
@@ -331,4 +371,4 @@ PARAMETER NAMING:
   - dbUser: database user
   - replyUrl: OAuth/OIDC reply URL
 
-REMEMBER: Follow example 6 structure exactly. Use function parameters for environment-specific values. Group configurations with comments. Use withEnvironmentVariables({...}) for multiple static env vars.`
+REMEMBER: Follow example 6 structure exactly. Use function parameters for environment-specific values. Group configurations with comments. Use withEnvironmentVariables({...}) for multiple static env vars. Match the source manifest EXACTLY - no extras, no omissions, correct field names.`
