@@ -86,7 +86,7 @@ func runDiff(cmd *cobra.Command, _ []string) error {
 	// If kustomize is enabled, ref must be a valid directory
 	if kustomizeEnabled && !isValidDirectoryRef {
 		refErr := fmt.Errorf("with --kustomize flag, --ref must be a valid directory path: %s", ref)
-		log.Error(refErr.Error())
+		log.Error("invalid ref", "error", refErr)
 		return refErr
 	}
 
@@ -98,7 +98,7 @@ func runDiff(cmd *cobra.Command, _ []string) error {
 			source = manifest.NewGitSource(ref)
 		} else {
 			refErr := fmt.Errorf("invalid commit ref %s", ref)
-			log.Error(refErr.Error())
+			log.Error("invalid ref", "error", refErr)
 			return refErr
 		}
 	}
