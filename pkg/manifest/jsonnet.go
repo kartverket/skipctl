@@ -8,6 +8,7 @@ import (
 	"github.com/google/go-jsonnet"
 	"github.com/kartverket/skipctl/pkg/diff"
 	"github.com/kartverket/skipctl/pkg/logging"
+	"github.com/kartverket/skipctl/pkg/utils"
 )
 
 // JsonnetRenderer renders jsonnet files.
@@ -21,7 +22,7 @@ type JsonnetRenderer struct {
 func NewJsonnetRenderer(output *slog.Logger, cache *ImportCache, ref ...string) *JsonnetRenderer {
 	vm := jsonnet.MakeVM()
 
-	if len(ref) > 0 {
+	if len(ref) > 0 && !utils.IsValidDirectoryRef(ref[0]) {
 		vm.Importer(NewGitFileImporter(ref[0], cache))
 	} else {
 		vm.Importer(NewFileImporter(cache))

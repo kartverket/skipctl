@@ -218,13 +218,13 @@ func TestDiffsToPatch_EmptyOrNoChanges(t *testing.T) {
 func TestDiffsToPatch_WithChangesAndHunks(t *testing.T) {
 	// Two separated change regions to exercise hunk splitting
 	diffs := []*ManifestDiff{
-		{Type: constants.Equals, Text: "a1", Line: 1},
-		{Type: constants.Deletion, Text: "a2", Line: 2},
-		{Type: constants.Insertion, Text: "b2", Line: 2},
-		{Type: constants.Equals, Text: "a3", Line: 3},
+		{Type: constants.Equals, Text: "a1", Line: 1, OldLine: 1, NewLine: 1},
+		{Type: constants.Deletion, Text: "a2", Line: 2, OldLine: 2, NewLine: 2},
+		{Type: constants.Insertion, Text: "b2", Line: 2, OldLine: 3, NewLine: 2},
+		{Type: constants.Equals, Text: "a3", Line: 3, OldLine: 3, NewLine: 3},
 		// gap here (simulate jump)
-		{Type: constants.Equals, Text: "a10", Line: 10},
-		{Type: constants.Insertion, Text: "b11", Line: 11},
+		{Type: constants.Equals, Text: "a10", Line: 10, OldLine: 10, NewLine: 10},
+		{Type: constants.Insertion, Text: "b11", Line: 11, OldLine: 11, NewLine: 11},
 	}
 
 	out := DiffsToPatch(diffs, "file.txt")
