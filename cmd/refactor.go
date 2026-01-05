@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"errors"
 	"fmt"
 	"os"
 
@@ -30,13 +31,14 @@ func runRefactor(cmd *cobra.Command, args []string) error {
 	var filePaths []string
 
 	// Priority: positional arguments > -p flag
-	if len(args) > 0 {
+	switch {
+	case len(args) > 0:
 		filePaths = args
-	} else if path != "." {
+	case path != ".":
 		filePaths = []string{path}
-	} else {
+	default:
 		log.Error("No files specified for refactoring")
-		return fmt.Errorf("please provide file paths as arguments or use the -p flag")
+		return errors.New("please provide file paths as arguments or use the -p flag")
 	}
 
 	// Validate that all paths are files, not directories
@@ -67,7 +69,7 @@ func runRefactor(cmd *cobra.Command, args []string) error {
 	}
 
 	// Pass all files as context together for refactoring via gRPC server
-	err = refactor.RefactorManifest(cmd.Context(), manifestFiles, serverAddr)
+	err = refactor.Manifest(cmd.Context(), manifestFiles, serverAddr)
 	return err
 }
 func init() {

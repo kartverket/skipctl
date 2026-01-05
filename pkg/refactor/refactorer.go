@@ -21,10 +21,10 @@ import (
 
 const chunkSize = 64 * 1024 // 64KB chunks
 
-// RefactorManifest sends manifest files to the server for AI refactoring via gRPC
-func RefactorManifest(ctx context.Context, docs []*manifest.Document, serverAddr string) error {
+// Manifest sends manifest files to the server for AI refactoring via gRPC
+func Manifest(ctx context.Context, docs []*manifest.Document, serverAddr string) error {
 	if len(docs) == 0 {
-		return fmt.Errorf("no documents provided for refactoring")
+		return errors.New("no documents provided for refactoring")
 	}
 
 	// Connect to the server
@@ -36,17 +36,39 @@ func RefactorManifest(ctx context.Context, docs []*manifest.Document, serverAddr
 
 	client := api.NewAIServiceClient(conn)
 
-	mainDoc := docs[0]
-
-	// Extract imported files
-	importedDocs, err := extractImportedFiles(mainDoc)
+	// Extract and append imported files
+	docs, err = appendImportedFiles(docs)
 	if err != nil {
 		slog.WarnContext(ctx, "Failed to extract imports", "error", err.Error())
-	} else {
-		docs = append(docs, importedDocs...)
 	}
 
-	// Combine all document contents as context
+	// Build combined content from all documents
+	combinedContent := buildCombinedContent(ctx, docs)
+	contentBytes := []byte(combinedContent)
+
+	// Create the prompt with system instruction
+	prompt := prompts.RefactorSystemPrompt + "\n\n" + "Please refactor the libsonnet file in the /application, and use the other files for context:\n\n" + combinedContent
+
+	// Stream content to server
+	resp, err := streamToServer(ctx, client, docs[0], contentBytes, prompt)
+	if err != nil {
+		return err
+	}
+
+	// Write the refactored content to file
+	return writeRefactoredOutput(ctx, resp)
+}
+
+func appendImportedFiles(docs []*manifest.Document) ([]*manifest.Document, error) {
+	mainDoc := docs[0]
+	importedDocs, err := extractImportedFiles(mainDoc)
+	if err != nil {
+		return docs, err
+	}
+	return append(docs, importedDocs...), nil
+}
+
+func buildCombinedContent(ctx context.Context, docs []*manifest.Document) string {
 	var combinedContent strings.Builder
 	for i, doc := range docs {
 		if i > 0 {
@@ -57,33 +79,32 @@ func RefactorManifest(ctx context.Context, docs []*manifest.Document, serverAddr
 
 		// If it's a Jsonnet file, render it to JSON and include the output
 		if isJsonnetFile(doc.Extension) && !doc.Rendered {
-			slog.InfoContext(ctx, "Attempting to render Jsonnet file", "file", doc.Name, "extension", doc.Extension)
-			renderedContent, err := renderDocument(doc)
-			if err != nil {
-				// Log the error but continue - we'll still have the original Jsonnet
-				slog.WarnContext(ctx, "Failed to render Jsonnet file", "file", doc.Name, "error", err.Error())
-				fmt.Fprintf(os.Stderr, "Warning: failed to render %s: %v\n", doc.Path, err)
-			} else {
-				slog.InfoContext(ctx, "Successfully rendered Jsonnet file", "file", doc.Name, "size", len(renderedContent))
-				combinedContent.WriteString("\n\n---\n\nRendered JSON output:\n")
-				combinedContent.WriteString(renderedContent)
-			}
+			appendRenderedContent(ctx, &combinedContent, doc)
 		}
 	}
+	return combinedContent.String()
+}
 
-	contentBytes := []byte(combinedContent.String())
+func appendRenderedContent(ctx context.Context, builder *strings.Builder, doc *manifest.Document) {
+	slog.InfoContext(ctx, "Attempting to render Jsonnet file", "file", doc.Name, "extension", doc.Extension)
+	renderedContent, err := renderDocument(doc)
+	if err != nil {
+		slog.WarnContext(ctx, "Failed to render Jsonnet file", "file", doc.Name, "error", err.Error())
+		fmt.Fprintf(os.Stderr, "Warning: failed to render %s: %v\n", doc.Path, err)
+		return
+	}
+	slog.InfoContext(ctx, "Successfully rendered Jsonnet file", "file", doc.Name, "size", len(renderedContent))
+	builder.WriteString("\n\n---\n\nRendered JSON output:\n")
+	builder.WriteString(renderedContent)
+}
 
-	// Create the prompt with system instruction
-	prompt := prompts.RefactorSystemPrompt + "\n\n" + "Please refactor the libsonnet file in the /application, and use the other files for context:\n\n" + combinedContent.String()
-
-	// Open stream
+func streamToServer(ctx context.Context, client api.AIServiceClient, firstDoc *manifest.Document, contentBytes []byte, prompt string) (*api.RefactorToArgokitv2Response, error) {
 	stream, err := client.RefactorToArgokitv2(ctx)
 	if err != nil {
-		return fmt.Errorf("failed to open stream: %w", err)
+		return nil, fmt.Errorf("failed to open stream: %w", err)
 	}
 
 	// Send file in chunks
-	firstDoc := docs[0]
 	for offset := 0; offset < len(contentBytes); offset += chunkSize {
 		end := offset + chunkSize
 		if end > len(contentBytes) {
@@ -101,8 +122,8 @@ func RefactorManifest(ctx context.Context, docs []*manifest.Document, serverAddr
 			req.Prompt = prompt
 		}
 
-		if err := stream.Send(req); err != nil {
-			return fmt.Errorf("failed to send chunk: %w", err)
+		if sendErr := stream.Send(req); sendErr != nil {
+			return nil, fmt.Errorf("failed to send chunk: %w", sendErr)
 		}
 	}
 
@@ -110,25 +131,26 @@ func RefactorManifest(ctx context.Context, docs []*manifest.Document, serverAddr
 	resp, err := stream.CloseAndRecv()
 	if err != nil {
 		if errors.Is(err, io.EOF) {
-			return fmt.Errorf("unexpected EOF from server")
+			return nil, errors.New("unexpected EOF from server")
 		}
-		return fmt.Errorf("failed to receive response: %w", err)
+		return nil, fmt.Errorf("failed to receive response: %w", err)
 	}
 
-	// Write the refactored content to file
-	if resp.Response != "" {
-		newPath := fmt.Sprintf("%s.libsonnet", "vertexAI_output")
+	return resp, nil
+}
 
-		err := os.WriteFile(newPath, []byte(resp.Response), 0644)
-		if err != nil {
-			return fmt.Errorf("failed to write refactored content to file: %w", err)
-		}
-
-		fmt.Printf("Successfully refactored to: %s\n", newPath)
-		return nil
+func writeRefactoredOutput(ctx context.Context, resp *api.RefactorToArgokitv2Response) error {
+	if resp.GetResponse() == "" {
+		return errors.New("empty response from server")
 	}
 
-	return fmt.Errorf("empty response from server")
+	newPath := fmt.Sprintf("%s.libsonnet", "vertexAI_output")
+	if err := os.WriteFile(newPath, []byte(resp.GetResponse()), 0600); err != nil {
+		return fmt.Errorf("failed to write refactored content to file: %w", err)
+	}
+
+	slog.InfoContext(ctx, "Successfully refactored", "output", newPath)
+	return nil
 }
 
 func extractImportedFiles(doc *manifest.Document) ([]*manifest.Document, error) {
@@ -151,8 +173,9 @@ func extractImportedFiles(doc *manifest.Document) ([]*manifest.Document, error) 
 		baseDir := filepath.Dir(absDocPath)
 		seen := make(map[string]bool)
 
+		const minMatchLength = 2
 		for _, match := range matches {
-			if len(match) < 2 {
+			if len(match) < minMatchLength {
 				continue
 			}
 
@@ -171,9 +194,9 @@ func extractImportedFiles(doc *manifest.Document) ([]*manifest.Document, error) 
 			seen[absPath] = true
 
 			// Read the imported file using the absolute path
-			content, err := os.ReadFile(absPath)
-			if err != nil {
-				fmt.Fprintf(os.Stderr, "Warning: failed to read imported file %s: %v\n", absPath, err)
+			content, readErr := os.ReadFile(absPath)
+			if readErr != nil {
+				fmt.Fprintf(os.Stderr, "Warning: failed to read imported file %s: %v\n", absPath, readErr)
 				continue
 			}
 

@@ -158,14 +158,14 @@ func (s *AIService) analyzeWithVertexAI(prompt string) (string, error) {
 
 	// Extract the response text
 	if len(resp.Candidates) == 0 || len(resp.Candidates[0].Content.Parts) == 0 {
-		return "", fmt.Errorf("no response from vertex ai")
+		return "", errors.New("no response from vertex ai")
 	}
 
 	if text := resp.Candidates[0].Content.Parts[0].Text; text != "" {
 		return text, nil
 	}
 
-	return "", fmt.Errorf("empty response from vertex ai")
+	return "", errors.New("empty response from vertex ai")
 }
 
 func (s *AIService) Close() error {
