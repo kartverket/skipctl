@@ -9,11 +9,11 @@ import (
 	"github.com/kartverket/skipctl/pkg/constants"
 )
 
-func TestLCS_NoDiff(t *testing.T) {
+func TestCalculateDiff_NoDiff(t *testing.T) {
 	a := "line1\nline2\nline3"
 	b := "line1\nline2\nline3"
 
-	diffs, hasDiff := LCS(a, b)
+	diffs, hasDiff := CalculateDiff(a, b)
 
 	if hasDiff {
 		t.Fatalf("expected hasDiff=false, got true")
@@ -30,22 +30,94 @@ func TestLCS_NoDiff(t *testing.T) {
 		}
 	}
 }
+func TestCalculateDiff_InsertDelete(t *testing.T) {
+	old := `{
+  person: {
+	name: 'Alice',
+	age: 30 + 12 + 'bob',
+	hobbies: [
+	  'reading',
+	  'cycling',
+	] + ['reading'],
+  },
+}
+`
+	updated := `{
+  person: {
+	name: 'Alice',
+	age: 30 + 12 + 'bob',
+	hobbies: [
+	  'backflipping',
+	  'shooting',
+	  'cycling',
+	] + ['reading'],
+  },
+}
+`
+	diffs, hasDiff := CalculateDiff(old, updated)
+	if !hasDiff {
+		t.Fatalf("expected hasDiff=true, but got false")
+	}
 
-func TestLCS_InsertDelete(t *testing.T) {
+	// Build the expected sequence
+	gotTypes := make([]string, 0, len(diffs))
+	gotTexts := make([]string, 0, len(diffs))
+	for _, d := range diffs {
+		gotTypes = append(gotTypes, d.Type)
+		gotTexts = append(gotTexts, d.Text)
+	}
+
+	// Expected: equals for lines 1-5, then deletion of 'reading', insertions of 'backflipping' and 'shooting', equals for rest
+	expectedTypes := []string{
+		constants.Equals,    // {
+		constants.Equals,    //   person: {
+		constants.Equals,    //     name: 'Alice',
+		constants.Equals,    //     age: 30 + 12 + 'bob',
+		constants.Equals,    //     hobbies: [
+		constants.Deletion,  //       'reading',
+		constants.Insertion, //       'backflipping',
+		constants.Insertion, //       'shooting',
+		constants.Equals,    //       'cycling',
+		constants.Equals,    //     ] + ['reading'],
+		constants.Equals,    //   },
+		constants.Equals,    // }
+	}
+
+	expectedTexts := []string{
+		"{",
+		"  person: {",
+		"\tname: 'Alice',",
+		"\tage: 30 + 12 + 'bob',",
+		"\thobbies: [",
+		"\t  'reading',",
+		"\t  'backflipping',",
+		"\t  'shooting',",
+		"\t  'cycling',",
+		"\t] + ['reading'],",
+		"  },",
+		"}",
+	}
+
+	if len(gotTypes) != len(expectedTypes) {
+		t.Fatalf("unexpected number of diffs: got %d want %d", len(gotTypes), len(expectedTypes))
+	}
+
+	if strings.Join(gotTypes, ",") != strings.Join(expectedTypes, ",") {
+		t.Fatalf("unexpected type sequence:\ngot:  %v\nwant: %v", gotTypes, expectedTypes)
+	}
+
+	if strings.Join(gotTexts, ",") != strings.Join(expectedTexts, ",") {
+		t.Fatalf("unexpected text sequence:\ngot:  %v\nwant: %v", gotTexts, expectedTexts)
+	}
+}
+func TestCalculateDiffOneString_InsertDelete(t *testing.T) {
 	a := "a1\na2\na3"
 	b := "a1\nb2\na3\nb4"
 
-	diffs, hasDiff := LCS(a, b)
+	diffs, hasDiff := CalculateDiff(a, b)
 	if !hasDiff {
 		t.Fatalf("expected hasDiff=true, got false")
 	}
-
-	// Expected sequence:
-	// = a1 (line 1)
-	// - a2 (line 2 in A)
-	// + b2 (line 2 in B)
-	// = a3 (line 3)
-	// + b4 (trailing insertion, line index is j during trailing phase which code sets to j)
 	gotTypes := make([]string, 0, len(diffs))
 	gotTexts := make([]string, 0, len(diffs))
 	for _, d := range diffs {
@@ -55,11 +127,12 @@ func TestLCS_InsertDelete(t *testing.T) {
 	expectedTypes := []string{
 		constants.Equals,
 		constants.Deletion,
+		constants.Deletion,
 		constants.Insertion,
-		constants.Equals,
+		constants.Insertion,
 		constants.Insertion,
 	}
-	expectedTexts := []string{"a1", "a2", "b2", "a3", "b4"}
+	expectedTexts := []string{"a1", "a2", "a3", "b2", "a3", "b4"}
 
 	if strings.Join(gotTypes, ",") != strings.Join(expectedTypes, ",") {
 		t.Fatalf("unexpected type sequence: got %v want %v", gotTypes, expectedTypes)
@@ -76,7 +149,7 @@ func TestDiffsToPrettyPrint_Basic(t *testing.T) {
 		{Type: constants.Deletion, Text: "del", Line: 3},
 	}
 
-	out := DiffsToPrettyPrint(diffs)
+	out := DiffsToPrettyPrint(diffs, "test-filename.jsonnet")
 
 	// Contains line numbers, symbols, and texts in order
 	wantLines := []string{
@@ -145,13 +218,13 @@ func TestDiffsToPatch_EmptyOrNoChanges(t *testing.T) {
 func TestDiffsToPatch_WithChangesAndHunks(t *testing.T) {
 	// Two separated change regions to exercise hunk splitting
 	diffs := []*ManifestDiff{
-		{Type: constants.Equals, Text: "a1", Line: 1},
-		{Type: constants.Deletion, Text: "a2", Line: 2},
-		{Type: constants.Insertion, Text: "b2", Line: 2},
-		{Type: constants.Equals, Text: "a3", Line: 3},
+		{Type: constants.Equals, Text: "a1", Line: 1, OldLine: 1, NewLine: 1},
+		{Type: constants.Deletion, Text: "a2", Line: 2, OldLine: 2, NewLine: 2},
+		{Type: constants.Insertion, Text: "b2", Line: 2, OldLine: 3, NewLine: 2},
+		{Type: constants.Equals, Text: "a3", Line: 3, OldLine: 3, NewLine: 3},
 		// gap here (simulate jump)
-		{Type: constants.Equals, Text: "a10", Line: 10},
-		{Type: constants.Insertion, Text: "b11", Line: 11},
+		{Type: constants.Equals, Text: "a10", Line: 10, OldLine: 10, NewLine: 10},
+		{Type: constants.Insertion, Text: "b11", Line: 11, OldLine: 11, NewLine: 11},
 	}
 
 	out := DiffsToPatch(diffs, "file.txt")

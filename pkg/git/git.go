@@ -40,7 +40,7 @@ func GetFileContentAtRef(filename string, ref string) (*string, error) {
 		return nil, fmt.Errorf("read tree: %w", err)
 	}
 
-	rel, err := repoRelativePath(filename)
+	rel, err := RepoRelativePath(filename)
 	if err != nil {
 		return nil, err
 	}
@@ -218,8 +218,8 @@ func join(parts []string) string {
 	return strings.Join(parts, "/")
 }
 
-// repoRelativePath converts an OS path to a repo-relative, slash-separated path.
-func repoRelativePath(p string) (string, error) {
+// RepoRelativePath converts an OS path to a repo-relative, slash-separated path.
+func RepoRelativePath(p string) (string, error) {
 	// Make the target absolute so Rel() can compute correctly.
 	absP, err := filepath.Abs(p)
 	if err != nil {

@@ -1,7 +1,11 @@
 package manifest
 
 import (
+	"bytes"
+	"errors"
 	"fmt"
+	"io"
+	"strings"
 
 	"github.com/google/go-jsonnet/formatter"
 	"github.com/kartverket/skipctl/pkg/constants"
@@ -22,25 +26,38 @@ func formatJsonnet(file *Document) error {
 }
 
 func formatYaml(d *Document) error {
-	var out any
-	if err := yaml.Unmarshal([]byte(d.Content), &out); err != nil {
-		return err
+	decoder := yaml.NewDecoder(strings.NewReader(d.Content))
+	var output bytes.Buffer
+	encoder := yaml.NewEncoder(&output)
+	encoder.SetIndent(constants.YamlIndent)
+
+	for {
+		var node yaml.Node
+		decErr := decoder.Decode(&node)
+		if decErr != nil {
+			if errors.Is(decErr, io.EOF) {
+				break
+			}
+			return fmt.Errorf("failed to decode YAML: %w", decErr)
+		}
+
+		if len(node.Content) == 0 {
+			continue
+		}
+
+		if encErr := encoder.Encode(&node); encErr != nil {
+			return fmt.Errorf("failed to encode YAML: %w", encErr)
+		}
 	}
 
-	formattedYaml, merr := yaml.Marshal(out)
-	if merr != nil {
-		return merr
-	}
-
-	if werr := d.Write(string(formattedYaml)); werr != nil {
+	if werr := d.Write(output.String()); werr != nil {
 		return werr
 	}
-
 	return nil
 }
 func FormatManifest(file *Document) error {
 	switch file.Extension {
-	case constants.ManifestSuffixJsonnet:
+	case constants.ManifestSuffixJsonnet, constants.ManifestSuffixLibsonnet:
 		return formatJsonnet(file)
 	case constants.ManifestSuffixYaml, constants.ManifestSuffixYml:
 		return formatYaml(file)

@@ -65,6 +65,15 @@ func isKustomizeDir(kustomizeDirs map[string]bool, path string) bool {
 	}
 	return inKustomizeDir
 }
+
+func IsValidDirectoryRef(ref string) bool {
+	finfo, err := os.Stat(ref)
+	if err != nil || !finfo.IsDir() {
+		return false
+	}
+	return true
+}
+
 func FindFilesWithSuffixes(directory string, suffixes []string) ([]string, error) {
 	kustomizeDirs, findKustomizeErr := findKustomizeDirs(directory)
 	if findKustomizeErr != nil {
@@ -174,4 +183,31 @@ func DetectFiletype(content []byte) (string, error) {
 	default:
 		return constants.ManifestSuffixYaml, nil
 	}
+}
+
+func ExcludeSuffixes(filenames []string, suffixes []string) []string {
+	var filtered []string
+	for _, name := range filenames {
+		exclude := false
+		for _, suf := range suffixes {
+			if strings.HasSuffix(name, suf) {
+				exclude = true
+				break
+			}
+		}
+		if !exclude {
+			filtered = append(filtered, name)
+		}
+	}
+	return filtered
+}
+
+func RebasePath(relPath, baseDir, refDir string) string {
+	relPath = filepath.Clean(relPath)
+	baseDir = filepath.Clean(baseDir)
+	refDir = filepath.Clean(refDir)
+
+	filePath, _ := strings.CutPrefix(relPath, baseDir)
+
+	return filepath.Join(refDir, filePath)
 }
