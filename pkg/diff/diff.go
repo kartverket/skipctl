@@ -34,6 +34,11 @@ type ManifestDiff struct {
 	Line    int    `json:"line"`
 	OldLine int    `json:"old_line"`
 	NewLine int    `json:"new_line"`
+
+	ResourceKind       string `json:"resource_kind,omitempty"`
+	ResourceName       string `json:"resource_name,omitempty"`
+	ResourceNamespace  string `json:"resource_namespace,omitempty"`
+	ResourceAPIVersion string `json:"resource_api_version,omitempty"`
 }
 
 type JSONOutput struct {
@@ -140,13 +145,144 @@ func CalculateDiff(a, b string) ([]*ManifestDiff, bool) {
 func DiffsToPrettyPrint(diffs []*ManifestDiff, filename string) string {
 	var out strings.Builder
 
-	out.WriteString(fmt.Sprintf("%s%s%s\n", textBold, filename, colorReset))
-	out.WriteString(formatPrettyHeader(diffs))
+	if len(diffs) == 0 {
+		return ""
+	}
 
-	for _, d := range diffs {
-		out.WriteString(fmt.Sprintf("%s%d %s %s%s\n", diffColorMap[d.Type], d.Line, diffSymbolMap[d.Type], d.Text, colorReset))
+	if !hasResourceMetadata(diffs) {
+		out.WriteString(fmt.Sprintf("%s%s%s\n", textBold, filename, colorReset))
+		out.WriteString(formatPrettyHeader(diffs))
+		for _, d := range diffs {
+			out.WriteString(fmt.Sprintf("%s%d %s %s%s\n", diffColorMap[d.Type], d.Line, diffSymbolMap[d.Type], d.Text, colorReset))
+		}
+		return out.String()
+	}
+
+	out.WriteString(fmt.Sprintf("%s%s%s\n", textBold, filename, colorReset))
+
+	hunks := splitIntoHunks(diffs)
+	for i, hunk := range hunks {
+		if len(hunk) == 0 {
+			continue
+		}
+		if i > 0 {
+			out.WriteByte('\n')
+		}
+
+		if hdr := hunkResourceHeader(hunk); hdr != "" {
+			out.WriteString(fmt.Sprintf("%s%s%s\n", textBold, hdr, colorReset))
+		}
+		out.WriteString(formatPrettyHeader(hunk))
+		for _, d := range hunk {
+			out.WriteString(fmt.Sprintf("%s%d %s %s%s\n", diffColorMap[d.Type], d.Line, diffSymbolMap[d.Type], d.Text, colorReset))
+		}
 	}
 	return out.String()
+}
+
+func hasResourceMetadata(diffs []*ManifestDiff) bool {
+	for _, d := range diffs {
+		if d.ResourceKind != "" || d.ResourceName != "" || d.ResourceNamespace != "" || d.ResourceAPIVersion != "" {
+			return true
+		}
+	}
+	return false
+}
+
+func splitIntoHunks(diffs []*ManifestDiff) [][]*ManifestDiff {
+	if len(diffs) == 0 {
+		return nil
+	}
+	hunks := make([][]*ManifestDiff, 0)
+	var current []*ManifestDiff
+
+	expectedOld := -1
+	expectedNew := -1
+
+	for i, d := range diffs {
+		isNewHunk := false
+		if i == 0 {
+			isNewHunk = true
+		} else if d.OldLine != expectedOld || d.NewLine != expectedNew {
+			isNewHunk = true
+		}
+
+		if isNewHunk {
+			if len(current) > 0 {
+				hunks = append(hunks, current)
+			}
+			current = []*ManifestDiff{}
+		}
+		current = append(current, d)
+
+		// same logic as patch writer to calculate next expected line
+		switch d.Type {
+		case constants.Equals:
+			expectedOld = d.OldLine + 1
+			expectedNew = d.NewLine + 1
+		case constants.Deletion:
+			expectedOld = d.OldLine + 1
+			expectedNew = d.NewLine
+		case constants.Insertion:
+			expectedOld = d.OldLine
+			expectedNew = d.NewLine + 1
+		}
+	}
+
+	if len(current) > 0 {
+		hunks = append(hunks, current)
+	}
+	return hunks
+}
+
+func hunkResourceHeader(hunk []*ManifestDiff) string {
+	var pick *ManifestDiff
+	for _, d := range hunk {
+		if d.Type != constants.Equals && (d.ResourceKind != "" || d.ResourceName != "" || d.ResourceNamespace != "" || d.ResourceAPIVersion != "") {
+			pick = d
+			break
+		}
+	}
+
+	if pick == nil {
+		for _, d := range hunk {
+			if d.ResourceKind != "" || d.ResourceName != "" || d.ResourceNamespace != "" || d.ResourceAPIVersion != "" {
+				pick = d
+				break
+			}
+		}
+	}
+	if pick == nil {
+		return ""
+	}
+	return formatResourceHeader(pick.ResourceKind, pick.ResourceAPIVersion, pick.ResourceNamespace, pick.ResourceName)
+}
+
+func formatResourceHeader(kind, apiVersion, namespace, name string) string {
+	if kind == "" && name == "" {
+		return ""
+	}
+	var b strings.Builder
+	if kind != "" {
+		b.WriteString(kind)
+		if apiVersion != "" {
+			b.WriteString(".")
+			b.WriteString(apiVersion)
+		}
+	} else {
+		b.WriteString("Resource")
+	}
+
+	if namespace != "" && name != "" {
+		b.WriteString("/")
+		b.WriteString(namespace)
+		b.WriteString("/")
+		b.WriteString(name)
+	} else if name != "" {
+		b.WriteString("/")
+		b.WriteString(name)
+	}
+	return b.String()
 }
 
 func DiffsToJSON(diffs []*ManifestDiff, fileName string, ref string) string {
