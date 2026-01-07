@@ -38,5 +38,5 @@ func init() {
 	serveCmd.Flags().DurationVar(&globalTimeout, "global-timeout", constants.DefaultServerTestTimeout, "Max timeout for all client probes")
 	serveCmd.Flags().StringVar(&idTokenOrg, "id-token-organization", constants.DefaultGoogleOrgID, "The organization that is present in valid OIDC ID tokens")
 	serveCmd.Flags().StringVar(&gcpProjectID, "gcp-project-id", "", "GCP project ID for Vertex AI")
-	serveCmd.Flags().StringVar(&gcpLocation, "gcp-location", "us-central1", "GCP location for Vertex AI")
+	serveCmd.Flags().StringVar(&gcpLocation, "gcp-location", "europe-north1", "GCP location for Vertex AI")
 }

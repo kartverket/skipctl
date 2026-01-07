@@ -186,11 +186,11 @@ A service account `skipctl@kv-spire-devex-ksde.iam.gserviceaccount.com` is alrea
 **Step 2: Start the skipctl server**
 
 ```shell
-# Start the server (default location is us-central1)
+# Start the server (default location is europe-north1)
 ./skipctl serve --gcp-project-id=kv-spire-devex-ksde
 
 # Or specify a different location
-./skipctl serve --gcp-project-id=kv-spire-devex-ksde --gcp-location=europe-north1
+./skipctl serve --gcp-project-id=kv-spire-devex-ksde --gcp-location=us-central1
 ```
 
 The server handles all communication with Vertex AI, so clients don't need GCP credentials.
