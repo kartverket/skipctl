@@ -153,71 +153,69 @@ skipctl manifests validate <pathname>
 
 #### Refactor manifests (Experimental)
 
-The `refactor` command uses AI (Google Vertex AI with Gemini) to automatically refactor manifests. This is an experimental feature currently in development.
+The `refactor` command uses AI (Google Vertex AI with Gemini) to automatically refactor manifests. This command connects to a skipctl server instead of directly to GCP.
 
-##### Prerequisites
+##### Setup
 
-Before using the refactor command, you need to:
+**Step 1: Authenticate to Google Cloud**
 
-1. **Install Google Cloud SDK**
+Choose one authentication method:
+
+**Option A: User Credentials (for local development)**
+```shell
+gcloud auth application-default login
+```
+
+**Option B: Service Account Key (for production/CI)**
+
+A service account `skipctl@kv-spire-devex-ksde.iam.gserviceaccount.com` is already configured. To use it:
+
+1. Create a new service account key:
    ```shell
-   # macOS (via Homebrew)
-   brew install --cask google-cloud-sdk
-   
-   # Other platforms: https://cloud.google.com/sdk/docs/install
+   gcloud iam service-accounts keys create ~/.config/gcloud/skipctl-server-key.json \
+     --iam-account=skipctl@kv-spire-devex-ksde.iam.gserviceaccount.com
    ```
 
-2. **Authenticate with Google Cloud**
+2. Set the environment variable:
    ```shell
-   gcloud auth application-default login
-   gcloud auth application-default set-quota-project kv-spire-devex-ksde
+   export GOOGLE_APPLICATION_CREDENTIALS="$HOME/.config/gcloud/skipctl-server-key.json"
    ```
-   This will open a browser window for OAuth authentication and save credentials to `~/.config/gcloud/application_default_credentials.json`. The quota project must be set to ensure API calls are properly billed.
 
-3. **Configure Vertex AI Search Datastore**
-   
-   The refactor command requires a Vertex AI Search datastore. Currently, the following values are hardcoded in `pkg/refactor/refactorer.go`:
-   - Project ID: `kv-spire-devex-ksde`
-   - Location: `europe-north1`
-   - Model: `gemini-2.5-flash-lite`
-   - Datastore ID: `argokit-v2-knowledge_1764338186592`
-   - Datastore Location: `eu`
-   
-   **To use this command, you need to either:**
-   - Have access to the specified Google Cloud project and datastore, OR
-   - Modify these values in the source code to match your own Vertex AI Search setup
+> **Security Note:** Store service account keys in `~/.config/gcloud/` or a secure credential management system. Never commit keys to version control. Use user credentials for local development and service accounts for production/CI.
+
+**Step 2: Start the skipctl server**
+
+```shell
+# Start the server (default location is us-central1)
+./skipctl serve --gcp-project-id=kv-spire-devex-ksde
+
+# Or specify a different location
+./skipctl serve --gcp-project-id=kv-spire-devex-ksde --gcp-location=europe-north1
+```
+
+The server handles all communication with Vertex AI, so clients don't need GCP credentials.
+
+**Step 3: Refactor your manifests**
+
+```shell
+# Refactor a single file
+skipctl refactor app.jsonnet
+
+# Provide additional files for context (libraries, shared configs, etc.)
+skipctl refactor app.jsonnet lib/common.libsonnet shared/config.libsonnet
+```
+
+The first file is the target to refactor. Additional files provide context to help the AI understand dependencies, shared functions, and configuration patterns. All files are sent to the AI, but only the first file is refactored.
+
+Output is written to `vertexAI_output.libsonnet`.
 
 ##### How It Works
 
-The refactor command uses Vertex AI Search for grounding, which means:
-1. Your manifest content is sent to the Gemini model
-2. The model searches the Vertex AI Search datastore for relevant ArgoKit v2 documentation
-3. The retrieved documentation is used as context to generate accurate refactorings
-4. The refactored content is written to `<original-filename>.refactored.jsonnet`
-
-The datastore contains ArgoKit v2 knowledge and examples to guide the refactoring process.
-
-##### Usage
-
-```shell
-# Single file
-skipctl refactor <file>
-skipctl refactor --path <file>
-
-# Multiple files (first is target, rest is context)
-skipctl refactor target.yaml context1.jsonnet context2.libsonnet
-```
-
-The first file is refactored, additional files provide context. Output is written to `<first-file>.refactored.jsonnet`.
-
-**Examples:**
-```shell
-skipctl refactor app.jsonnet
-skipctl refactor app.yaml lib/common.libsonnet
-skipctl refactor old-app.yaml reference.argokit.jsonnet
-```
-
-**Note:** This is an experimental feature and the API/behavior may change.
+1. Client sends manifest files to the skipctl server via gRPC
+2. Server proxies the request to Vertex AI with Gemini models
+3. Vertex AI Search provides grounding using ArgoKit v2 documentation and examples
+4. Server returns the refactored content to the client
+5. Refactored content is written to `vertexAI_output.libsonnet`
 
 ## Analytics & Privacy
 
