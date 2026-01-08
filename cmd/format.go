@@ -11,8 +11,12 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var (
+	formatPath string
+)
+
 var formatCmd = &cobra.Command{
-	Use:     "format",
+	Use:     "format [path]",
 	Aliases: []string{"f", "fmt"},
 	Short:   "Format manifest in place",
 	Long: fmt.Sprintf(`Recursively formats manifest files in the specified path.
@@ -23,23 +27,13 @@ Any errors will be printed to stderr. Returns 0 if all input files are formatted
 correctly, otherwise return code 1 is used to indicate failure.`,
 		strings.Join(constants.ManifestSuffixes, ", ")),
 	RunE:         runFormat,
-	Args:         cobra.RangeArgs(0, 1),
+	Args:         cobra.MaximumNArgs(1),
 	SilenceUsage: true,
 }
 
 func runFormat(_ *cobra.Command, args []string) error {
-	var manifestFiles []*manifest.Document
-	var err error
+	manifestFiles, err := determineDocuments(formatPath, args, constants.FmtManifestSuffixes)
 
-	if isStdin(args) {
-		manifestFiles, err = manifest.FromStdin()
-	} else {
-		var filenames []string
-		filenames, err = utils.FindFilesWithSuffixes(path, constants.FmtManifestSuffixes)
-		if err == nil {
-			manifestFiles, err = manifest.FromFiles(filenames)
-		}
-	}
 	if err != nil {
 		log.Error("Error collecting files", "error", err.Error())
 		return err
@@ -56,4 +50,5 @@ func runFormat(_ *cobra.Command, args []string) error {
 }
 func init() {
 	manifestCmd.AddCommand(formatCmd)
+	formatCmd.Flags().StringVarP(&formatPath, "path", "p", "", "path to format (default: current directory)")
 }
