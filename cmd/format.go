@@ -7,7 +7,6 @@ import (
 	"github.com/kartverket/skipctl/pkg/constants"
 	"github.com/kartverket/skipctl/pkg/manifest"
 	"github.com/kartverket/skipctl/pkg/manifest/format"
-	"github.com/kartverket/skipctl/pkg/utils"
 	"github.com/spf13/cobra"
 )
 
