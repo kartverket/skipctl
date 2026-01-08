@@ -21,7 +21,7 @@ var refactorCmd = &cobra.Command{
 	Long: `Refactor a manifest to ArgoKit v2 format using AI.
 
 		The first file is the target to refactor. Additional files provide context (libraries, configs, references).
-		Output is written to '<first-file>.refactored.jsonnet'.`,
+		Output is written to 'vertexAI_output.libsonnet'.`,
 	RunE:         runRefactor,
 	Args:         cobra.MinimumNArgs(0),
 	SilenceUsage: true,
