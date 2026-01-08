@@ -142,24 +142,27 @@ func annotateKustomizeDiffsWithResourceMeta(diffs []*diff.ManifestDiff, prevRend
 	newMap := buildLineToResourceMetaMap(rendered)
 
 	for _, d := range diffs {
-		var meta kustomizeResourceMeta
-		switch d.Type {
-		case constants.Insertion:
-			meta = newMap[d.NewLine]
-		case constants.Deletion:
-			meta = oldMap[d.OldLine]
-		default:
-			if m, ok := newMap[d.NewLine]; ok {
-				meta = m
-			} else {
-				meta = oldMap[d.OldLine]
-			}
-		}
+		meta := metaForDiffLine(d, oldMap, newMap)
 
 		d.ResourceKind = meta.Kind
 		d.ResourceAPIVersion = meta.APIVersion
 		d.ResourceName = meta.Name
 		d.ResourceNamespace = meta.Namespace
+	}
+}
+
+func metaForDiffLine(d *diff.ManifestDiff, oldMap, newMap map[int]kustomizeResourceMeta) kustomizeResourceMeta {
+	switch d.Type {
+	case constants.Insertion:
+		return newMap[d.NewLine]
+	case constants.Deletion:
+		return oldMap[d.OldLine]
+	default:
+		// if there is change in metadata between new and old, prefer new.
+		if m, ok := newMap[d.NewLine]; ok {
+			return m
+		}
+		return oldMap[d.OldLine]
 	}
 }
 
@@ -170,29 +173,35 @@ func buildLineToResourceMetaMap(rendered string) map[int]kustomizeResourceMeta {
 		return out
 	}
 
-	docStart := 0
-	for i := 0; i <= len(lines); i++ {
-		isBoundary := false
-		if i == len(lines) {
-			isBoundary = true
-		} else if strings.TrimSpace(lines[i]) == "---" && i != docStart {
-			isBoundary = true
+	for _, r := range splitYAMLDocRanges(lines) {
+		meta := parseResourceMetaFromDocLines(lines[r.start : r.end+1])
+		for i := r.start; i <= r.end; i++ {
+			out[i+1] = meta // 1-indexed
 		}
-		if !isBoundary {
-			continue
-		}
-
-		end := i - 1
-		if end >= docStart {
-			meta := parseResourceMetaFromDocLines(lines[docStart : end+1])
-			for ln := docStart; ln <= end; ln++ {
-				out[ln+1] = meta // 1-indexed
-			}
-		}
-		docStart = i
 	}
-
 	return out
+}
+
+type docRange struct{ start, end int }
+
+func splitYAMLDocRanges(lines []string) []docRange {
+	starts := []int{0}
+	for i := 1; i < len(lines); i++ {
+		if strings.TrimSpace(lines[i]) == "---" {
+			starts = append(starts, i)
+		}
+	}
+	ranges := make([]docRange, 0, len(starts))
+	for idx, start := range starts {
+		end := len(lines) - 1
+		if idx+1 < len(starts) {
+			end = starts[idx+1] - 1
+		}
+		if end >= start {
+			ranges = append(ranges, docRange{start: start, end: end})
+		}
+	}
+	return ranges
 }
 
 func normalizeLines(s string) []string {
