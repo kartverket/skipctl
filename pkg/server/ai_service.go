@@ -169,6 +169,10 @@ func (s *AIService) analyzeWithVertexAI(prompt string) (string, error) {
 }
 
 func (s *AIService) Close() error {
-	// No cleanup needed for REST API client
+	// No explicit cleanup is required here. The aiplatform.Service uses an HTTP
+	// client provided by google.DefaultClient, whose resources (connections,
+	// goroutines, etc.) are managed by the Go runtime and do not need an
+	// explicit Close call. This method exists to satisfy the AIService interface
+	// and is intentionally a no-op.
 	return nil
 }
