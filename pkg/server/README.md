@@ -27,6 +27,13 @@ gcloud iam service-accounts keys create $HOME/.config/gcloud/skipctl-sa-key.json
   --iam-account=skipctl@kv-spire-devex-ksde.iam.gserviceaccount.com
  ```
 
+> **Security note:** Service account keys are powerful credentials that grant all permissions assigned to the service account. Treat this file as a secret:
+>
+> - Never commit `skipctl-sa-key.json` (or any service account key) to version control.
+> - Add it to your `.gitignore` and do not share it over chat, email, or ticket systems.
+> - Restrict file permissions (for example: `chmod 600 $HOME/.config/gcloud/skipctl-sa-key.json`).
+> - Rotate keys regularly and delete unused keys from the service account.
+> - For production and CI environments, prefer keyless authentication mechanisms (e.g., Workload Identity) instead of long‑lived keys.
 ## Running server locally
 
 ```bash
