@@ -58,7 +58,7 @@ func Manifest(ctx context.Context, docs []*manifest.Document, serverAddr string)
 	prompt := prompts.RefactorSystemPrompt + "\n\n" + "Please refactor the libsonnet file in the /application, and use the other files for context:\n\n" + combinedContent
 
 	// Validate prompt size before sending
-	if err := validatePromptSize(prompt); err != nil {
+	if err = validatePromptSize(prompt); err != nil {
 		return err
 	}
 
