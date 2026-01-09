@@ -21,6 +21,14 @@ import (
 
 const chunkSize = 64 * 1024 // 64KB chunks
 
+// Token limits for Vertex AI models (approximate, accounting for prompt + response)
+const (
+	maxPromptSizeBytes     = 1 * 1024 * 1024 // 1MB - conservative limit for most models
+	warnPromptSizeBytes    = 500 * 1024      // 500KB - warning threshold
+	maxPromptSizeReadable  = "1MB"
+	warnPromptSizeReadable = "500KB"
+)
+
 // Manifest sends manifest files to the server for AI refactoring via gRPC
 func Manifest(ctx context.Context, docs []*manifest.Document, serverAddr string) error {
 	if len(docs) == 0 {
@@ -49,6 +57,11 @@ func Manifest(ctx context.Context, docs []*manifest.Document, serverAddr string)
 	// Create the prompt with system instruction
 	prompt := prompts.RefactorSystemPrompt + "\n\n" + "Please refactor the libsonnet file in the /application, and use the other files for context:\n\n" + combinedContent
 
+	// Validate prompt size before sending
+	if err := validatePromptSize(prompt); err != nil {
+		return err
+	}
+
 	// Stream content to server
 	resp, err := streamToServer(ctx, client, docs[0], contentBytes, prompt)
 	if err != nil {
@@ -57,6 +70,24 @@ func Manifest(ctx context.Context, docs []*manifest.Document, serverAddr string)
 
 	// Write the refactored content to file
 	return writeRefactoredOutput(ctx, resp)
+}
+
+func validatePromptSize(prompt string) error {
+	promptSize := len(prompt)
+
+	if promptSize > maxPromptSizeBytes {
+		return fmt.Errorf("prompt size (%d bytes) exceeds maximum allowed size (%s). "+
+			"Consider reducing the number of files or file sizes",
+			promptSize, maxPromptSizeReadable)
+	}
+
+	if promptSize > warnPromptSizeBytes {
+		fmt.Fprintf(os.Stderr, "Warning: prompt size is large (%d bytes, over %s). "+
+			"This may approach model token limits and could fail or be truncated.\n",
+			promptSize, warnPromptSizeReadable)
+	}
+
+	return nil
 }
 
 func appendImportedFiles(docs []*manifest.Document) ([]*manifest.Document, error) {
