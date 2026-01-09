@@ -267,7 +267,8 @@ func renderDocument(doc *manifest.Document) (string, error) {
 		return "", fmt.Errorf("failed to render: %w", err)
 	}
 
-	slog.Info("Rendered content", "content", docCopy.Content)
+	ctx := context.Background()
+	slog.InfoContext(ctx, "Rendered content", "content", docCopy.Content)
 
 	// Return the rendered content
 	return docCopy.Content, nil
