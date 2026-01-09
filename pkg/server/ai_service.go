@@ -77,10 +77,6 @@ func (s *AIService) RefactorToArgokitv2(stream api.AIService_RefactorToArgokitv2
 
 	log.InfoContext(reqCtx, "received refactor to argokitv2 request")
 
-	// Create timeout context
-	_, cancel := globalTimeoutContext(reqCtx, s.globalTimeout)
-	defer cancel()
-
 	// Receive file metadata from client
 	var fileName string
 	var mimeType string
