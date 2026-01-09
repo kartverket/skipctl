@@ -53,9 +53,15 @@ func Serve(addr string, metricsAddr string, timeout time.Duration, idTokenOrg st
 	reg.MustRegister(srvMetrics)
 
 	// gRPC
-	opts := []grpc.ServerOption{grpc.ChainUnaryInterceptor(
-		auth.ValidADCTokenWithOrg(idTokenOrg),
-		srvMetrics.UnaryServerInterceptor()),
+	opts := []grpc.ServerOption{
+		grpc.ChainUnaryInterceptor(
+			auth.ValidADCTokenWithOrg(idTokenOrg),
+			srvMetrics.UnaryServerInterceptor(),
+		),
+		grpc.ChainStreamInterceptor(
+			auth.ValidADCTokenWithOrgStream(idTokenOrg),
+			srvMetrics.StreamServerInterceptor(),
+		),
 	}
 
 	grpcSrv := grpc.NewServer(opts...)

@@ -81,3 +81,51 @@ func ValidADCTokenWithOrg(idTokenOrg string) func(
 		return handler(userContext, req)
 	}
 }
+
+// ValidADCTokenWithOrgStream ensures a valid token exists within a stream request's metadata.
+// The token must be scoped to a specific organization. If the token is missing or invalid,
+// the interceptor blocks execution of the handler and returns an error. Otherwise, the
+// interceptor invokes the stream handler.
+func ValidADCTokenWithOrgStream(idTokenOrg string) func(
+	srv any, ss grpc.ServerStream, info *grpc.StreamServerInfo, handler grpc.StreamHandler) error {
+	return func(srv any, ss grpc.ServerStream, _ *grpc.StreamServerInfo, handler grpc.StreamHandler) error {
+		ctx := ss.Context()
+		md, ok := metadata.FromIncomingContext(ctx)
+		if !ok {
+			log.WarnContext(ctx, "no metadata present for stream request")
+			return errMissingMetadata
+		}
+		// The keys within metadata.MD are normalized to lowercase.
+		auth := md["authorization"]
+		email, err := validateToken(ctx, idTokenOrg, auth)
+		if err != nil {
+			return err
+		}
+
+		p, _ := peer.FromContext(ctx)
+		userContext := slogcontext.WithValue(ctx, "userInfo", map[string]string{
+			"email": email,
+			"ip":    p.Addr.String(),
+		})
+
+		// Wrap the ServerStream to use the authenticated context
+		wrappedStream := &authenticatedServerStream{
+			ServerStream: ss,
+			ctx:          userContext,
+		}
+
+		// Continue execution of handler after ensuring a valid token.
+		return handler(srv, wrappedStream)
+	}
+}
+
+// authenticatedServerStream wraps grpc.ServerStream to override Context() method
+type authenticatedServerStream struct {
+	grpc.ServerStream
+	ctx context.Context
+}
+
+// Context returns the authenticated context with user info
+func (w *authenticatedServerStream) Context() context.Context {
+	return w.ctx
+}
