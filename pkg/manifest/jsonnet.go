@@ -40,11 +40,11 @@ func (r *JsonnetRenderer) Render(file *Document) error {
 		return fmt.Errorf("parse jsonnet %q: %w", file.Name, err)
 	}
 	result, err := r.vm.Evaluate(node)
-	file.Content = result
-	file.Rendered = true
 	if err != nil {
 		return fmt.Errorf("evaluate jsonnet %q: %w", file.Name, err)
 	}
+	file.Content = result
+	file.Rendered = true
 
 	r.output.Info(result)
 	return nil
