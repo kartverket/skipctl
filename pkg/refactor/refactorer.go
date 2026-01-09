@@ -154,65 +154,63 @@ func writeRefactoredOutput(ctx context.Context, resp *api.RefactorToArgokitv2Res
 }
 
 func extractImportedFiles(doc *manifest.Document) ([]*manifest.Document, error) {
-	{
-		// Matches: import 'file.libsonnet', importstr 'file.txt', import "file.libsonnet"
-		importRegex := regexp.MustCompile(`(?:import|importstr)\s+['"]([^'"]+)['"]`)
+	// Matches: import 'file.libsonnet', importstr 'file.txt', import "file.libsonnet"
+	importRegex := regexp.MustCompile(`(?:import|importstr)\s+['"]([^'"]+)['"]`)
 
-		matches := importRegex.FindAllStringSubmatch(doc.Content, -1)
-		if len(matches) == 0 {
-			return nil, nil
-		}
-
-		var importedDocs []*manifest.Document
-
-		// Get absolute path to the directory containing the main document
-		absDocPath, err := filepath.Abs(doc.Path)
-		if err != nil {
-			return nil, fmt.Errorf("failed to get absolute path for %s: %w", doc.Path, err)
-		}
-		baseDir := filepath.Dir(absDocPath)
-		seen := make(map[string]bool)
-
-		const minMatchLength = 2
-		for _, match := range matches {
-			if len(match) < minMatchLength {
-				continue
-			}
-
-			importPath := match[1]
-
-			// Resolve relative path - filepath.Join handles ./ and ../ correctly
-			absPath := filepath.Join(baseDir, importPath)
-
-			// Clean the path to resolve . and .. properly
-			absPath = filepath.Clean(absPath)
-
-			// Avoid duplicates
-			if seen[absPath] {
-				continue
-			}
-			seen[absPath] = true
-
-			// Read the imported file using the absolute path
-			content, readErr := os.ReadFile(absPath)
-			if readErr != nil {
-				fmt.Fprintf(os.Stderr, "Warning: failed to read imported file %s: %v\n", absPath, readErr)
-				continue
-			}
-
-			importedDoc := &manifest.Document{
-				Name:      filepath.Base(absPath),
-				Content:   string(content),
-				Extension: filepath.Ext(absPath),
-				Path:      absPath,
-				Rendered:  false,
-			}
-
-			importedDocs = append(importedDocs, importedDoc)
-		}
-
-		return importedDocs, nil
+	matches := importRegex.FindAllStringSubmatch(doc.Content, -1)
+	if len(matches) == 0 {
+		return nil, nil
 	}
+
+	var importedDocs []*manifest.Document
+
+	// Get absolute path to the directory containing the main document
+	absDocPath, err := filepath.Abs(doc.Path)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get absolute path for %s: %w", doc.Path, err)
+	}
+	baseDir := filepath.Dir(absDocPath)
+	seen := make(map[string]bool)
+
+	const minMatchLength = 2
+	for _, match := range matches {
+		if len(match) < minMatchLength {
+			continue
+		}
+
+		importPath := match[1]
+
+		// Resolve relative path - filepath.Join handles ./ and ../ correctly
+		absPath := filepath.Join(baseDir, importPath)
+
+		// Clean the path to resolve . and .. properly
+		absPath = filepath.Clean(absPath)
+
+		// Avoid duplicates
+		if seen[absPath] {
+			continue
+		}
+		seen[absPath] = true
+
+		// Read the imported file using the absolute path
+		content, readErr := os.ReadFile(absPath)
+		if readErr != nil {
+			fmt.Fprintf(os.Stderr, "Warning: failed to read imported file %s: %v\n", absPath, readErr)
+			continue
+		}
+
+		importedDoc := &manifest.Document{
+			Name:      filepath.Base(absPath),
+			Content:   string(content),
+			Extension: filepath.Ext(absPath),
+			Path:      absPath,
+			Rendered:  false,
+		}
+
+		importedDocs = append(importedDocs, importedDoc)
+	}
+
+	return importedDocs, nil
 }
 
 func isJsonnetFile(path string) bool {

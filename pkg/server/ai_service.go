@@ -81,8 +81,7 @@ func (s *AIService) RefactorToArgokitv2(stream api.AIService_RefactorToArgokitv2
 	_, cancel := globalTimeoutContext(reqCtx, s.globalTimeout)
 	defer cancel()
 
-	// Receive file chunks from client
-	var fileData []byte
+	// Receive file metadata from client
 	var fileName string
 	var mimeType string
 	var prompt string
@@ -94,8 +93,8 @@ func (s *AIService) RefactorToArgokitv2(stream api.AIService_RefactorToArgokitv2
 		}
 		if err != nil {
 			aiRequestsFailed.Inc()
-			log.ErrorContext(reqCtx, "failed to receive file chunk", "error", err)
-			return fmt.Errorf("failed to receive file chunk: %w", err)
+			log.ErrorContext(reqCtx, "failed to receive request", "error", err)
+			return fmt.Errorf("failed to receive request: %w", err)
 		}
 
 		// First chunk contains metadata
@@ -108,11 +107,7 @@ func (s *AIService) RefactorToArgokitv2(stream api.AIService_RefactorToArgokitv2
 				"mimeType", mimeType,
 				"promptLength", len(prompt))
 		}
-
-		fileData = append(fileData, req.GetChunk()...)
 	}
-
-	log.InfoContext(reqCtx, "file received", "size", len(fileData))
 
 	// Analyze file with Vertex AI
 	response, err := s.analyzeWithVertexAI(prompt)
