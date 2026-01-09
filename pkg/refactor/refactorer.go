@@ -170,12 +170,34 @@ func streamToServer(ctx context.Context, client api.AIServiceClient, firstDoc *m
 	return resp, nil
 }
 
+func generateUniqueOutputPath(baseName, ext string) (string, error) {
+	// Start with the base filename and, if it exists, append a numeric suffix.
+	newPath := fmt.Sprintf("%s%s", baseName, ext)
+	if _, err := os.Stat(newPath); errors.Is(err, os.ErrNotExist) {
+		return newPath, nil
+	} else if err != nil && !errors.Is(err, os.ErrNotExist) {
+		return "", fmt.Errorf("failed to stat output file %q: %w", newPath, err)
+	}
+
+	for i := 1; ; i++ {
+		candidate := fmt.Sprintf("%s_%d%s", baseName, i, ext)
+		if _, err := os.Stat(candidate); errors.Is(err, os.ErrNotExist) {
+			return candidate, nil
+		} else if err != nil && !errors.Is(err, os.ErrNotExist) {
+			return "", fmt.Errorf("failed to stat output file %q: %w", candidate, err)
+		}
+	}
+}
+
 func writeRefactoredOutput(ctx context.Context, resp *api.RefactorToArgokitv2Response) error {
 	if resp.GetResponse() == "" {
 		return errors.New("empty response from server")
 	}
 
-	newPath := fmt.Sprintf("%s.libsonnet", "vertexAI_output")
+	newPath, err := generateUniqueOutputPath("vertexAI_output", ".libsonnet")
+	if err != nil {
+		return fmt.Errorf("failed to determine output file path: %w", err)
+	}
 	if err := os.WriteFile(newPath, []byte(resp.GetResponse()), 0600); err != nil {
 		return fmt.Errorf("failed to write refactored content to file: %w", err)
 	}
