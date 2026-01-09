@@ -29,7 +29,7 @@ func FindManifestFiles(path string) ([]string, error) {
 	return files, nil
 }
 
-// Find a file. Specific for the refactor function.
+// findKustomizeDirs walks the directory tree and returns all directories that contain kustomization files.
 func findKustomizeDirs(directory string) (map[string]bool, error) {
 	kustomizeDirs := make(map[string]bool)
 
