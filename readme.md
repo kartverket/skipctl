@@ -157,41 +157,50 @@ The `refactor` command uses AI (Google Vertex AI with Gemini) to automatically r
 
 ##### Setup
 
-**Step 1: Authenticate to Google Cloud**
+**Step 1: Set up Service Account Authentication**
 
-Choose one authentication method:
+A service account `skipctl@kv-spire-devex-ksde.iam.gserviceaccount.com` is configured for both server and client.
 
-**Option A: User Credentials (for local development)**
-```shell
-gcloud auth application-default login
-```
-
-**Option B: Service Account Key (for production/CI)**
-
-A service account `skipctl@kv-spire-devex-ksde.iam.gserviceaccount.com` is already configured. To use it:
-
-1. Create a new service account key:
+1. Create a service account key:
    ```shell
-   gcloud iam service-accounts keys create ~/.config/gcloud/skipctl-server-key.json \
+   gcloud iam service-accounts keys create ~/.config/gcloud/skipctl-key.json \
      --iam-account=skipctl@kv-spire-devex-ksde.iam.gserviceaccount.com
    ```
 
-2. Set the environment variable:
+2. Set the environment variable (needed for both server and client):
    ```shell
-   export GOOGLE_APPLICATION_CREDENTIALS="$HOME/.config/gcloud/skipctl-server-key.json"
+   export GOOGLE_APPLICATION_CREDENTIALS="$HOME/.config/gcloud/skipctl-key.json"
    ```
 
-> **Security Note:** Store service account keys in `~/.config/gcloud/` or a secure credential management system. Never commit keys to version control. Use user credentials for local development and service accounts for production/CI.
+> **Security Note:** 
+> - Store service account keys securely in `~/.config/gcloud/` or use a secret management system
+> - Never commit keys to version control
+> - In production/GKE, use Workload Identity instead of key files (no GOOGLE_APPLICATION_CREDENTIALS needed)
+> - Rotate keys regularly
 
 **Step 2: Start the skipctl server**
 
 ```shell
-# Start the server (default location is europe-north1)
-./skipctl serve --gcp-project-id=kv-spire-devex-ksde
+# For local development (with self-signed TLS certificates)
+# First, generate self-signed certificates:
+mkdir -p ~/.config/skipctl
+openssl req -x509 -newkey rsa:4096 -keyout ~/.config/skipctl/server-key.pem \
+  -out ~/.config/skipctl/server-cert.pem -days 365 -nodes \
+  -subj "/CN=localhost" -addext "subjectAltName=DNS:localhost,IP:127.0.0.1"
 
-# Or specify a different location
-./skipctl serve --gcp-project-id=kv-spire-devex-ksde --gcp-location=us-central1
+# Start the server with TLS
+./skipctl serve --gcp-project-id=kv-spire-devex-ksde \
+  --tls-cert=$HOME/.config/skipctl/server-cert.pem \
+  --tls-key=$HOME/.config/skipctl/server-key.pem
+
+# Or for production with proper certificates
+./skipctl serve --gcp-project-id=kv-spire-devex-ksde \
+  --tls-cert=/path/to/server-cert.pem \
+  --tls-key=/path/to/server-key.pem \
+  --gcp-location=europe-north1
 ```
+
+> **Note:** Running the server without `--tls-cert` and `--tls-key` will start it in insecure mode (no encryption). This should only be used for local testing in trusted networks.
 
 The server handles all communication with Vertex AI, so clients don't need GCP credentials.
 

@@ -15,7 +15,7 @@ var serveCmd = &cobra.Command{
 	Long: `Intended to be run inside a SKIP cluster in order to help product teams
 debug various connectivity issues.`,
 	Run: func(_ *cobra.Command, _ []string) {
-		if err := server.Serve(addr, metricsAddr, globalTimeout, idTokenOrg, gcpProjectID, gcpLocation); err != nil {
+		if err := server.Serve(addr, metricsAddr, globalTimeout, idTokenOrg, gcpProjectID, gcpLocation, tlsCertFile, tlsKeyFile); err != nil {
 			log.Error("could not start server", "error", err)
 		}
 	},
@@ -28,6 +28,8 @@ var (
 	idTokenOrg    string
 	gcpProjectID  string
 	gcpLocation   string
+	tlsCertFile   string
+	tlsKeyFile    string
 )
 
 func init() {
@@ -39,4 +41,6 @@ func init() {
 	serveCmd.Flags().StringVar(&idTokenOrg, "id-token-organization", constants.DefaultGoogleOrgID, "The organization that is present in valid OIDC ID tokens")
 	serveCmd.Flags().StringVar(&gcpProjectID, "gcp-project-id", "", "GCP project ID for Vertex AI")
 	serveCmd.Flags().StringVar(&gcpLocation, "gcp-location", "europe-north1", "GCP location for Vertex AI")
+	serveCmd.Flags().StringVar(&tlsCertFile, "tls-cert", "", "TLS certificate file (PEM format). If not provided, server runs without TLS")
+	serveCmd.Flags().StringVar(&tlsKeyFile, "tls-key", "", "TLS private key file (PEM format). Required if --tls-cert is provided")
 }

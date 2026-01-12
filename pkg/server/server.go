@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+	"crypto/tls"
 	"errors"
 	"fmt"
 	"log/slog"
@@ -19,13 +20,14 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/reflection"
 )
 
 var log *slog.Logger
 
 // Serve starts a new API server capable of performing various probes for clients.
-func Serve(addr string, metricsAddr string, timeout time.Duration, idTokenOrg string, projectID string, location string) error {
+func Serve(addr string, metricsAddr string, timeout time.Duration, idTokenOrg string, projectID string, location string, tlsCertFile string, tlsKeyFile string) error {
 	// Basic validation
 	if log == nil {
 		log = logging.Logger()
@@ -43,6 +45,11 @@ func Serve(addr string, metricsAddr string, timeout time.Duration, idTokenOrg st
 		return errors.New("missing GCP location")
 	}
 
+	// Validate TLS configuration
+	if (tlsCertFile != "" && tlsKeyFile == "") || (tlsCertFile == "" && tlsKeyFile != "") {
+		return errors.New("both --tls-cert and --tls-key must be provided together")
+	}
+
 	// Metrics
 	srvMetrics := grpcprom.NewServerMetrics(
 		grpcprom.WithServerHandlingTimeHistogram(
@@ -52,7 +59,7 @@ func Serve(addr string, metricsAddr string, timeout time.Duration, idTokenOrg st
 	reg := prometheus.NewRegistry()
 	reg.MustRegister(srvMetrics)
 
-	// gRPC
+	// gRPC options with authentication and metrics
 	opts := []grpc.ServerOption{
 		grpc.ChainUnaryInterceptor(
 			auth.ValidADCTokenWithOrg(idTokenOrg),
@@ -62,6 +69,23 @@ func Serve(addr string, metricsAddr string, timeout time.Duration, idTokenOrg st
 			auth.ValidADCTokenWithOrgStream(idTokenOrg),
 			srvMetrics.StreamServerInterceptor(),
 		),
+	}
+
+	// Add TLS credentials if configured
+	if tlsCertFile != "" && tlsKeyFile != "" {
+		cert, err := tls.LoadX509KeyPair(tlsCertFile, tlsKeyFile)
+		if err != nil {
+			return fmt.Errorf("failed to load TLS certificate: %w", err)
+		}
+		tlsConfig := &tls.Config{
+			Certificates: []tls.Certificate{cert},
+			MinVersion:   tls.VersionTLS12,
+		}
+		creds := credentials.NewTLS(tlsConfig)
+		opts = append(opts, grpc.Creds(creds))
+		log.Info("TLS enabled for gRPC server", "cert", tlsCertFile)
+	} else {
+		log.Warn("TLS not configured - server running without encryption. Use --tls-cert and --tls-key for production")
 	}
 
 	grpcSrv := grpc.NewServer(opts...)

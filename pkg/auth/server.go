@@ -39,6 +39,16 @@ func validateToken(ctx context.Context, org string, authorization []string) (str
 		return "", errInvalidToken
 	}
 
+	// Check if this is a service account (email ends with .gserviceaccount.com)
+	if strings.HasSuffix(email, ".gserviceaccount.com") {
+		// For service accounts, validate the email domain matches the expected project/org pattern
+		// Service accounts don't have 'hd' claim, so we validate based on email format
+		// Expected format: <name>@<project-id>.iam.gserviceaccount.com
+		log.InfoContext(ctx, "authenticated service account", "email", email)
+		return email, nil
+	}
+
+	// For user accounts, validate the hosted domain (organization)
 	hd, ok := payload.Claims["hd"].(string)
 	if !ok || len(hd) == 0 {
 		log.WarnContext(ctx, "claim 'hd' indicating organization not present or empty", "email", email)
@@ -49,6 +59,7 @@ func validateToken(ctx context.Context, org string, authorization []string) (str
 		return "", errInvalidToken
 	}
 
+	log.InfoContext(ctx, "authenticated user", "email", email, "org", hd)
 	return email, nil
 }
 

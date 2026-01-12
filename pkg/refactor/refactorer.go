@@ -2,6 +2,7 @@ package refactor
 
 import (
 	"context"
+	"crypto/tls"
 	"errors"
 	"fmt"
 	"io"
@@ -12,6 +13,7 @@ import (
 	"strings"
 
 	api "github.com/kartverket/skipctl/pkg/api/v1"
+	"github.com/kartverket/skipctl/pkg/auth"
 	"github.com/kartverket/skipctl/pkg/logging"
 	"github.com/kartverket/skipctl/pkg/manifest"
 	"github.com/kartverket/skipctl/pkg/prompts"
@@ -35,10 +37,30 @@ func Manifest(ctx context.Context, docs []*manifest.Document, serverAddr string)
 		return errors.New("no documents provided for refactoring")
 	}
 
-	// Use TLS with system's root CA certificates
-	tlsCreds := credentials.NewTLS(nil)
-	opts := []grpc.DialOption{
-		grpc.WithTransportCredentials(tlsCreds),
+	// Get authentication credentials
+	perRPCCreds, err := auth.NewADCBackedRPCCredentials()
+	if err != nil {
+		return fmt.Errorf("failed to create authentication credentials: %w", err)
+	}
+
+	// Use TLS with system's root CA certificates for remote servers
+	// Use insecure credentials only for localhost
+	var opts []grpc.DialOption
+	opts = append(opts, grpc.WithPerRPCCredentials(perRPCCreds))
+
+	if strings.HasPrefix(serverAddr, "localhost:") || strings.HasPrefix(serverAddr, "127.0.0.1:") {
+		// For localhost, check if TLS is available by trying with InsecureSkipVerify first
+		tlsConfig := &tls.Config{
+			InsecureSkipVerify: true, // nosec G402 - acceptable for localhost development
+		}
+		tlsCreds := credentials.NewTLS(tlsConfig)
+		opts = append(opts, grpc.WithTransportCredentials(tlsCreds))
+		slog.InfoContext(ctx, "Using TLS with self-signed certificate support for localhost")
+	} else {
+		// Use TLS for remote servers with proper certificate validation
+		tlsCreds := credentials.NewTLS(nil)
+		opts = append(opts, grpc.WithTransportCredentials(tlsCreds))
+		slog.InfoContext(ctx, "Using TLS connection", "server", serverAddr)
 	}
 
 	// Connect to the server
@@ -101,6 +123,10 @@ func appendImportedFiles(docs []*manifest.Document) ([]*manifest.Document, error
 	importedDocs, err := extractImportedFiles(mainDoc)
 	if err != nil {
 		return docs, err
+	}
+	slog.Info("Discovered imports", "count", len(importedDocs), "mainFile", mainDoc.Name)
+	for _, doc := range importedDocs {
+		slog.Info("  Imported file", "name", doc.Name, "path", doc.Path)
 	}
 	return append(docs, importedDocs...), nil
 }
@@ -213,23 +239,47 @@ func writeRefactoredOutput(ctx context.Context, resp *api.RefactorToArgokitv2Res
 }
 
 func extractImportedFiles(doc *manifest.Document) ([]*manifest.Document, error) {
-	// Matches: import 'file.libsonnet', importstr 'file.txt', import "file.libsonnet"
-	importRegex := regexp.MustCompile(`(?:import|importstr)\s+['"]([^'"]+)['"]`)
-
-	matches := importRegex.FindAllStringSubmatch(doc.Content, -1)
-	if len(matches) == 0 {
-		return nil, nil
-	}
-
-	var importedDocs []*manifest.Document
-
 	// Get absolute path to the directory containing the main document
 	absDocPath, err := filepath.Abs(doc.Path)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get absolute path for %s: %w", doc.Path, err)
 	}
-	baseDir := filepath.Dir(absDocPath)
+
+	// Track seen files to avoid duplicates and circular imports
 	seen := make(map[string]bool)
+	var importedDocs []*manifest.Document
+
+	// Use a queue for breadth-first traversal of imports
+	toProcess := []*manifest.Document{doc}
+	seen[filepath.Clean(absDocPath)] = true
+
+	for len(toProcess) > 0 {
+		current := toProcess[0]
+		toProcess = toProcess[1:]
+
+		// Extract imports from current document
+		imports := extractImportsFromDocument(current, seen)
+
+		// Add newly discovered imports to the result and queue for processing
+		for _, imp := range imports {
+			importedDocs = append(importedDocs, imp)
+			toProcess = append(toProcess, imp)
+		}
+	}
+
+	return importedDocs, nil
+}
+
+func extractImportsFromDocument(doc *manifest.Document, seen map[string]bool) []*manifest.Document {
+	// Matches: import 'file.libsonnet', importstr 'file.txt', import "file.libsonnet"
+	importRegex := regexp.MustCompile(`(?:import|importstr)\s+['"]([^'"]+)['"]`)
+
+	matches := importRegex.FindAllStringSubmatch(doc.Content, -1)
+	if len(matches) == 0 {
+		return nil
+	}
+
+	var importedDocs []*manifest.Document
 
 	const minMatchLength = 2
 	for _, match := range matches {
@@ -239,13 +289,14 @@ func extractImportedFiles(doc *manifest.Document) ([]*manifest.Document, error) 
 
 		importPath := match[1]
 
-		// Resolve relative path - filepath.Join handles ./ and ../ correctly
-		absPath := filepath.Join(baseDir, importPath)
+		// Resolve relative path from the current document's directory
+		currentDocDir := filepath.Dir(doc.Path)
+		absPath := filepath.Join(currentDocDir, importPath)
 
 		// Clean the path to resolve . and .. properly
 		absPath = filepath.Clean(absPath)
 
-		// Avoid duplicates
+		// Avoid duplicates and circular imports
 		if seen[absPath] {
 			continue
 		}
@@ -269,7 +320,7 @@ func extractImportedFiles(doc *manifest.Document) ([]*manifest.Document, error) 
 		importedDocs = append(importedDocs, importedDoc)
 	}
 
-	return importedDocs, nil
+	return importedDocs
 }
 
 func isJsonnetFile(path string) bool {
