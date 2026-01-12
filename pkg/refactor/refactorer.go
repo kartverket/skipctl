@@ -81,7 +81,6 @@ func Manifest(ctx context.Context, docs []*manifest.Document, serverAddr string)
 
 	// Build combined content from all documents
 	combinedContent := buildCombinedContent(ctx, docs)
-	contentBytes := []byte(combinedContent)
 
 	// Create the prompt with system instruction
 	prompt := prompts.RefactorSystemPrompt + "\n\n" + "Please refactor the libsonnet file in the /application, and use the other files for context:\n\n" + combinedContent
@@ -92,7 +91,7 @@ func Manifest(ctx context.Context, docs []*manifest.Document, serverAddr string)
 	}
 
 	// Stream content to server
-	resp, err := streamToServer(ctx, client, docs[0], contentBytes, prompt)
+	resp, err := streamToServer(ctx, client, docs[0], prompt)
 	if err != nil {
 		return err
 	}
@@ -162,21 +161,24 @@ func appendRenderedContent(ctx context.Context, builder *strings.Builder, doc *m
 	builder.WriteString(renderedContent)
 }
 
-func streamToServer(ctx context.Context, client api.AIServiceClient, firstDoc *manifest.Document, contentBytes []byte, prompt string) (*api.RefactorToArgokitv2Response, error) {
+func streamToServer(ctx context.Context, client api.AIServiceClient, firstDoc *manifest.Document, prompt string) (*api.RefactorToArgokitv2Response, error) {
 	stream, err := client.RefactorToArgokitv2(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to open stream: %w", err)
 	}
 
-	// Send file in chunks
-	for offset := 0; offset < len(contentBytes); offset += chunkSize {
+	// Convert prompt to bytes for chunking
+	promptBytes := []byte(prompt)
+
+	// Send prompt in chunks
+	for offset := 0; offset < len(promptBytes); offset += chunkSize {
 		end := offset + chunkSize
-		if end > len(contentBytes) {
-			end = len(contentBytes)
+		if end > len(promptBytes) {
+			end = len(promptBytes)
 		}
 
 		req := &api.RefactorToArgokitv2Request{
-			Chunk: contentBytes[offset:end],
+			Chunk: promptBytes[offset:end],
 		}
 
 		// Send metadata in first chunk
