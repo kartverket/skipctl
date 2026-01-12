@@ -139,10 +139,10 @@ func (s *AIService) RefactorToArgokitv2(stream api.AIService_RefactorToArgokitv2
 
 	log.InfoContext(reqCtx, "received refactor to argokitv2 request")
 
-	// Receive file metadata from client
+	// Receive file metadata and chunks from client
 	var fileName string
 	var mimeType string
-	var prompt string
+	var promptBuilder strings.Builder
 
 	for {
 		req, err := stream.Recv()
@@ -159,13 +159,19 @@ func (s *AIService) RefactorToArgokitv2(stream api.AIService_RefactorToArgokitv2
 		if fileName == "" {
 			fileName = req.GetFileName()
 			mimeType = req.GetMimeType()
-			prompt = req.GetPrompt()
 			log.InfoContext(reqCtx, "file metadata received",
 				"fileName", fileName,
-				"mimeType", mimeType,
-				"promptLength", len(prompt))
+				"mimeType", mimeType)
+		}
+
+		// Accumulate all chunks to build the prompt
+		if chunk := req.GetChunk(); len(chunk) > 0 {
+			promptBuilder.Write(chunk)
 		}
 	}
+
+	prompt := promptBuilder.String()
+	log.InfoContext(reqCtx, "prompt assembled from chunks", "promptLength", len(prompt))
 
 	// Analyze file with Vertex AI
 	response, err := s.analyzeWithVertexAI(prompt)

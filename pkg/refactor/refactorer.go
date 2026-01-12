@@ -181,11 +181,10 @@ func streamToServer(ctx context.Context, client api.AIServiceClient, firstDoc *m
 			Chunk: promptBytes[offset:end],
 		}
 
-		// Send metadata in first chunk
+		// Send metadata in first chunk only
 		if offset == 0 {
 			req.FileName = firstDoc.Name
 			req.MimeType = "text/plain"
-			req.Prompt = prompt
 		}
 
 		if sendErr := stream.Send(req); sendErr != nil {

@@ -191,7 +191,6 @@ func TestRefactorToArgokitv2_ErrorHandling(t *testing.T) {
 					{
 						FileName: "test.jsonnet",
 						MimeType: "text/plain",
-						Prompt:   "test prompt",
 						Chunk:    []byte("test content"),
 					},
 				},
@@ -222,7 +221,7 @@ func TestRefactorToArgokitv2_ErrorHandling(t *testing.T) {
 					{
 						FileName: "test.jsonnet",
 						MimeType: "text/plain",
-						Prompt:   "test prompt",
+						Chunk:    []byte("test prompt"),
 					},
 				},
 			},
@@ -235,13 +234,13 @@ func TestRefactorToArgokitv2_ErrorHandling(t *testing.T) {
 			errContains: "vertex ai analysis failed",
 		},
 		{
-			name: "empty prompt",
+			name: "empty chunks",
 			stream: &mockRefactorStream{
 				requests: []*apiv1.RefactorToArgokitv2Request{
 					{
 						FileName: "test.jsonnet",
 						MimeType: "text/plain",
-						Prompt:   "",
+						Chunk:    []byte(""),
 					},
 				},
 			},
@@ -250,7 +249,7 @@ func TestRefactorToArgokitv2_ErrorHandling(t *testing.T) {
 					analyzeResponse: "response",
 				}
 			},
-			wantErr: false, // Should still work with empty prompt
+			wantErr: false, // Should still work with empty chunks
 		},
 	}
 
@@ -260,9 +259,9 @@ func TestRefactorToArgokitv2_ErrorHandling(t *testing.T) {
 
 			// Use a custom refactor method that uses the mock
 			err := func() error {
-				// Receive file metadata
+				// Receive file metadata and chunks
 				var fileName string
-				var prompt string
+				var promptBuilder strings.Builder
 
 				for {
 					req, recvErr := tt.stream.Recv()
@@ -275,9 +274,15 @@ func TestRefactorToArgokitv2_ErrorHandling(t *testing.T) {
 
 					if fileName == "" {
 						fileName = req.GetFileName()
-						prompt = req.GetPrompt()
+					}
+
+					// Accumulate chunks
+					if chunk := req.GetChunk(); len(chunk) > 0 {
+						promptBuilder.Write(chunk)
 					}
 				}
+
+				prompt := promptBuilder.String()
 
 				// Analyze with mock
 				response, analyzeErr := service.analyzeWithVertexAI(prompt)
