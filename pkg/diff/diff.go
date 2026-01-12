@@ -220,28 +220,33 @@ func diffHasResourceMeta(d *ManifestDiff) bool {
 }
 
 // groups diffs into diff hunks based on continuity between oldLine and newLine.
-func groupIntoHunks(diffs []*ManifestDiff) [][]*ManifestDiff {
-	if len(diffs) == 0 {
+func groupIntoHunks(entries []*ManifestDiff) [][]*ManifestDiff {
+	if len(entries) == 0 {
 		return nil
 	}
-	var hunks [][]*ManifestDiff
-	var hunk []*ManifestDiff
 
-	expectedOld, expectedNew := -1, -1
-	for i, d := range diffs {
-		newHunk := i == 0 || d.OldLine != expectedOld || d.NewLine != expectedNew
-		if newHunk {
-			if len(hunk) > 0 {
-				hunks = append(hunks, hunk)
+	var hunks [][]*ManifestDiff
+	var currentHunk []*ManifestDiff
+
+	expectedOldLine, expectedNewLine := -1, -1
+
+	for i, entry := range entries {
+		startNewHunk := i == 0 || entry.OldLine != expectedOldLine || entry.NewLine != expectedNewLine
+		if startNewHunk {
+			if len(currentHunk) > 0 {
+				hunks = append(hunks, currentHunk)
 			}
-			hunk = nil
+			currentHunk = nil
 		}
-		hunk = append(hunk, d)
-		expectedOld, expectedNew = nextExpectedLines(d)
+
+		currentHunk = append(currentHunk, entry)
+		expectedOldLine, expectedNewLine = nextExpectedLines(entry)
 	}
-	if len(hunk) > 0 {
-		hunks = append(hunks, hunk)
+
+	if len(currentHunk) > 0 {
+		hunks = append(hunks, currentHunk)
 	}
+
 	return hunks
 }
 
