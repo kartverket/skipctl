@@ -26,40 +26,52 @@ import (
 
 var log *slog.Logger
 
-// Serve starts a new API server capable of performing various probes for clients.
-func Serve(addr string, metricsAddr string, timeout time.Duration, idTokenOrg string, projectID string, location string, tlsCertFile string, tlsKeyFile string) error {
-	// Basic validation
-	if log == nil {
-		log = logging.Logger()
-	}
-
+// validateServerConfig validates the server configuration parameters
+func validateServerConfig(idTokenOrg, projectID, location, tlsCertFile, tlsKeyFile string) error {
 	if len(idTokenOrg) == 0 {
 		return errors.New("missing ID token organization")
 	}
-
 	if len(projectID) == 0 {
 		return errors.New("missing GCP project ID")
 	}
-
 	if len(location) == 0 {
 		return errors.New("missing GCP location")
 	}
-
 	// Validate TLS configuration
 	if (tlsCertFile != "" && tlsKeyFile == "") || (tlsCertFile == "" && tlsKeyFile != "") {
 		return errors.New("both --tls-cert and --tls-key must be provided together")
 	}
+	return nil
+}
 
-	// Metrics
+// setupTLSCredentials configures TLS credentials if certificate and key files are provided
+func setupTLSCredentials(tlsCertFile, tlsKeyFile string) (credentials.TransportCredentials, error) {
+	if tlsCertFile == "" || tlsKeyFile == "" {
+		log.Warn("TLS not configured - server running without encryption. Use --tls-cert and --tls-key for production")
+		return nil, nil //nolint:nilnil // nil credentials is a valid response when TLS is not configured
+	}
+
+	cert, err := tls.LoadX509KeyPair(tlsCertFile, tlsKeyFile)
+	if err != nil {
+		return nil, fmt.Errorf("failed to load TLS certificate: %w", err)
+	}
+	tlsConfig := &tls.Config{
+		Certificates: []tls.Certificate{cert},
+		MinVersion:   tls.VersionTLS12,
+	}
+	log.Info("TLS enabled for gRPC server", "cert", tlsCertFile)
+	return credentials.NewTLS(tlsConfig), nil
+}
+
+// setupGRPCServer creates and configures the gRPC server with authentication, metrics, and TLS
+func setupGRPCServer(idTokenOrg, tlsCertFile, tlsKeyFile string, reg *prometheus.Registry) (*grpc.Server, *grpcprom.ServerMetrics, error) {
 	srvMetrics := grpcprom.NewServerMetrics(
 		grpcprom.WithServerHandlingTimeHistogram(
 			grpcprom.WithHistogramBuckets([]float64{0.001, 0.01, 0.1, 0.3, 0.6, 1, 3, 6, 9, 20, 30, 60, 90, 120}),
 		),
 	)
-	reg := prometheus.NewRegistry()
 	reg.MustRegister(srvMetrics)
 
-	// gRPC options with authentication and metrics
 	opts := []grpc.ServerOption{
 		grpc.ChainUnaryInterceptor(
 			auth.ValidADCTokenWithOrg(idTokenOrg),
@@ -71,47 +83,70 @@ func Serve(addr string, metricsAddr string, timeout time.Duration, idTokenOrg st
 		),
 	}
 
-	// Add TLS credentials if configured
-	if tlsCertFile != "" && tlsKeyFile != "" {
-		cert, err := tls.LoadX509KeyPair(tlsCertFile, tlsKeyFile)
-		if err != nil {
-			return fmt.Errorf("failed to load TLS certificate: %w", err)
-		}
-		tlsConfig := &tls.Config{
-			Certificates: []tls.Certificate{cert},
-			MinVersion:   tls.VersionTLS12,
-		}
-		creds := credentials.NewTLS(tlsConfig)
-		opts = append(opts, grpc.Creds(creds))
-		log.Info("TLS enabled for gRPC server", "cert", tlsCertFile)
-	} else {
-		log.Warn("TLS not configured - server running without encryption. Use --tls-cert and --tls-key for production")
+	tlsCreds, err := setupTLSCredentials(tlsCertFile, tlsKeyFile)
+	if err != nil {
+		return nil, nil, err
+	}
+	if tlsCreds != nil {
+		opts = append(opts, grpc.Creds(tlsCreds))
 	}
 
 	grpcSrv := grpc.NewServer(opts...)
 	srvMetrics.InitializeMetrics(grpcSrv)
+	return grpcSrv, srvMetrics, nil
+}
+
+// registerServices registers the diagnostic and AI services with the gRPC server
+func registerServices(ctx context.Context, grpcSrv *grpc.Server, reg *prometheus.Registry, timeout time.Duration, projectID, location string) (*AIService, error) {
+	// Register diagnostic service (optional)
+	ds, err := NewDiagnosticService(reg, timeout)
+	if err != nil {
+		log.WarnContext(ctx, "diagnostic service unavailable (requires elevated permissions)", "error", err)
+		log.InfoContext(ctx, "continuing without diagnostic service - only AI service will be available")
+	} else {
+		api.RegisterDiagnosticServiceServer(grpcSrv, ds)
+		log.InfoContext(ctx, "diagnostic service registered")
+	}
+
+	// Register AI service (required)
+	aiService, err := NewAIService(ctx, reg, timeout, projectID, location)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create AI service: %w", err)
+	}
+	api.RegisterAIServiceServer(grpcSrv, aiService)
+	log.InfoContext(ctx, "AI service registered")
+
+	reflection.Register(grpcSrv)
+	return aiService, nil
+}
+
+// Serve starts a new API server capable of performing various probes for clients.
+func Serve(addr string, metricsAddr string, timeout time.Duration, idTokenOrg string, projectID string, location string, tlsCertFile string, tlsKeyFile string) error {
+	// Basic validation
+	if log == nil {
+		log = logging.Logger()
+	}
+
+	if err := validateServerConfig(idTokenOrg, projectID, location, tlsCertFile, tlsKeyFile); err != nil {
+		return err
+	}
+
+	// Setup metrics registry
+	reg := prometheus.NewRegistry()
+
+	// Setup gRPC server with authentication, metrics, and TLS
+	grpcSrv, _, err := setupGRPCServer(idTokenOrg, tlsCertFile, tlsKeyFile, reg)
+	if err != nil {
+		return err
+	}
 
 	ctx := context.Background()
 
-	// Register actual services
-	ds, err := NewDiagnosticService(reg, timeout)
+	// Register services
+	aiService, err := registerServices(ctx, grpcSrv, reg, timeout, projectID, location)
 	if err != nil {
-		log.Warn("diagnostic service unavailable (requires elevated permissions)", "error", err)
-		log.Info("continuing without diagnostic service - only AI service will be available")
-	} else {
-		api.RegisterDiagnosticServiceServer(grpcSrv, ds)
-		log.Info("diagnostic service registered")
+		return err
 	}
-
-	// Register AI service
-	aiService, err := NewAIService(ctx, reg, timeout, projectID, location)
-	if err != nil {
-		return fmt.Errorf("failed to create AI service: %w", err)
-	}
-	api.RegisterAIServiceServer(grpcSrv, aiService)
-	log.Info("AI service registered")
-
-	reflection.Register(grpcSrv)
 
 	// Binding
 	g := &run.Group{}

@@ -50,8 +50,9 @@ func Manifest(ctx context.Context, docs []*manifest.Document, serverAddr string)
 
 	if strings.HasPrefix(serverAddr, "localhost:") || strings.HasPrefix(serverAddr, "127.0.0.1:") {
 		// For localhost, check if TLS is available by trying with InsecureSkipVerify first
+		// #nosec G402 - InsecureSkipVerify is acceptable for localhost development with self-signed certificates
 		tlsConfig := &tls.Config{
-			InsecureSkipVerify: true, // nosec G402 - acceptable for localhost development
+			InsecureSkipVerify: true,
 		}
 		tlsCreds := credentials.NewTLS(tlsConfig)
 		opts = append(opts, grpc.WithTransportCredentials(tlsCreds))
