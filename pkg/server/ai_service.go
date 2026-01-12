@@ -80,7 +80,9 @@ func loadAdditionalContext() (string, error) {
 	// Check if directory exists
 	if _, err := os.Stat(contextDir); os.IsNotExist(err) {
 		// Directory doesn't exist, return empty string (not an error)
-		log.Info("ai-context directory does not exist, skipping additional context")
+		if log != nil {
+			log.Info("ai-context directory does not exist, skipping additional context")
+		}
 		return "", nil
 	}
 
@@ -122,7 +124,7 @@ func loadAdditionalContext() (string, error) {
 		return "", fmt.Errorf("failed to load additional context: %w", err)
 	}
 
-	if len(filesLoaded) > 0 {
+	if len(filesLoaded) > 0 && log != nil {
 		log.Info("loaded additional context files", "files", filesLoaded, "totalSize", contextBuilder.Len())
 	}
 
@@ -187,7 +189,9 @@ func (s *AIService) analyzeWithVertexAI(prompt string) (string, error) {
 	additionalContext, err := loadAdditionalContext()
 	if err != nil {
 		// Log warning but continue without additional context
-		log.Warn("failed to load additional context", "error", err)
+		if log != nil {
+			log.Warn("failed to load additional context", "error", err)
+		}
 		additionalContext = ""
 	}
 
@@ -195,7 +199,9 @@ func (s *AIService) analyzeWithVertexAI(prompt string) (string, error) {
 	finalPrompt := prompt
 	if additionalContext != "" {
 		finalPrompt = prompt + additionalContext
-		log.Info("added additional context to prompt", "additionalContextLength", len(additionalContext))
+		if log != nil {
+			log.Info("added additional context to prompt", "additionalContextLength", len(additionalContext))
+		}
 	}
 
 	// Construct the endpoint for the model
