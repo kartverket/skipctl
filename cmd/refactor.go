@@ -22,8 +22,15 @@ var refactorCmd = &cobra.Command{
 
 		The first file is the target to refactor. Additional files provide context (libraries, configs, references).
 		Output is written to 'vertexAI_output.libsonnet'.`,
-	RunE:         runRefactor,
-	Args:         cobra.MinimumNArgs(0),
+	RunE: runRefactor,
+	Args: func(cmd *cobra.Command, args []string) error {
+		// Require at least one file to be specified, either as a positional argument
+		// or via the -p/--path flag (which changes the default "." value).
+		if len(args) == 0 && path == "." {
+			return errors.New("please provide file paths as arguments or use the -p flag")
+		}
+		return nil
+	},
 	SilenceUsage: true,
 }
 
