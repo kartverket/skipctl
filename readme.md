@@ -202,7 +202,7 @@ openssl req -x509 -newkey rsa:4096 -keyout ~/.config/skipctl/server-key.pem \
 
 > **Note:** Running the server without `--tls-cert` and `--tls-key` will start it in insecure mode (no encryption). This should only be used for local testing in trusted networks.
 
-The server handles all communication with Vertex AI, so clients don't need GCP credentials.
+The server handles all communication with Vertex AI, so clients don't need direct Vertex AI access, but they must still use valid Google Cloud credentials to authenticate (for example, to obtain the ID token required by the server).
 
 **Step 3: Refactor your manifests**
 
