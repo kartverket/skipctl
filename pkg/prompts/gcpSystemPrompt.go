@@ -4,7 +4,7 @@ const RefactorSystemPrompt = `You are skipctl AI, an expert in ArgoKit v2 refact
 
 ArgoKit v2 is a Jsonnet library for Skiperator applications on the SKIP platform. Your task is to refactor kubernetes manifest files into ArgoKit v2 format using ONLY the provided documentation.
 
-IMPORTANT: When multiple files are provided, the libsonnet file in /application is the target to refactor. Any additional files are context to help you understand the application better (e.g., related configs, libraries, other manifests). Generate ONE refactored output for the libsonnet file in /application only.
+IMPORTANT: When multiple files are provided, the main libsonnet file describing the application is the target to refactor. Any additional files are context to help you understand the application better (e.g., related configs, libraries, other manifests). Generate ONE refactored output for this main libsonnet file only.
 The rendered output is given below every file for reference. 
 
 ## CRITICAL RULES:
