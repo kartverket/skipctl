@@ -221,6 +221,45 @@ The first file is the target to refactor. Additional files provide context to he
 
 Output is written to `vertexAI_output.libsonnet`.
 
+##### Adding Custom Documentation Context
+
+The AI service can be enhanced with custom documentation by adding files to the `docs/ai-context/` folder. The server automatically reads all `.md` and `.txt` files from this directory and includes them in the AI prompt.
+
+**Why not use RAG (Retrieval-Augmented Generation)?**
+
+While we initially considered using Google Cloud's Vertex AI Search with RAG for dynamic document retrieval, it requires **Google Cloud Enterprise Edition**, which is not available in our current setup. Instead, we use a simpler approach:
+
+- All documentation files in `docs/ai-context/` are automatically concatenated and added to the AI prompt
+- This provides the AI with custom context without requiring external services or enterprise features
+- The approach is straightforward: just add your `.md` or `.txt` files to the folder
+
+**How to add custom context:**
+
+1. Create or add documentation files to `docs/ai-context/`:
+   ```shell
+   # Add custom documentation
+   cat > docs/ai-context/my-patterns.md << 'EOF'
+   # Custom Patterns
+   
+   ## Naming Conventions
+   - Use kebab-case for application names
+   - Prefix all resources with team identifier
+   
+   ## Best Practices
+   - Always set resource limits
+   - Use explicit namespace references
+   EOF
+   ```
+
+2. The server will automatically load these files when processing refactor requests
+3. You can add multiple files - they will all be included in the AI context
+
+**Best practices:**
+- Keep files focused on specific topics
+- Use clear headings and structure
+- Include examples where helpful
+- Remove files that are no longer relevant
+
 ##### Security Considerations
 
 **Network Security:**

@@ -5,6 +5,9 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"os"
+	"path/filepath"
+	"strings"
 	"time"
 
 	slogcontext "github.com/PumpkinSeed/slog-context"
@@ -69,6 +72,63 @@ func defineAIMetrics(reg *prometheus.Registry) {
 	})
 }
 
+// loadAdditionalContext reads all .md and .txt files from docs/ai-context/
+// and concatenates their contents to be added to the AI prompt
+func loadAdditionalContext() (string, error) {
+	contextDir := "docs/ai-context"
+
+	// Check if directory exists
+	if _, err := os.Stat(contextDir); os.IsNotExist(err) {
+		// Directory doesn't exist, return empty string (not an error)
+		log.Info("ai-context directory does not exist, skipping additional context")
+		return "", nil
+	}
+
+	var contextBuilder strings.Builder
+	var filesLoaded []string
+
+	// Walk through the directory
+	err := filepath.Walk(contextDir, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+
+		// Skip directories and non-.md/.txt files
+		if info.IsDir() {
+			return nil
+		}
+
+		ext := strings.ToLower(filepath.Ext(path))
+		if ext != ".md" && ext != ".txt" {
+			return nil
+		}
+
+		// Read file content
+		content, err := os.ReadFile(path)
+		if err != nil {
+			return fmt.Errorf("failed to read %s: %w", path, err)
+		}
+
+		filesLoaded = append(filesLoaded, filepath.Base(path))
+
+		// Add to context with a separator
+		contextBuilder.WriteString(fmt.Sprintf("\n\n--- Additional Context from %s ---\n\n", filepath.Base(path)))
+		contextBuilder.Write(content)
+
+		return nil
+	})
+
+	if err != nil {
+		return "", fmt.Errorf("failed to load additional context: %w", err)
+	}
+
+	if len(filesLoaded) > 0 {
+		log.Info("loaded additional context files", "files", filesLoaded, "totalSize", contextBuilder.Len())
+	}
+
+	return contextBuilder.String(), nil
+}
+
 func (s *AIService) RefactorToArgokitv2(stream api.AIService_RefactorToArgokitv2Server) error {
 	ctx := stream.Context()
 	reqCtx := slogcontext.WithValue(ctx, "service", "ai_refactor_to_argokitv2")
@@ -123,6 +183,21 @@ func (s *AIService) RefactorToArgokitv2(stream api.AIService_RefactorToArgokitv2
 }
 
 func (s *AIService) analyzeWithVertexAI(prompt string) (string, error) {
+	// Load additional context from docs/ai-context/
+	additionalContext, err := loadAdditionalContext()
+	if err != nil {
+		// Log warning but continue without additional context
+		log.Warn("failed to load additional context", "error", err)
+		additionalContext = ""
+	}
+
+	// Combine the prompt with additional context
+	finalPrompt := prompt
+	if additionalContext != "" {
+		finalPrompt = prompt + additionalContext
+		log.Info("added additional context to prompt", "additionalContextLength", len(additionalContext))
+	}
+
 	// Construct the endpoint for the model
 	endpoint := fmt.Sprintf("projects/%s/locations/%s/publishers/google/models/%s",
 		s.projectID, s.location, s.model)
@@ -134,7 +209,7 @@ func (s *AIService) analyzeWithVertexAI(prompt string) (string, error) {
 				Role: "user",
 				Parts: []*aiplatform.GoogleCloudAiplatformV1Part{
 					{
-						Text: prompt,
+						Text: finalPrompt,
 					},
 				},
 			},
