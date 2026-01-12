@@ -285,7 +285,7 @@ While we initially considered using Google Cloud's Vertex AI Search with RAG for
 3. Server combines your manifest with the additional context and sends to Vertex AI (Gemini models)
 4. Vertex AI generates the refactored content based on the provided context
 5. Server returns the refactored content to the client
-6. Refactored content is written to `vertexAI_output.libsonnet`
+6. Refactored content is written to `refactored_output.libsonnet`
 
 ## Analytics & Privacy
 
