@@ -229,7 +229,7 @@ func writeRefactoredOutput(ctx context.Context, resp *api.RefactorToArgokitv2Res
 		return errors.New("empty response from server")
 	}
 
-	newPath, err := generateUniqueOutputPath("vertexAI_output", ".libsonnet")
+	newPath, err := generateUniqueOutputPath("refactored_output", ".libsonnet")
 	if err != nil {
 		return fmt.Errorf("failed to determine output file path: %w", err)
 	}
