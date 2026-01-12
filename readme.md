@@ -229,7 +229,7 @@ skipctl refactor --server=server.example.com:3514 app.jsonnet
 
 The first file is the target to refactor. Additional files provide context to help the AI understand dependencies, shared functions, and configuration patterns. All files are sent to the AI, but only the first file is refactored.
 
-Output is written to `vertexAI_output.libsonnet`.
+Output is written to `refactored_output.libsonnet`.
 
 ##### Adding Custom Documentation Context
 
