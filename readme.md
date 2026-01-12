@@ -202,9 +202,19 @@ openssl req -x509 -newkey rsa:4096 -keyout ~/.config/skipctl/server-key.pem \
 
 > **Note:** Running the server without `--tls-cert` and `--tls-key` will start it in insecure mode (no encryption). This should only be used for local testing in trusted networks.
 
-The server handles all communication with Vertex AI, so clients don't need direct Vertex AI access, but they must still use valid Google Cloud credentials to authenticate (for example, to obtain the ID token required by the server).
+The server handles all communication with Vertex AI, so clients don't need direct Vertex AI access.
+
+**Important:** The `GOOGLE_APPLICATION_CREDENTIALS` environment variable must be set on the **client** machine as well as the server. The client uses these credentials to obtain a Google Cloud ID token for authentication with the skipctl server. Without valid credentials, the server will reject the request with an authentication error.
 
 **Step 3: Refactor your manifests**
+
+Before running refactor commands, ensure `GOOGLE_APPLICATION_CREDENTIALS` is set:
+
+```shell
+export GOOGLE_APPLICATION_CREDENTIALS="$HOME/.config/gcloud/skipctl-key.json"
+```
+
+Then run refactor commands:
 
 ```shell
 # Refactor a single file

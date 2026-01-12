@@ -14,6 +14,8 @@ skipctl uses **Google Cloud ID tokens** from **service accounts only** for authe
 
 ### Client Side
 
+**Important:** The client **requires** Google Cloud credentials to authenticate with the skipctl server. Set the `GOOGLE_APPLICATION_CREDENTIALS` environment variable pointing to a service account key file before running any client commands (like `skipctl refactor`).
+
 The client uses service account credentials to obtain ID tokens:
 
 ```go
