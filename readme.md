@@ -203,11 +203,22 @@ skipctl refactor app.jsonnet
 
 # Provide additional files for context (libraries, shared configs, etc.)
 skipctl refactor app.jsonnet lib/common.libsonnet shared/config.libsonnet
+
+# Connect to a remote server
+skipctl refactor --server=server.example.com:3514 app.jsonnet
 ```
 
 The first file is the target to refactor. Additional files provide context to help the AI understand dependencies, shared functions, and configuration patterns. All files are sent to the AI, but only the first file is refactored.
 
 Output is written to `vertexAI_output.libsonnet`.
+
+##### Security Considerations
+
+**Network Security:**
+- All client-server communication uses TLS encryption with system root CA certificates
+- The server validates client authentication using Google Cloud ID tokens
+- Only users from the `kartverket.no` organization can access the API
+- See [server documentation](./server.md) for details on authentication
 
 ##### How It Works
 

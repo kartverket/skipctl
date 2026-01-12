@@ -16,7 +16,7 @@ import (
 	"github.com/kartverket/skipctl/pkg/manifest"
 	"github.com/kartverket/skipctl/pkg/prompts"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
+	"google.golang.org/grpc/credentials"
 )
 
 const chunkSize = 64 * 1024 // 64KB chunks
@@ -35,8 +35,14 @@ func Manifest(ctx context.Context, docs []*manifest.Document, serverAddr string)
 		return errors.New("no documents provided for refactoring")
 	}
 
+	// Use TLS with system's root CA certificates
+	tlsCreds := credentials.NewTLS(nil)
+	opts := []grpc.DialOption{
+		grpc.WithTransportCredentials(tlsCreds),
+	}
+
 	// Connect to the server
-	conn, err := grpc.NewClient(serverAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	conn, err := grpc.NewClient(serverAddr, opts...)
 	if err != nil {
 		return fmt.Errorf("failed to connect to server: %w", err)
 	}
@@ -198,7 +204,7 @@ func writeRefactoredOutput(ctx context.Context, resp *api.RefactorToArgokitv2Res
 	if err != nil {
 		return fmt.Errorf("failed to determine output file path: %w", err)
 	}
-	if err := os.WriteFile(newPath, []byte(resp.GetResponse()), 0600); err != nil {
+	if err = os.WriteFile(newPath, []byte(resp.GetResponse()), 0600); err != nil {
 		return fmt.Errorf("failed to write refactored content to file: %w", err)
 	}
 
