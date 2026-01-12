@@ -84,7 +84,6 @@ func Serve(addr string, metricsAddr string, timeout time.Duration, idTokenOrg st
 	if err != nil {
 		return fmt.Errorf("failed to create AI service: %w", err)
 	}
-	defer aiService.Close()
 	api.RegisterAIServiceServer(grpcSrv, aiService)
 	log.Info("AI service registered")
 
@@ -104,6 +103,10 @@ func Serve(addr string, metricsAddr string, timeout time.Duration, idTokenOrg st
 	}, func(_ error) {
 		grpcSrv.GracefulStop()
 		grpcSrv.Stop()
+		// Close AI service resources when server stops
+		if closeErr := aiService.Close(); closeErr != nil {
+			log.Error("failed to close AI service", "error", closeErr)
+		}
 	})
 
 	httpSrv := &http.Server{Addr: metricsAddr, ReadHeaderTimeout: constants.HTTPReadHeaderTimeout}
