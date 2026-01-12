@@ -191,6 +191,10 @@ func (s *AIService) RefactorToArgokitv2(stream api.AIService_RefactorToArgokitv2
 }
 
 func (s *AIService) analyzeWithVertexAI(prompt string) (string, error) {
+	// Create a timeout context for the Vertex AI API call
+	ctx, cancel := context.WithTimeout(context.Background(), s.globalTimeout)
+	defer cancel()
+
 	// Load additional context from docs/ai-context/
 	additionalContext, err := loadAdditionalContext()
 	if err != nil {
@@ -228,9 +232,13 @@ func (s *AIService) analyzeWithVertexAI(prompt string) (string, error) {
 		},
 	}
 
-	// Send the request to Vertex AI
-	resp, err := s.aiplatformService.Projects.Locations.Publishers.Models.GenerateContent(endpoint, req).Do()
+	// Send the request to Vertex AI with timeout context
+	resp, err := s.aiplatformService.Projects.Locations.Publishers.Models.GenerateContent(endpoint, req).Context(ctx).Do()
 	if err != nil {
+		// Check if it was a timeout error
+		if ctx.Err() == context.DeadlineExceeded {
+			return "", fmt.Errorf("vertex ai request timed out after %v: %w", s.globalTimeout, err)
+		}
 		return "", fmt.Errorf("failed to generate content: %w", err)
 	}
 
