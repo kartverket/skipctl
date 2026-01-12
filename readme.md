@@ -271,10 +271,11 @@ While we initially considered using Google Cloud's Vertex AI Search with RAG for
 ##### How It Works
 
 1. Client sends manifest files to the skipctl server via gRPC
-2. Server proxies the request to Vertex AI with Gemini models
-3. Vertex AI Search provides grounding using ArgoKit v2 documentation and examples
-4. Server returns the refactored content to the client
-5. Refactored content is written to `vertexAI_output.libsonnet`
+2. Server loads additional context from `docs/ai-context/` folder (all `.md` and `.txt` files)
+3. Server combines your manifest with the additional context and sends to Vertex AI (Gemini models)
+4. Vertex AI generates the refactored content based on the provided context
+5. Server returns the refactored content to the client
+6. Refactored content is written to `vertexAI_output.libsonnet`
 
 ## Analytics & Privacy
 
