@@ -45,7 +45,7 @@ func runRefactor(cmd *cobra.Command, args []string) error {
 		filePaths = []string{path}
 	default:
 		log.Error("No files specified for refactoring")
-		return errors.New("please provide file paths as arguments or use the -p flag")
+		return errors.New("please provide one or more file paths as arguments (e.g., 'skipctl refactor app.jsonnet lib.libsonnet') or use the -p flag for a single path")
 	}
 
 	// Validate that all paths are files, not directories
