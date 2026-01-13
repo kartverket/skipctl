@@ -8,14 +8,16 @@ import (
 )
 
 type Validator struct {
-	k8s *K8sValidator
-	res *ValidateResult
+	k8s        *K8sValidator
+	res        *ValidateResult
+	outputJSON bool
 }
 
-func NewValidator(tempDir string) *Validator {
+func NewValidator(tempDir string, outputJSON bool) *Validator {
 	return &Validator{
-		k8s: NewK8sValidator(tempDir),
-		res: &ValidateResult{},
+		k8s:        NewK8sValidator(tempDir),
+		res:        &ValidateResult{},
+		outputJSON: outputJSON,
 	}
 }
 
@@ -43,14 +45,14 @@ func (v *Validator) validateJsonnet(file *Document) error {
 	node, err := jsonnet.SnippetToAST(file.Name, file.Content)
 	if err != nil {
 		v.res.ErrorCount++
-		logging.LogValidationErrors(file.Name, nil, err)
+		logging.LogValidationErrors(file.Name, nil, err, v.outputJSON)
 		return err
 	}
 
 	content, err := vm.Evaluate(node)
 	if err != nil {
 		v.res.ErrorCount++
-		logging.LogValidationErrors(file.Name, nil, err)
+		logging.LogValidationErrors(file.Name, nil, err, v.outputJSON)
 		return err
 	}
 	summary, k8err := v.k8s.validateK8sSchema(file.Name, content)
@@ -58,7 +60,7 @@ func (v *Validator) validateJsonnet(file *Document) error {
 	// Log validation errors for each result
 	for _, result := range summary.Result {
 		if result.Status != validator.Valid {
-			logging.LogValidationErrors(file.Name, result.ValidationErrors, result.Err)
+		logging.LogValidationErrors(file.Name, result.ValidationErrors, result.Err, v.outputJSON)
 		}
 	}
 
@@ -72,7 +74,7 @@ func (v *Validator) validateYaml(d *Document) error {
 	// Log validation errors for each result
 	for _, result := range summary.Result {
 		if result.Status != validator.Valid {
-			logging.LogValidationErrors(d.Name, result.ValidationErrors, result.Err)
+		logging.LogValidationErrors(d.Name, r.ValidationErrors, r.Err, v.outputJSON)
 		}
 	}
 

@@ -29,7 +29,7 @@ func TestValidateManifestJsonnetValid(t *testing.T) {
 `
 
 	doc := newTestDocument(validJsonnetManifest, "valid.jsonnet")
-	validator := NewValidator(t.TempDir())
+	validator := NewValidator(t.TempDir(), true)
 	err := validator.ValidateManifest(doc)
 	result := validator.GetResults()
 
@@ -57,7 +57,7 @@ func TestValidateManifestJsonnetInvalid(t *testing.T) {
 `
 
 	doc := newTestDocument(validJsonnet, "valid.jsonnet")
-	validator := NewValidator(t.TempDir())
+	validator := NewValidator(t.TempDir(), true)
 	err := validator.ValidateManifest(doc)
 	result := validator.GetResults()
 
@@ -86,7 +86,7 @@ func TestValidateManifestJsonnetSyntaxError(t *testing.T) {
 `
 
 	doc := newTestDocument(invalidJsonnet, "invalid.jsonnet")
-	validator := NewValidator(t.TempDir())
+	validator := NewValidator(t.TempDir(), true)
 	err := validator.ValidateManifest(doc)
 	result := validator.GetResults()
 
@@ -115,7 +115,7 @@ spec:
 `
 
 	doc := newTestDocument(validYamlManifest, "valid.yaml")
-	validator := NewValidator(t.TempDir())
+	validator := NewValidator(t.TempDir(), true)
 	err := validator.ValidateManifest(doc)
 	result := validator.GetResults()
 
@@ -139,7 +139,7 @@ spec:
 `
 
 	doc := newTestDocument(validYaml, "valid.yaml")
-	validator := NewValidator(t.TempDir())
+	validator := NewValidator(t.TempDir(), true)
 	err := validator.ValidateManifest(doc)
 	result := validator.GetResults()
 
@@ -164,7 +164,7 @@ spec:
 `
 
 	doc := newTestDocument(invalidYaml, "invalid.yaml")
-	validator := NewValidator(t.TempDir())
+	validator := NewValidator(t.TempDir(), true)
 	err := validator.ValidateManifest(doc) // TODO does not return error, why?
 	result := validator.GetResults()
 	hasError := result.HasValidationFailed()
