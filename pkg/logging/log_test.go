@@ -12,7 +12,7 @@ import (
 	"github.com/yannh/kubeconform/pkg/validator"
 )
 
-func TestLogValidationErrors_NilInputs(t *testing.T) {
+func TestLogValidationErrors_NilInputs(_ *testing.T) {
 	// Setup
 	ConfigureLogging("text", false)
 
@@ -21,7 +21,7 @@ func TestLogValidationErrors_NilInputs(t *testing.T) {
 	// If we reach here without panic, test passes
 }
 
-func TestLogValidationErrors_JSONModeSkipsRawOutput(t *testing.T) {
+func TestLogValidationErrors_JSONModeSkipsRawOutput(_ *testing.T) {
 	// Setup logger in JSON mode
 	ConfigureLogging("json", false)
 
@@ -43,7 +43,7 @@ func TestLogValidationErrors_JSONModeSkipsRawOutput(t *testing.T) {
 	// (Note: actual JSON structured logs would go to the structured logger, not rawLogger)
 }
 
-func TestLogValidationErrors_TextModeWithValidationErrors(t *testing.T) {
+func TestLogValidationErrors_TextModeWithValidationErrors(_ *testing.T) {
 	// Setup logger in text mode
 	ConfigureLogging("text", false)
 
@@ -58,7 +58,7 @@ func TestLogValidationErrors_TextModeWithValidationErrors(t *testing.T) {
 	// If we reach here without panic, the function executed successfully
 }
 
-func TestLogValidationErrors_WithErrorContainingHint(t *testing.T) {
+func TestLogValidationErrors_WithErrorContainingHint(_ *testing.T) {
 	// Setup logger in text mode
 	ConfigureLogging("text", false)
 
@@ -73,7 +73,7 @@ func TestLogValidationErrors_WithErrorContainingHint(t *testing.T) {
 	// If we reach here without panic, the hint was processed correctly
 }
 
-func TestLogValidationErrors_WithErrorWithoutHint(t *testing.T) {
+func TestLogValidationErrors_WithErrorWithoutHint(_ *testing.T) {
 	// Setup logger in text mode
 	ConfigureLogging("text", false)
 
@@ -88,7 +88,7 @@ func TestLogValidationErrors_WithErrorWithoutHint(t *testing.T) {
 	// If we reach here without panic, the error was processed correctly
 }
 
-func TestLogValidationErrors_MultipleValidationErrors(t *testing.T) {
+func TestLogValidationErrors_MultipleValidationErrors(_ *testing.T) {
 	// Setup logger in text mode
 	ConfigureLogging("text", false)
 
@@ -102,7 +102,7 @@ func TestLogValidationErrors_MultipleValidationErrors(t *testing.T) {
 	LogValidationErrors("test.yaml", validationErrors, nil, false)
 }
 
-func TestLogValidationErrors_ErrorWithWhitespace(t *testing.T) {
+func TestLogValidationErrors_ErrorWithWhitespace(_ *testing.T) {
 	// Setup logger in text mode
 	ConfigureLogging("text", false)
 
@@ -151,11 +151,11 @@ func TestConfigureLogging(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			logger := ConfigureLogging(tt.mode, tt.isDebug)
-			require.NotNil(t, logger, "ConfigureLogging should return a valid logger")
+			configuredLogger := ConfigureLogging(tt.mode, tt.isDebug)
+			require.NotNil(t, configuredLogger, "ConfigureLogging should return a valid logger")
 
 			// Verify logger is functional
-			logger.Info("test message")
+			configuredLogger.Info("test message")
 		})
 	}
 }
@@ -238,7 +238,7 @@ func TestSplitHandler_Handle(t *testing.T) {
 	assert.Empty(t, stdoutBuf.String())
 }
 
-func TestLogValidationErrors_HintSplitWithMultipleParts(t *testing.T) {
+func TestLogValidationErrors_HintSplitWithMultipleParts(_ *testing.T) {
 	// Setup logger in text mode
 	ConfigureLogging("text", false)
 
@@ -253,7 +253,7 @@ func TestLogValidationErrors_HintSplitWithMultipleParts(t *testing.T) {
 	// Should split only on first "Hint:" due to SplitN with maxHintParts=2
 }
 
-func TestLogValidationErrors_BraceTrimming(t *testing.T) {
+func TestLogValidationErrors_BraceTrimming(_ *testing.T) {
 	// Setup logger in text mode
 	ConfigureLogging("text", false)
 

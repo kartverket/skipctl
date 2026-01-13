@@ -132,6 +132,46 @@ func RawLogger() *slog.Logger {
 	return rawLogger
 }
 
+func logValidationErrorsJSON(filename string, validationErrors []validator.ValidationError, err error) {
+	// JSON mode: only log structured errors
+	if err != nil {
+		logger.Error("validation error", "file", filename, "error", err.Error())
+	}
+	if len(validationErrors) > 0 {
+		errorMsgs := make([]string, len(validationErrors))
+		for i, ve := range validationErrors {
+			errorMsgs[i] = fmt.Sprintf("{%s %s}", ve.Path, strings.Trim(ve.Error(), "{}"))
+		}
+		logger.Error("validation errors", "file", filename, "errors", errorMsgs)
+	}
+}
+
+func logValidationErrorsText(filename string, validationErrors []validator.ValidationError, err error) {
+	// Text mode: human-readable formatting
+	rawLogger.Error(
+		errStyle("ERROR:") + fmt.Sprintf(" file is invalid at %s", filename),
+	)
+
+	// Print each validation error
+	for _, ve := range validationErrors {
+		cleanedMsg := strings.Trim(ve.Error(), "{}") // remove outer braces
+		rawLogger.Error(fmt.Sprintf("  — %s: %s\n", ve.Path, cleanedMsg))
+	}
+
+	if err != nil {
+		errMsg := strings.TrimSpace(err.Error())
+		// Split error message to show hint on separate lines for better readability
+		if strings.Contains(errMsg, "Hint:") {
+			var maxHintParts = 2
+			parts := strings.SplitN(errMsg, "Hint:", maxHintParts)
+			rawLogger.Error(fmt.Sprintf("  — %s\n", parts[0]))
+			rawLogger.Error(fmt.Sprintf("   Hint:%s\n", parts[1]))
+		} else {
+			rawLogger.Error(fmt.Sprintf("  — %s\n", errMsg))
+		}
+	}
+}
+
 func LogValidationErrors(filename string, validationErrors []validator.ValidationError, err error, outputJSON bool) {
 	// Skip colored raw output when in JSON mode - errors are already logged via the structured logger
 	if outputMode == OutputModeJSON {
@@ -147,40 +187,8 @@ func LogValidationErrors(filename string, validationErrors []validator.Validatio
 	}
 
 	if outputJSON {
-		// JSON mode: only log structured errors
-		if err != nil {
-			logger.Error("validation error", "file", filename, "error", err.Error())
-		}
-		if len(validationErrors) > 0 {
-			errorMsgs := make([]string, len(validationErrors))
-			for i, ve := range validationErrors {
-				errorMsgs[i] = fmt.Sprintf("{%s %s}", ve.Path, strings.Trim(ve.Error(), "{}"))
-			}
-			logger.Error("validation errors", "file", filename, "errors", errorMsgs)
-		}
+		logValidationErrorsJSON(filename, validationErrors, err)
 	} else {
-		// Text mode: human-readable formatting
-		rawLogger.Error(
-			errStyle("ERROR:") + fmt.Sprintf(" file is invalid at %s", filename),
-		)
-
-		// Print each validation error
-		for _, ve := range validationErrors {
-			cleanedMsg := strings.Trim(ve.Error(), "{}") // remove outer braces
-			rawLogger.Error(fmt.Sprintf("  — %s: %s\n", ve.Path, cleanedMsg))
-		}
-
-		if err != nil {
-			errMsg := strings.TrimSpace(err.Error())
-			// Split error message to show hint on separate lines for better readability
-			if strings.Contains(errMsg, "Hint:") {
-				var maxHintParts = 2
-				parts := strings.SplitN(errMsg, "Hint:", maxHintParts)
-				rawLogger.Error(fmt.Sprintf("  — %s\n", parts[0]))
-				rawLogger.Error(fmt.Sprintf("   Hint:%s\n", parts[1]))
-			} else {
-				rawLogger.Error(fmt.Sprintf("  — %s\n", errMsg))
-			}
-		}
+		logValidationErrorsText(filename, validationErrors, err)
 	}
 }
