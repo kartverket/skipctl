@@ -111,7 +111,7 @@ func (k8 *K8sValidator) processValidationResults(filename string, results []vali
 	var validCount, invalidCount, errorCount, skippedCount int
 	var err error
 
-	// Check if valid api version in results
+	// Enrich schema-not-found errors with helpful API version hints
 	for i := range results {
 		if results[i].Status == validator.Error {
 			results[i].Err = k8.checkIfValidSchema(results[i])
