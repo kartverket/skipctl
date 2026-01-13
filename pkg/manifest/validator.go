@@ -73,7 +73,7 @@ func (v *Validator) validateYaml(d *Document) error {
 
 	// Log validation errors for each result
 	for _, result := range summary.Result {
-		if result.Status != validator.Valid {
+		if result.Status == validator.Invalid || result.Status == validator.Error {
 			logging.LogValidationErrors(d.Name, result.ValidationErrors, result.Err, v.outputJSON)
 		}
 	}
