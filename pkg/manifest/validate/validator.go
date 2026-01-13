@@ -54,7 +54,7 @@ func (v *Validator) validateJsonnet(file *manifest.Document) error {
 		logging.LogValidationErrors(file.Name, nil, err, v.outputJSON)
 		return err
 	}
-	res, results, k8err := v.k8s.validateK8sSchema(file.Name, content)
+	res, results, k8err := v.k8s.ValidateK8sSchema(file.Name, content)
 
 	// Log validation errors for each result
 	for _, result := range results {
@@ -66,7 +66,7 @@ func (v *Validator) validateJsonnet(file *manifest.Document) error {
 }
 
 func (v *Validator) validateYaml(d *manifest.Document) error {
-	result, results, jerr := v.k8s.validateK8sSchema(d.Name, d.Content)
+	result, results, jerr := v.k8s.ValidateK8sSchema(d.Name, d.Content)
 
 	// Log validation errors for each result
 	for _, r := range results {
