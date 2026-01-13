@@ -8,15 +8,15 @@ import (
 )
 
 type Validator struct {
-	k8s *manifest.K8sValidator
-	res *manifest.ValidateResult
+	k8s        *manifest.K8sValidator
+	res        *manifest.ValidateResult
 	outputJSON bool
 }
 
 func NewValidator(tempDir string, outputJSON bool) *Validator {
 	return &Validator{
-		k8s: manifest.NewK8sValidator(tempDir),
-		res: &manifest.ValidateResult{},
+		k8s:        manifest.NewK8sValidator(tempDir),
+		res:        &manifest.ValidateResult{},
 		outputJSON: outputJSON,
 	}
 }
