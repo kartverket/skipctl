@@ -30,7 +30,7 @@ func TestValidateManifestJsonnetValid(t *testing.T) {
 `
 
 	doc := manifest.NewTestDocument(validJsonnetManifest, "valid.jsonnet")
-	validator := NewValidator(t.TempDir())
+	validator := NewValidator(t.TempDir(), true)
 	err := validator.ValidateManifest(doc)
 	result := validator.GetResults()
 
@@ -58,7 +58,7 @@ func TestValidateManifestJsonnetInvalid(t *testing.T) {
 `
 
 	doc := manifest.NewTestDocument(validJsonnet, "valid.jsonnet")
-	validator := NewValidator(t.TempDir())
+	validator := NewValidator(t.TempDir(), true)
 	err := validator.ValidateManifest(doc)
 	result := validator.GetResults()
 
@@ -87,7 +87,7 @@ func TestValidateManifestJsonnetSyntaxError(t *testing.T) {
 `
 
 	doc := manifest.NewTestDocument(invalidJsonnet, "invalid.jsonnet")
-	validator := NewValidator(t.TempDir())
+	validator := NewValidator(t.TempDir(), true)
 	err := validator.ValidateManifest(doc)
 	result := validator.GetResults()
 
@@ -116,7 +116,7 @@ spec:
 `
 
 	doc := manifest.NewTestDocument(validYamlManifest, "valid.yaml")
-	validator := NewValidator(t.TempDir())
+	validator := NewValidator(t.TempDir(), true)
 	err := validator.ValidateManifest(doc)
 	result := validator.GetResults()
 
@@ -140,7 +140,7 @@ spec:
 `
 
 	doc := manifest.NewTestDocument(validYaml, "valid.yaml")
-	validator := NewValidator(t.TempDir())
+	validator := NewValidator(t.TempDir(), true)
 	err := validator.ValidateManifest(doc)
 	result := validator.GetResults()
 
@@ -165,7 +165,7 @@ spec:
 `
 
 	doc := manifest.NewTestDocument(invalidYaml, "invalid.yaml")
-	validator := NewValidator(t.TempDir())
+	validator := NewValidator(t.TempDir(), true)
 	err := validator.ValidateManifest(doc) // TODO does not return error, why?
 	result := validator.GetResults()
 	hasError := result.HasValidationFailed()

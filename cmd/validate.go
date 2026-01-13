@@ -50,7 +50,8 @@ func runValidate(_ *cobra.Command, args []string) error {
 	}
 
 	processor := manifest.NewDocumentProcessor()
-	validator := validate.NewValidator(tempDir)
+	validator := manifest.NewValidator(tempDir, outputJSON)
+	outputJSON := outputFormat == "json"
 
 	err = processor.ProcessDocuments(manifestFiles, validator.ValidateManifest)
 

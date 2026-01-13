@@ -2,13 +2,17 @@ package logging
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"log/slog"
 	"os"
+	"strings"
 	"sync"
 
 	slogcontext "github.com/PumpkinSeed/slog-context"
+	"github.com/fatih/color"
 	"github.com/pkg/errors"
+	"github.com/yannh/kubeconform/pkg/validator"
 )
 
 var (
@@ -27,6 +31,9 @@ type stdoutCtxKey struct{}
 type splitHandler struct {
 	stdout, stderr slog.Handler
 }
+
+// Style used for error messages. Red background with white text.
+var errStyle = color.New(color.FgWhite, color.BgRed).SprintFunc()
 
 func (h *splitHandler) Enabled(ctx context.Context, level slog.Level) bool {
 	// Delegate; assume same levels configured on both.
@@ -120,4 +127,43 @@ func RawLogger() *slog.Logger {
 	}
 
 	return rawLogger
+}
+
+func LogValidationErrors(filename string, validationErrors []validator.ValidationError, err error, outputJSON bool) {
+	if rawLogger == nil {
+		panic("logger not initialized")
+	}
+
+	if validationErrors == nil && err == nil {
+		return
+	}
+
+	if outputJSON {
+		// JSON mode: only log structured errors
+		if err != nil {
+			logger.Error("validation error", "file", filename, "error", err.Error())
+		}
+		if len(validationErrors) > 0 {
+			errorMsgs := make([]string, len(validationErrors))
+			for i, ve := range validationErrors {
+				errorMsgs[i] = fmt.Sprintf("{%s %s}", ve.Path, strings.Trim(ve.Error(), "{}"))
+			}
+			logger.Error("validation errors", "file", filename, "errors", errorMsgs)
+		}
+	} else {
+		// Text mode: human-readable formatting
+		rawLogger.Error(
+			errStyle("ERROR:") + fmt.Sprintf(" file is invalid at %s", filename),
+		)
+
+		// Print each validation error
+		for _, ve := range validationErrors {
+			cleanedMsg := strings.Trim(ve.Error(), "{}") // remove outer braces
+			rawLogger.Error(fmt.Sprintf("  — %s: %s\n", ve.Path, cleanedMsg))
+		}
+
+		if err != nil {
+			rawLogger.Error(fmt.Sprintf("  — %s\n", strings.TrimSpace(err.Error())))
+		}
+	}
 }

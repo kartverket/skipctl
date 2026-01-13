@@ -3,18 +3,21 @@ package validate
 import (
 	"github.com/google/go-jsonnet"
 	"github.com/kartverket/skipctl/pkg/constants"
+	"github.com/kartverket/skipctl/pkg/logging"
 	"github.com/kartverket/skipctl/pkg/manifest"
 )
 
 type Validator struct {
 	k8s *manifest.K8sValidator
 	res *manifest.ValidateResult
+	outputJSON bool
 }
 
-func NewValidator(tempDir string) *Validator {
+func NewValidator(tempDir string, outputJSON bool) *Validator {
 	return &Validator{
 		k8s: manifest.NewK8sValidator(tempDir),
 		res: &manifest.ValidateResult{},
+		outputJSON: outputJSON,
 	}
 }
 
@@ -41,22 +44,35 @@ func (v *Validator) validateJsonnet(file *manifest.Document) error {
 	node, err := jsonnet.SnippetToAST(file.Name, file.Content)
 	if err != nil {
 		v.res.ErrorCount++
+		logging.LogValidationErrors(file.Name, nil, err, v.outputJSON)
 		return err
 	}
 
 	content, err := vm.Evaluate(node)
 	if err != nil {
 		v.res.ErrorCount++
+		logging.LogValidationErrors(file.Name, nil, err, v.outputJSON)
 		return err
 	}
-	res, k8err := v.k8s.ValidateK8sSchema(file.Name, content)
+	res, results, k8err := v.k8s.validateK8sSchema(file.Name, content)
+
+	// Log validation errors for each result
+	for _, result := range results {
+		logging.LogValidationErrors(file.Name, result.ValidationErrors, result.Err, v.outputJSON)
+	}
 
 	v.countValidateRes(&res)
 	return k8err
 }
 
 func (v *Validator) validateYaml(d *manifest.Document) error {
-	result, jerr := v.k8s.ValidateK8sSchema(d.Name, d.Content)
+	result, results, jerr := v.k8s.validateK8sSchema(d.Name, d.Content)
+
+	// Log validation errors for each result
+	for _, r := range results {
+		logging.LogValidationErrors(d.Name, r.ValidationErrors, r.Err, v.outputJSON)
+	}
+
 	v.countValidateRes(&result)
 	return jerr
 }
