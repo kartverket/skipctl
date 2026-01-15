@@ -436,6 +436,10 @@ CRITICAL RULES FOR FUNCTION PARAMETERS:
   7. If you use argokit.externalSecrets.store.new(), gsmProjectId MUST be a parameter (caller-provided)
   8. If you reference cloudSqlConfig in spec, cloudSqlConfig MUST be a parameter (caller-provided)
   9. Do NOT hardcode values that vary by environment (like project IDs, URLs)
+  10. The refactored function MUST have the EXACT SAME PARAMETERS as the reference function in the source
+      - Match parameter names, order, and default values exactly
+      - If reference has function(env, version, clientId, gsmProjectId, databaseHost), use those exact parameters
+      - Do NOT add, remove, or rename parameters compared to the reference
 
 Example of what NOT to do:
   ❌ WRONG: gcpProject=env + '-1234'  // Hardcoded suffix
