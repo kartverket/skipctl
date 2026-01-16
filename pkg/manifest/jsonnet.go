@@ -89,6 +89,10 @@ func (d *JsonnetDiffer) Diff(file *Document) ([]*diff.ManifestDiff, bool, error)
 		return nil, false, err
 	}
 	rendered := d.currentBuffer.String()
+	rendered, err = SortJSON(rendered)
+	if err != nil {
+		return nil, false, fmt.Errorf("failed to sort jsonnet output: %w", err)
+	}
 
 	// Render git file
 	d.gitBuffer.Reset()
@@ -97,6 +101,10 @@ func (d *JsonnetDiffer) Diff(file *Document) ([]*diff.ManifestDiff, bool, error)
 		return nil, false, err
 	}
 	prevRendered := d.gitBuffer.String()
+	prevRendered, err = SortJSON(prevRendered)
+	if err != nil {
+		return nil, false, fmt.Errorf("failed to sort prev jsonnet output: %w", err)
+	}
 
 	diffs, hasChanges := diff.CalculateDiff(prevRendered, rendered)
 	return diffs, hasChanges, nil
