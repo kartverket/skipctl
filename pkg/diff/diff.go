@@ -34,6 +34,11 @@ type ManifestDiff struct {
 	Line    int    `json:"line"`
 	OldLine int    `json:"old_line"`
 	NewLine int    `json:"new_line"`
+
+	ResourceKind       string `json:"resource_kind,omitempty"`
+	ResourceName       string `json:"resource_name,omitempty"`
+	ResourceNamespace  string `json:"resource_namespace,omitempty"`
+	ResourceAPIVersion string `json:"resource_api_version,omitempty"`
 }
 
 type JSONOutput struct {
@@ -140,13 +145,122 @@ func CalculateDiff(a, b string) ([]*ManifestDiff, bool) {
 func DiffsToPrettyPrint(diffs []*ManifestDiff, filename string) string {
 	var out strings.Builder
 
-	out.WriteString(fmt.Sprintf("%s%s%s\n", textBold, filename, colorReset))
-	out.WriteString(formatPrettyHeader(diffs))
+	if len(diffs) == 0 {
+		return ""
+	}
 
-	for _, d := range diffs {
-		out.WriteString(fmt.Sprintf("%s%d %s %s%s\n", diffColorMap[d.Type], d.Line, diffSymbolMap[d.Type], d.Text, colorReset))
+	out.WriteString(fmt.Sprintf("%s%s%s\n", textBold, filename, colorReset))
+	hunks := groupIntoHunks(diffs)
+
+	for i, hunk := range hunks {
+		if len(hunk) == 0 {
+			continue
+		}
+		if i > 0 {
+			out.WriteByte('\n')
+		}
+		if hdr := resourceHeaderForHunk(hunk); hdr != "" {
+			out.WriteString(fmt.Sprintf("%s%s%s\n", textBold, hdr, colorReset))
+		}
+		out.WriteString(formatPrettyHeader(hunk))
+		for _, d := range hunk {
+			out.WriteString(fmt.Sprintf("%s%d %s %s%s\n",
+				diffColorMap[d.Type], d.Line, diffSymbolMap[d.Type], d.Text, colorReset))
+		}
 	}
 	return out.String()
+}
+
+func resourceHeaderForHunk(hunk []*ManifestDiff) string {
+	d := pickResourceDiff(hunk)
+	if d == nil {
+		return ""
+	}
+	return formatResourceHeader(d.ResourceKind, d.ResourceAPIVersion, d.ResourceNamespace, d.ResourceName)
+}
+
+func pickResourceDiff(hunk []*ManifestDiff) *ManifestDiff {
+	// choose resource from changed lines first
+	for _, d := range hunk {
+		if d.Type != constants.Equals && diffHasResourceMeta(d) {
+			return d
+		}
+	}
+	// if for some reason none found, choose any with resource information
+	for _, d := range hunk {
+		if diffHasResourceMeta(d) {
+			return d
+		}
+	}
+	return nil
+}
+
+func formatResourceHeader(kind, apiVersion, namespace, name string) string {
+	if kind == "" && name == "" {
+		return ""
+	}
+	left := "Resource"
+	if kind != "" {
+		left = kind
+		if apiVersion != "" {
+			left = left + "." + apiVersion
+		}
+	}
+	if name == "" {
+		return left
+	}
+	if namespace != "" {
+		return left + "/" + namespace + "/" + name
+	}
+	return left + "/" + name
+}
+
+func diffHasResourceMeta(d *ManifestDiff) bool {
+	return d.ResourceKind != "" || d.ResourceName != "" || d.ResourceNamespace != "" || d.ResourceAPIVersion != ""
+}
+
+// groups diffs into diff hunks based on continuity between oldLine and newLine.
+func groupIntoHunks(entries []*ManifestDiff) [][]*ManifestDiff {
+	if len(entries) == 0 {
+		return nil
+	}
+
+	var hunks [][]*ManifestDiff
+	var currentHunk []*ManifestDiff
+
+	expectedOldLine, expectedNewLine := -1, -1
+
+	for i, entry := range entries {
+		startNewHunk := i == 0 || entry.OldLine != expectedOldLine || entry.NewLine != expectedNewLine
+		if startNewHunk {
+			if len(currentHunk) > 0 {
+				hunks = append(hunks, currentHunk)
+			}
+			currentHunk = nil
+		}
+
+		currentHunk = append(currentHunk, entry)
+		expectedOldLine, expectedNewLine = nextExpectedLines(entry)
+	}
+
+	if len(currentHunk) > 0 {
+		hunks = append(hunks, currentHunk)
+	}
+
+	return hunks
+}
+
+func nextExpectedLines(d *ManifestDiff) (int, int) {
+	switch d.Type {
+	case constants.Equals:
+		return d.OldLine + 1, d.NewLine + 1
+	case constants.Deletion:
+		return d.OldLine + 1, d.NewLine
+	case constants.Insertion:
+		return d.OldLine, d.NewLine + 1
+	default:
+		return d.OldLine, d.NewLine
+	}
 }
 
 func DiffsToJSON(diffs []*ManifestDiff, fileName string, ref string) string {
@@ -197,44 +311,12 @@ func writePatchHeaders(fileName string) string {
 
 func writePatch(diffs []*ManifestDiff) string {
 	var b strings.Builder
-	var currentHunk []*ManifestDiff
-
-	expectedOld := -1
-	expectedNew := -1
-	for i, diff := range diffs {
-		isNewHunk := false
-		if i == 0 {
-			isNewHunk = true
-		} else if diff.OldLine != expectedOld || diff.NewLine != expectedNew {
-			isNewHunk = true
-		}
-		if isNewHunk {
-			if len(currentHunk) > 0 {
-				b.WriteString(formatPatchHunk(currentHunk))
-			}
-			currentHunk = []*ManifestDiff{}
-		}
-		currentHunk = append(currentHunk, diff)
-		// Calculate next line
-		switch diff.Type {
-		case constants.Equals:
-			expectedOld = diff.OldLine + 1
-			expectedNew = diff.NewLine + 1
-		case constants.Deletion:
-			expectedOld = diff.OldLine + 1
-			expectedNew = diff.NewLine
-		case constants.Insertion:
-			expectedOld = diff.OldLine
-			expectedNew = diff.NewLine + 1
-		}
+	for _, hunk := range groupIntoHunks(diffs) {
+		b.WriteString(formatPatchHunk(hunk))
 	}
-	// If whe have a hunk, format it
-	if len(currentHunk) > 0 {
-		b.WriteString(formatPatchHunk(currentHunk))
-	}
-
 	return b.String()
 }
+
 func FilterDiffs(diffs []*ManifestDiff, verbosityLevel string, chunkSize int) []*ManifestDiff {
 	switch verbosityLevel {
 	case constants.DiffVerbosityFull:

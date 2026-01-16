@@ -310,3 +310,66 @@ func TestFilterDiffsWithChunks(t *testing.T) {
 func intSliceToString(v []int) string {
 	return strings.Trim(fmt.Sprint(v), "[]")
 }
+
+func TestFormatResourceHeader(t *testing.T) {
+	got := formatResourceHeader("Deployment", "apps/v1", "upbound-system", "crossplane-rbac-manager")
+	want := "Deployment.apps/v1/upbound-system/crossplane-rbac-manager"
+	if got != want {
+		t.Fatalf("unexpected header:\n got: %q\nwant: %q", got, want)
+	}
+
+	got = formatResourceHeader("SecretStore", "external-secrets.io/v1", "", "gsm")
+	want = "SecretStore.external-secrets.io/v1/gsm"
+	if got != want {
+		t.Fatalf("unexpected header:\n got: %q\nwant: %q", got, want)
+	}
+
+	got = formatResourceHeader("", "", "", "")
+	if got != "" {
+		t.Fatalf("expected empty header, got %q", got)
+	}
+}
+
+func TestDiffsToPrettyPrint_WithResourceMetadata_PrintsHeaderPerHunk(t *testing.T) {
+	diffs := []*ManifestDiff{
+		{Type: constants.Equals, Text: "ctx1", Line: 10, OldLine: 10, NewLine: 10},
+		{Type: constants.Deletion, Text: "old", Line: 11, OldLine: 11, NewLine: 11},
+		{
+			Type:               constants.Insertion,
+			Text:               "new",
+			Line:               11,
+			OldLine:            12,
+			NewLine:            11,
+			ResourceKind:       "Deployment",
+			ResourceAPIVersion: "apps/v1",
+			ResourceNamespace:  "upbound-system",
+			ResourceName:       "crossplane-rbac-manager",
+		},
+		{Type: constants.Equals, Text: "ctx2", Line: 12, OldLine: 12, NewLine: 12},
+
+		{Type: constants.Equals, Text: "c50", Line: 50, OldLine: 50, NewLine: 50},
+		{
+			Type:               constants.Insertion,
+			Text:               "add",
+			Line:               51,
+			OldLine:            51,
+			NewLine:            51,
+			ResourceKind:       "SecretStore",
+			ResourceAPIVersion: "external-secrets.io/v1",
+			ResourceName:       "gsm",
+		},
+	}
+
+	out := DiffsToPrettyPrint(diffs, "kustomize-render.yaml")
+
+	if !strings.Contains(out, "Deployment.apps/v1/upbound-system/crossplane-rbac-manager") {
+		t.Fatalf("missing first resource header in output:\n%s", out)
+	}
+	if !strings.Contains(out, "SecretStore.external-secrets.io/v1/gsm") {
+		t.Fatalf("missing second resource header in output:\n%s", out)
+	}
+
+	if strings.Count(out, "@@ ") != 2 {
+		t.Fatalf("expected 2 hunks in pretty output, got %d:\n%s", strings.Count(out, "@@ "), out)
+	}
+}
