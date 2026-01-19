@@ -178,3 +178,5 @@ You can disable analytics collection in two ways:
 
 1. Set the `DO_NOT_TRACK` environment variable to `true`
 2. Use the `--no-analytics` flag when running any `skipctl` command
+
+You can suppress analytics enablement messages (whether it enabled or not) by setting the environement variable `SKIPCTL_MUTE_TELEMETRY` to `true`. 

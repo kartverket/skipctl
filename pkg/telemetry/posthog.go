@@ -33,6 +33,7 @@ func (c *Collector) Enabled() bool {
 type Options struct {
 	Debug            bool
 	DisableAnalytics bool
+	MuteTelemetry    bool
 	GitVersion       string
 	GitCommitHash    string
 	Arch             string
@@ -45,17 +46,23 @@ func ConfigureCollector(opts Options) Collector {
 	collector := Collector{log: logger}
 	if len(PostHogProjectAPIToken) == 0 {
 		collector.enabled = false
-		logger.Info("telemetry is disabled because no PostHog project API token set – normal for development builds")
+		if !opts.MuteTelemetry {
+			logger.Info("telemetry is disabled because no PostHog project API token set – normal for development builds")
+		}
 		return collector
 	}
 
 	if opts.DisableAnalytics || len(PostHogProjectAPIToken) == 0 {
 		collector.enabled = false
-		logger.Info("telemetry is disabled")
+		if !opts.MuteTelemetry {
+			logger.Info("telemetry is disabled")
+		}
 		return collector
 	}
 
-	logger.Info("telemetry enabled, set DO_NOT_TRACK=true to disable")
+	if !opts.MuteTelemetry {
+		logger.Info("telemetry enabled, set DO_NOT_TRACK=true to disable or SKIPCTL_MUTE_TELEMETRY=true to mute this message")
+	}
 
 	config := posthog.Config{
 		Endpoint:               postHogURL,
@@ -200,6 +207,7 @@ func defaultProps(opts Options) posthog.Properties {
 	props := make(posthog.Properties)
 
 	props.Set("debug_mode", opts.Debug)
+	props.Set("telemetry_muted", opts.MuteTelemetry)
 	props.Set("app_version", opts.GitVersion)
 	props.Set("app_git_commit", opts.GitCommitHash)
 	props.Set("user_os", runtime.GOOS)
