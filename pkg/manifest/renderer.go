@@ -23,9 +23,9 @@ type Renderer struct {
 func NewRenderer(output *slog.Logger) *Renderer {
 	cache := NewImportCache()
 	return &Renderer{
-		jsonnetRenderer:   NewJsonnetRenderer(output, cache),
+		jsonnetRenderer:   NewJsonnetRenderer(output, cache, false),
 		yamlRenderer:      NewYamlRenderer(output),
-		kustomizeRenderer: NewKustomizeRenderer(output),
+		kustomizeRenderer: NewKustomizeRenderer(output, false),
 	}
 }
 

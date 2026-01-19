@@ -23,19 +23,21 @@ type Differ struct {
 	verbosityLevel  string
 	chunkSize       int
 	outputFormat    string
+	sortOutput      bool
 }
 
 // NewDiffer creates a new manifest differ facade.
-func NewDiffer(source Source, rawOutput *slog.Logger, verbosityLevel string, outputFormat string, chunkSize int) *Differ {
+func NewDiffer(source Source, rawOutput *slog.Logger, verbosityLevel string, outputFormat string, chunkSize int, sortOutput bool) *Differ {
 	return &Differ{
 		source:          source,
-		jsonnetDiffer:   NewJsonnetDiffer(source),
+		jsonnetDiffer:   NewJsonnetDiffer(source, sortOutput),
 		yamlDiffer:      NewYamlDiffer(source),
-		kustomizeDiffer: NewKustomizeDiffer(source),
+		kustomizeDiffer: NewKustomizeDiffer(source, sortOutput),
 		rawOutput:       rawOutput,
 		verbosityLevel:  verbosityLevel,
 		chunkSize:       chunkSize,
 		outputFormat:    outputFormat,
+		sortOutput:      sortOutput,
 	}
 }
 

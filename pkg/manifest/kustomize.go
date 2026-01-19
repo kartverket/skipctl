@@ -26,13 +26,17 @@ type KustomizeRenderer struct {
 }
 
 // NewKustomizeRenderer creates a new kustomize renderer.
-func NewKustomizeRenderer(output *slog.Logger, dividerEnabled ...bool) *KustomizeRenderer {
+func NewKustomizeRenderer(output *slog.Logger, sortOutput bool, dividerEnabled ...bool) *KustomizeRenderer {
 	opts := krusty.MakeDefaultOptions()
 
 	// SKIP kustomize options
 	opts.PluginConfig.HelmConfig.Enabled = true
 	opts.PluginConfig.HelmConfig.Command = "helm"
 	opts.LoadRestrictions = types.LoadRestrictionsNone
+
+	if sortOutput {
+		opts.Reorder = "legacy"
+	}
 
 	enableDiv := true
 	if len(dividerEnabled) > 0 {
@@ -86,7 +90,7 @@ type KustomizeDiffer struct {
 }
 
 // NewKustomizeDiffer creates a new kustomize differ.
-func NewKustomizeDiffer(source Source) *KustomizeDiffer {
+func NewKustomizeDiffer(source Source, sortOutput bool) *KustomizeDiffer {
 	currentBuf := &bytes.Buffer{}
 	prevBuf := &bytes.Buffer{}
 
@@ -97,8 +101,8 @@ func NewKustomizeDiffer(source Source) *KustomizeDiffer {
 		source:          source,
 		currentBuffer:   currentBuf,
 		prevBuffer:      prevBuf,
-		currentRenderer: NewKustomizeRenderer(currentLogger, false),
-		prevRenderer:    NewKustomizeRenderer(prevLogger, false),
+		currentRenderer: NewKustomizeRenderer(currentLogger, sortOutput),
+		prevRenderer:    NewKustomizeRenderer(prevLogger, sortOutput),
 	}
 }
 
