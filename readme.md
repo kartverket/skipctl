@@ -122,7 +122,7 @@ Flags:
 --chunk-size <n>       Context lines for chunk (default 3)
 --path, -p <path>      Files / directory to scan
 --kustomize            Enable diffing kustomize directories (requires --ref to be a directory)
---sortOutputs          Sort rendered outputs before diffing (useful on refactors that change output order only)
+--sort-output          Sort rendered outputs before diffing (useful on refactors that change output order only)
 ```
 
 Defaults (when --verbosity not provided): pretty->full, patch->chunk, json->full.
@@ -131,6 +131,7 @@ Examples:
 ```shell
 skipctl manifests diff --path .
 skipctl manifests diff --path . --diff-format json --verbosity minimal | jq '.diffs[] | select(.type!="Equals")'
+skipctl manifest diff --path env/cluster --verbosity chunk --diff-format patch --kustomize --ref env-copy/cluster 
 ```
 
 Exit codes: 0 success / 1 error.

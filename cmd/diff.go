@@ -123,6 +123,6 @@ func init() {
 	diffCmd.Flags().IntVar(&chunkSize, "chunk-size", constants.DefaultChunkSize, "Number of lines to include above and below a diff line")
 	diffCmd.Flags().StringVar(&diffOutputFormat, "diff-format", constants.DiffOutputPretty, "the output format of the diff (default pretty), allowed (pretty | patch | json)")
 	diffCmd.Flags().BoolVar(&kustomizeEnabled, "kustomize", false, "enable diffing of kustomize, if this flag is set, the --ref is expected to be a dir to diff agains, if not set kustomize files will be skipped (default false)")
-	diffCmd.Flags().BoolVar(&sortOutput, "sortOutput", false, "sort output to avoid diff on reorder changes between refs (default false)")
+	diffCmd.Flags().BoolVar(&sortOutput, "sort-output", false, "sort output to avoid diff on reorder changes between refs (default false)")
 	manifestCmd.AddCommand(diffCmd)
 }
