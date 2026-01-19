@@ -23,7 +23,6 @@ type Differ struct {
 	verbosityLevel  string
 	chunkSize       int
 	outputFormat    string
-	sortOutput      bool
 }
 
 // NewDiffer creates a new manifest differ facade.
@@ -37,7 +36,6 @@ func NewDiffer(source Source, rawOutput *slog.Logger, verbosityLevel string, out
 		verbosityLevel:  verbosityLevel,
 		chunkSize:       chunkSize,
 		outputFormat:    outputFormat,
-		sortOutput:      sortOutput,
 	}
 }
 
