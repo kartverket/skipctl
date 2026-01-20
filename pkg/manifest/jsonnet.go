@@ -55,7 +55,7 @@ if std.type(res) == "array" then
     ])
   )
 else if std.type(res) == "object" then
-  if std.objectHas(res, "kind") then
+  if std.objectHas(res, "kind") && res.kind == "List" then
     res + {items: std.sort(res.items, function(r)
 	  std.join("/", [
 		r.kind,
