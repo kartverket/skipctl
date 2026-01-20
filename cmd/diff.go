@@ -34,7 +34,7 @@ chunk (output changed lines with 3 lines of context above and below)
 full (output the entire file)
 
 Sort diff:
-If --sortOutput is set, the rendered output will be sorted before diffing to avoid diffs due to reordering of resources.
+If --sort-output is set, the rendered output will be sorted before diffing to avoid diffs due to reordering of resources.
 
 Kustomize:
 To diff kustomize manifests, you need to set the --kustomize flag and supply a path to a dir where the files to diff against are in --ref.
