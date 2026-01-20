@@ -1,8 +1,9 @@
-package manifest
+package validate
 
 import (
 	"testing"
 
+	"github.com/kartverket/skipctl/pkg/manifest"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -28,7 +29,7 @@ func TestValidateManifestJsonnetValid(t *testing.T) {
 }
 `
 
-	doc := newTestDocument(validJsonnetManifest, "valid.jsonnet")
+	doc := manifest.NewTestDocument(validJsonnetManifest, "valid.jsonnet")
 	validator := NewValidator(t.TempDir(), true)
 	err := validator.ValidateManifest(doc)
 	result := validator.GetResults()
@@ -56,7 +57,7 @@ func TestValidateManifestJsonnetInvalid(t *testing.T) {
 }
 `
 
-	doc := newTestDocument(validJsonnet, "valid.jsonnet")
+	doc := manifest.NewTestDocument(validJsonnet, "valid.jsonnet")
 	validator := NewValidator(t.TempDir(), true)
 	err := validator.ValidateManifest(doc)
 	result := validator.GetResults()
@@ -85,7 +86,7 @@ func TestValidateManifestJsonnetSyntaxError(t *testing.T) {
 }
 `
 
-	doc := newTestDocument(invalidJsonnet, "invalid.jsonnet")
+	doc := manifest.NewTestDocument(invalidJsonnet, "invalid.jsonnet")
 	validator := NewValidator(t.TempDir(), true)
 	err := validator.ValidateManifest(doc)
 	result := validator.GetResults()
@@ -114,7 +115,7 @@ spec:
     max: 5
 `
 
-	doc := newTestDocument(validYamlManifest, "valid.yaml")
+	doc := manifest.NewTestDocument(validYamlManifest, "valid.yaml")
 	validator := NewValidator(t.TempDir(), true)
 	err := validator.ValidateManifest(doc)
 	result := validator.GetResults()
@@ -138,7 +139,7 @@ spec:
   image: "kartverket/example"
 `
 
-	doc := newTestDocument(validYaml, "valid.yaml")
+	doc := manifest.NewTestDocument(validYaml, "valid.yaml")
 	validator := NewValidator(t.TempDir(), true)
 	err := validator.ValidateManifest(doc)
 	result := validator.GetResults()
@@ -163,7 +164,7 @@ spec:
   image: "kartverket/example"
 `
 
-	doc := newTestDocument(invalidYaml, "invalid.yaml")
+	doc := manifest.NewTestDocument(invalidYaml, "invalid.yaml")
 	validator := NewValidator(t.TempDir(), true)
 	err := validator.ValidateManifest(doc) // TODO does not return error, why?
 	result := validator.GetResults()

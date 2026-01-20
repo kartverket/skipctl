@@ -39,11 +39,11 @@ func isJSONArray(content string) bool {
 	return strings.HasPrefix(content, "[") && strings.HasSuffix(content, "]")
 }
 
-// validateK8sSchema validates the Kubernetes schema of the given content.
+// ValidateK8sSchema validates the Kubernetes schema of the given content.
 //
 // The content can be either in form JSON or YAML.
 // It handles both single resources and arrays of resources.
-func (k8 *K8sValidator) validateK8sSchema(filename string, content string) (ValidateResult, []validator.Result, error) {
+func (k8 *K8sValidator) ValidateK8sSchema(filename string, content string) (ValidateResult, []validator.Result, error) {
 	content = strings.TrimSpace(content)
 
 	if isJSONArray(content) {

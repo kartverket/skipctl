@@ -1,10 +1,11 @@
-package manifest
+package render
 
 import (
 	"bytes"
 	"testing"
 
 	"github.com/kartverket/skipctl/pkg/logging"
+	"github.com/kartverket/skipctl/pkg/manifest"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -33,7 +34,7 @@ ingress: [],
 }
 `
 
-	doc := newTestDocument(validJsonnet, "valid.jsonnet")
+	doc := manifest.NewTestDocument(validJsonnet, "valid.jsonnet")
 	renderer, buf := newRendererWithLogger()
 	err := renderer.Render(doc)
 	got := buf.String()
@@ -51,7 +52,7 @@ ingress = []
 }
 `
 
-	doc := newTestDocument(invalidJsonnet, "invalid.jsonnet")
+	doc := manifest.NewTestDocument(invalidJsonnet, "invalid.jsonnet")
 	renderer, _ := newRendererWithLogger()
 	res := renderer.Render(doc)
 	require.Error(t, res, "expected error for invalid Jsonnet input")
@@ -66,7 +67,7 @@ application:
     access-policies:
       enabled: true
 `
-	doc := newTestDocument(inputYaml, "input.yaml")
+	doc := manifest.NewTestDocument(inputYaml, "input.yaml")
 	renderer, buf := newRendererWithLogger()
 	err := renderer.Render(doc)
 	got := buf.String()
@@ -84,19 +85,19 @@ port: 8080
 }
 `
 
-	doc := newTestDocument(invalidYaml, "invalid.yaml")
+	doc := manifest.NewTestDocument(invalidYaml, "invalid.yaml")
 	renderer, _ := newRendererWithLogger()
 	res := renderer.Render(doc)
 	require.Error(t, res, "expected error for invalid Yaml input")
 }
 func TestRenderManifestValidKustomize(t *testing.T) {
 	// Use actual kustomize test directory
-	kustomizePath := "../../testdata/kustomize/kustomization.yaml"
+	kustomizePath := "../../../testdata/kustomize/kustomization.yaml"
 
-	doc := &Document{
+	doc := &manifest.Document{
 		Name:        kustomizePath,
 		Extension:   "kustomization.yaml",
-		Permissions: filePermission,
+		Permissions: manifest.FilePermission,
 		FromStdin:   false,
 	}
 
@@ -110,10 +111,10 @@ func TestRenderManifestValidKustomize(t *testing.T) {
 }
 func TestRenderManifestInvalidKustomize(t *testing.T) {
 	// Point to a directory that doesn't exist
-	doc := &Document{
+	doc := &manifest.Document{
 		Name:        "/nonexistent/path/kustomization.yaml",
 		Extension:   "kustomization.yaml",
-		Permissions: filePermission,
+		Permissions: manifest.FilePermission,
 		FromStdin:   false,
 	}
 

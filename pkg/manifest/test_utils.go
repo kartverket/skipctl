@@ -4,13 +4,13 @@ import (
 	"path/filepath"
 )
 
-const filePermission = 0o600
+const FilePermission = 0o600
 
-func newTestDocument(content string, name string) *Document {
+func NewTestDocument(content string, name string) *Document {
 	return &Document{
 		Name:        name,
 		Content:     content,
-		Permissions: filePermission,
+		Permissions: FilePermission,
 		FromStdin:   true,
 		Extension:   filepath.Ext(name),
 	}

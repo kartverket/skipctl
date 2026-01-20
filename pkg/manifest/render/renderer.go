@@ -1,35 +1,36 @@
-package manifest
+package render
 
 import (
 	"fmt"
 	"log/slog"
 
 	"github.com/kartverket/skipctl/pkg/constants"
+	"github.com/kartverket/skipctl/pkg/manifest"
 )
 
 // TypeRenderer handles rendering for a specific manifest type.
 type TypeRenderer interface {
-	Render(file *Document) error
+	Render(file *manifest.Document) error
 }
 
 // Renderer provides a unified interface for rendering all manifest types.
 type Renderer struct {
-	jsonnetRenderer   *JsonnetRenderer
-	yamlRenderer      *YamlRenderer
-	kustomizeRenderer *KustomizeRenderer
+	jsonnetRenderer   *manifest.JsonnetRenderer
+	yamlRenderer      *manifest.YamlRenderer
+	kustomizeRenderer *manifest.KustomizeRenderer
 }
 
 // NewRenderer creates a new manifest renderer facade.
 func NewRenderer(output *slog.Logger) *Renderer {
-	cache := NewImportCache()
+	cache := manifest.NewImportCache()
 	return &Renderer{
-		jsonnetRenderer:   NewJsonnetRenderer(output, cache),
-		yamlRenderer:      NewYamlRenderer(output),
-		kustomizeRenderer: NewKustomizeRenderer(output),
+		jsonnetRenderer:   manifest.NewJsonnetRenderer(output, cache),
+		yamlRenderer:      manifest.NewYamlRenderer(output),
+		kustomizeRenderer: manifest.NewKustomizeRenderer(output),
 	}
 }
 
-func (f *Renderer) Render(file *Document) error {
+func (f *Renderer) Render(file *manifest.Document) error {
 	switch file.Extension {
 	case constants.ManifestSuffixJsonnet:
 		return f.jsonnetRenderer.Render(file)

@@ -1,8 +1,10 @@
-package manifest
+package format_test
 
 import (
 	"testing"
 
+	"github.com/kartverket/skipctl/pkg/manifest"
+	"github.com/kartverket/skipctl/pkg/manifest/format"
 	"github.com/stretchr/testify/require"
 )
 
@@ -15,8 +17,8 @@ ingress: [],
 }
 `
 
-	doc := newTestDocument(validJsonnet, "valid.jsonnet")
-	res := FormatManifest(doc)
+	doc := manifest.NewTestDocument(validJsonnet, "valid.jsonnet")
+	res := format.Manifest(doc)
 	require.NoError(t, res, "expected no error for valid Jsonnet input")
 }
 
@@ -29,8 +31,8 @@ ingress = []
 }
 `
 
-	doc := newTestDocument(invalidJsonnet, "invalid.jsonnet")
-	res := FormatManifest(doc)
+	doc := manifest.NewTestDocument(invalidJsonnet, "invalid.jsonnet")
+	res := format.Manifest(doc)
 	require.Error(t, res, "expected error for invalid Jsonnet input")
 }
 
@@ -43,8 +45,8 @@ application:
     - item
 `
 
-	doc := newTestDocument(validYaml, "valid.yaml")
-	res := FormatManifest(doc)
+	doc := manifest.NewTestDocument(validYaml, "valid.yaml")
+	res := format.Manifest(doc)
 	require.NoError(t, res, "expected no error for valid Yaml input")
 }
 
@@ -57,8 +59,8 @@ port: 8080
 }
 `
 
-	doc := newTestDocument(invalidYaml, "invalid.yaml")
-	res := FormatManifest(doc)
+	doc := manifest.NewTestDocument(invalidYaml, "invalid.yaml")
+	res := format.Manifest(doc)
 	require.Error(t, res, "expected error for invalid Yaml input")
 }
 
@@ -71,8 +73,8 @@ ingress: [],
 }
 `
 
-	doc := newTestDocument(validLibsonnet, "valid.libsonnet")
-	res := FormatManifest(doc)
+	doc := manifest.NewTestDocument(validLibsonnet, "valid.libsonnet")
+	res := format.Manifest(doc)
 	require.NoError(t, res, "expected no error for valid Libsonnet input")
 }
 
@@ -85,7 +87,7 @@ ingress = []
 }
 `
 
-	doc := newTestDocument(invalidLibsonnet, "invalid.libsonnet")
-	res := FormatManifest(doc)
+	doc := manifest.NewTestDocument(invalidLibsonnet, "invalid.libsonnet")
+	res := format.Manifest(doc)
 	require.Error(t, res, "expected error for invalid Libsonnet input")
 }

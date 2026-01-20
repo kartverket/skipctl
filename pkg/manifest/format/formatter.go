@@ -1,4 +1,4 @@
-package manifest
+package format
 
 import (
 	"bytes"
@@ -9,10 +9,11 @@ import (
 
 	"github.com/google/go-jsonnet/formatter"
 	"github.com/kartverket/skipctl/pkg/constants"
+	"github.com/kartverket/skipctl/pkg/manifest"
 	"go.yaml.in/yaml/v4"
 )
 
-func formatJsonnet(file *Document) error {
+func formatJsonnet(file *manifest.Document) error {
 	formatted, err := formatter.Format(file.Name, file.Content, formatter.DefaultOptions())
 	if err != nil {
 		return err
@@ -25,7 +26,7 @@ func formatJsonnet(file *Document) error {
 	return nil
 }
 
-func formatYaml(d *Document) error {
+func formatYaml(d *manifest.Document) error {
 	decoder := yaml.NewDecoder(strings.NewReader(d.Content))
 	var output bytes.Buffer
 	encoder := yaml.NewEncoder(&output)
@@ -55,7 +56,8 @@ func formatYaml(d *Document) error {
 	}
 	return nil
 }
-func FormatManifest(file *Document) error {
+
+func Manifest(file *manifest.Document) error {
 	switch file.Extension {
 	case constants.ManifestSuffixJsonnet, constants.ManifestSuffixLibsonnet:
 		return formatJsonnet(file)

@@ -7,11 +7,12 @@ import (
 	"github.com/kartverket/skipctl/pkg/constants"
 	"github.com/kartverket/skipctl/pkg/logging"
 	"github.com/kartverket/skipctl/pkg/manifest"
+	"github.com/kartverket/skipctl/pkg/manifest/render"
 	"github.com/spf13/cobra"
 )
 
 var (
-	renderer   *manifest.Renderer
+	renderer   *render.Renderer
 	renderPath string
 )
 
@@ -55,6 +56,6 @@ func runRender(_ *cobra.Command, args []string) error {
 
 func init() {
 	manifestCmd.AddCommand(renderCmd)
-	renderer = manifest.NewRenderer(logging.RawLogger())
+	renderer = render.NewRenderer(logging.RawLogger())
 	renderCmd.Flags().StringVarP(&renderPath, "path", "p", "", "path to render (default: current directory)")
 }
