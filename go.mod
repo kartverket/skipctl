@@ -11,7 +11,7 @@ require (
 	github.com/grpc-ecosystem/go-grpc-middleware/providers/prometheus v1.1.0
 	github.com/oklog/run v1.2.0
 	github.com/pkg/errors v0.9.1
-	github.com/posthog/posthog-go v1.8.2
+	github.com/posthog/posthog-go v1.9.0
 	github.com/prometheus-community/pro-bing v0.7.0
 	github.com/prometheus/client_golang v1.23.2
 	github.com/sergi/go-diff v1.4.0
@@ -26,6 +26,7 @@ require (
 	google.golang.org/protobuf v1.36.11
 	sigs.k8s.io/kustomize/api v0.21.0
 	sigs.k8s.io/kustomize/kyaml v0.21.0
+	sigs.k8s.io/yaml v1.5.0
 )
 
 require (
@@ -85,6 +86,7 @@ require (
 	github.com/go-openapi/jsonpointer v0.21.0 // indirect
 	github.com/go-openapi/jsonreference v0.20.2 // indirect
 	github.com/go-openapi/swag v0.23.0 // indirect
+	github.com/goccy/go-json v0.10.5 // indirect
 	github.com/gofrs/flock v0.13.0 // indirect
 	github.com/golang/groupcache v0.0.0-20241129210726-2c02b8208cf8 // indirect
 	github.com/google/cel-go v0.26.1 // indirect
@@ -169,5 +171,4 @@ require (
 	gotest.tools/v3 v3.5.2 // indirect
 	k8s.io/kube-openapi v0.0.0-20241212222426-2c72e554b1e7 // indirect
 	pluginrpc.com/pluginrpc v0.5.0 // indirect
-	sigs.k8s.io/yaml v1.5.0 // indirect
 )
