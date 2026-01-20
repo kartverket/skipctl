@@ -54,6 +54,17 @@ if std.type(res) == "array" then
       r.metadata.name,
     ])
   )
+else if std.type(res) == "object" then
+  if std.objectHas(res, "kind") then
+    res + {items: std.sort(res.items, function(r)
+	  std.join("/", [
+		r.kind,
+        if std.objectHas(r, "metadata") && std.objectHas(r.metadata, "namespace")
+          then r.metadata.namespace
+          else "",
+        r.metadata.name,
+	  ])
+	)}
 else
   res
 `, file.Content)
