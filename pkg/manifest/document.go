@@ -2,6 +2,7 @@ package manifest
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -53,12 +54,18 @@ func (d *Document) Write(content string) error {
 
 func FromFiles(filenames []string) ([]*Document, error) {
 	var files = []*Document{}
+	var notExistErr error
 
 	for _, filename := range filenames {
 		fileContent, err := os.ReadFile(filename)
 
 		if err != nil {
 			logging.Logger().Error("unable to read file", "filename", filename)
+
+			if errors.Is(err, os.ErrNotExist) && notExistErr == nil {
+				notExistErr = fmt.Errorf("%w: %s", os.ErrNotExist, filename)
+			}
+
 			continue
 		}
 		finfo, ferr := os.Stat(filename)
@@ -77,6 +84,11 @@ func FromFiles(filenames []string) ([]*Document, error) {
 			FromStdin:   false,
 		})
 	}
+
+	if len(files) == 0 && notExistErr != nil {
+		return nil, notExistErr
+	}
+
 	return files, nil
 }
 func FromStdin() ([]*Document, error) {
