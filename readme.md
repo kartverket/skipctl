@@ -57,8 +57,8 @@ If a directory is specified, all commands in this group will recursively search 
 - `.libsonnet` (only for `manifests format`)
 - `.yaml`
 - `.yml`
-- `kustomization.yaml`(only for `manifests render`)
-- `kustomization.yml`(only for `manifests render`)
+- `kustomization.yaml`
+- `kustomization.yml`
 
 
 #### Render manifests
@@ -116,11 +116,13 @@ skipctl manifests diff --path <pathname> [flags]
 
 Flags:
 ```
---ref <git-ref>        Git ref to diff against (default HEAD)
+--ref <git-ref>        Git ref or directory to diff against (default HEAD)
 --diff-format <fmt>    pretty | patch | json (default pretty)
 --verbosity <level>    full | chunk | minimal (auto-set if omitted)
 --chunk-size <n>       Context lines for chunk (default 3)
 --path, -p <path>      Files / directory to scan
+--kustomize            Enable diffing kustomize directories (requires --ref to be a directory)
+--sort-output          Sort rendered outputs before diffing (useful on refactors that change output order only)
 ```
 
 Defaults (when --verbosity not provided): pretty->full, patch->chunk, json->full.
@@ -129,6 +131,7 @@ Examples:
 ```shell
 skipctl manifests diff --path .
 skipctl manifests diff --path . --diff-format json --verbosity minimal | jq '.diffs[] | select(.type!="Equals")'
+skipctl manifest diff --path env/cluster --verbosity chunk --diff-format patch --kustomize --ref env-copy/cluster 
 ```
 
 Exit codes: 0 success / 1 error.

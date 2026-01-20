@@ -17,6 +17,7 @@ var (
 	chunkSize        int
 	diffOutputFormat string
 	kustomizeEnabled bool
+	sortOutput       bool
 )
 
 var diffCmd = &cobra.Command{
@@ -31,6 +32,9 @@ Verbosity levels:
 minimal (output only changed lines)
 chunk (output changed lines with 3 lines of context above and below)
 full (output the entire file)
+
+Sort diff:
+If --sort-output is set, the rendered output will be sorted before diffing to avoid diffs due to reordering of resources.
 
 Kustomize:
 To diff kustomize manifests, you need to set the --kustomize flag and supply a path to a dir where the files to diff against are in --ref.
@@ -106,7 +110,7 @@ func runDiff(cmd *cobra.Command, _ []string) error {
 	processor := manifest.NewDocumentProcessor()
 
 	out := logging.RawLogger()
-	differ := manifest.NewDiffer(source, out, verbosityLevel, diffOutputFormat, chunkSize)
+	differ := manifest.NewDiffer(source, out, verbosityLevel, diffOutputFormat, chunkSize, sortOutput)
 
 	err = processor.ProcessDocuments(manifestFiles, differ.Diff)
 
@@ -119,5 +123,6 @@ func init() {
 	diffCmd.Flags().IntVar(&chunkSize, "chunk-size", constants.DefaultChunkSize, "Number of lines to include above and below a diff line")
 	diffCmd.Flags().StringVar(&diffOutputFormat, "diff-format", constants.DiffOutputPretty, "the output format of the diff (default pretty), allowed (pretty | patch | json)")
 	diffCmd.Flags().BoolVar(&kustomizeEnabled, "kustomize", false, "enable diffing of kustomize, if this flag is set, the --ref is expected to be a dir to diff agains, if not set kustomize files will be skipped (default false)")
+	diffCmd.Flags().BoolVar(&sortOutput, "sort-output", false, "sort output to avoid diff on reorder changes between refs (default false)")
 	manifestCmd.AddCommand(diffCmd)
 }
