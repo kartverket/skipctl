@@ -368,8 +368,17 @@ func formatPatchHunk(hunk []*ManifestDiff) string {
 	if ins+eql == 0 {
 		startLineLocal--
 	}
+
+	resourceHeader := ""
+	if hdr := resourceHeaderForHunk(hunk); hdr != "" {
+		resourceHeader = " " + hdr
+	}
+
 	var h strings.Builder
-	fmt.Fprintf(&h, "@@ -%d,%d +%d,%d @@\n", startLineRemote, del+eql, startLineLocal, ins+eql)
+	fmt.Fprintf(&h, "@@ -%d,%d +%d,%d @@%s\n",
+		startLineRemote, del+eql,
+		startLineLocal, ins+eql,
+		resourceHeader)
 	h.WriteString(b.String())
 	return h.String()
 }
