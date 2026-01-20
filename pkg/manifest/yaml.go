@@ -2,7 +2,9 @@ package manifest
 
 import (
 	"bytes"
+	"errors"
 	"log/slog"
+	"os"
 
 	"github.com/kartverket/skipctl/pkg/diff"
 	"github.com/kartverket/skipctl/pkg/logging"
@@ -74,20 +76,25 @@ func NewYamlDiffer(source Source) *YamlDiffer {
 }
 
 func (d *YamlDiffer) Diff(file *Document) ([]*diff.ManifestDiff, bool, error) {
-	prevFile, err := d.source.GetPreviousDocument(file)
-	if err != nil {
-		return nil, false, err
-	}
-
 	// Render current file
 	d.currentBuffer.Reset()
-	err = d.currentRenderer.Render(file)
+	err := d.currentRenderer.Render(file)
 	if err != nil {
 		return nil, false, err
 	}
 	rendered := d.currentBuffer.String()
 
-	// Render git file
+	// Get git file
+	prevFile, err := d.source.GetPreviousDocument(file)
+
+	if err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			diffs, hasChanges := diff.CalculateDiff("", rendered)
+			return diffs, hasChanges, nil
+		}
+		return nil, false, err
+	}
+
 	d.gitBuffer.Reset()
 	err = d.gitRenderer.Render(prevFile)
 	if err != nil {

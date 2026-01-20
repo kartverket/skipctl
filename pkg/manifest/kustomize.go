@@ -2,8 +2,10 @@ package manifest
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"log/slog"
+	"os"
 	"path/filepath"
 	"strings"
 
@@ -118,6 +120,10 @@ func (d *KustomizeDiffer) Diff(file *Document) ([]*diff.ManifestDiff, bool, erro
 	prevFile, err := d.source.GetPreviousDocument(file)
 
 	if err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			diffs, hasChanges := diff.CalculateDiff("", rendered)
+			return diffs, hasChanges, nil
+		}
 		return nil, false, err
 	}
 	// Render previous kustomize
