@@ -96,9 +96,16 @@ func initTelemetry() {
 		}
 	}
 
+	muteTelemetry := false
+	if val, ok := os.LookupEnv("SKIPCTL_MUTE_TELEMETRY"); ok {
+		parsed, _ := strconv.ParseBool(val)
+		muteTelemetry = parsed
+	}
+
 	collector = telemetry.ConfigureCollector(telemetry.Options{
 		Debug:            debug,
 		DisableAnalytics: disableAnalytics,
+		MuteTelemetry:    muteTelemetry,
 		GitVersion:       GitTag,
 		GitCommitHash:    GitCommitHash,
 	})
