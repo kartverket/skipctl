@@ -25,4 +25,11 @@ package crd
 
 //go:generate crdjson -outdir=./schemas -url=https://github.com/cloudnative-pg/cloudnative-pg/releases/download/v1.27.1/cnpg-1.27.1.yaml
 
+// Ztoperator CRD
 //go:generate crdjson -outdir=./schemas -url=https://raw.githubusercontent.com/kartverket/ztoperator/refs/heads/main/config/crd/bases/ztoperator.kartverket.no_authpolicies.yaml
+
+// Accesserator CRD
+//go:generate crdjson -outdir=./schemas -url=https://raw.githubusercontent.com/kartverket/accesserator/refs/heads/main/config/crd/bases/accesserator.kartverket.no_securityconfigs.yaml
+
+// Accesserator dependencies down below
+//go:generate crdjson -outdir=./schemas -url=https://raw.githubusercontent.com/nais/liberator/34a9e8ad9d4bf1b6f8e292e05ccb71db1147fbcb/config/crd/bases/nais.io_jwkers.yaml

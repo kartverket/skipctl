@@ -1,0 +1,182 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "description": "Jwker is the Schema for the jwkers API",
+  "properties": {
+    "apiVersion": {
+      "description": "APIVersion defines the versioned schema of this representation of an object.\nServers should convert recognized schemas to the latest internal value, and\nmay reject unrecognized values.\nMore info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
+      "type": "string"
+    },
+    "kind": {
+      "description": "Kind is a string value representing the REST resource this object represents.\nServers may infer this from the endpoint the client submits requests to.\nCannot be updated.\nIn CamelCase.\nMore info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds",
+      "type": "string"
+    },
+    "metadata": {
+      "type": "object"
+    },
+    "spec": {
+      "properties": {
+        "accessPolicy": {
+          "properties": {
+            "inbound": {
+              "description": "Configures inbound access for your application.",
+              "properties": {
+                "rules": {
+                  "description": "List of Nais applications that may access your application.\nThese settings apply both to Zero Trust network connectivity and token validity for Azure AD and TokenX tokens.",
+                  "items": {
+                    "properties": {
+                      "application": {
+                        "description": "The application's name.",
+                        "type": "string"
+                      },
+                      "cluster": {
+                        "description": "The application's cluster. May be omitted if it should be in the same cluster as your application.",
+                        "type": "string"
+                      },
+                      "namespace": {
+                        "description": "The application's namespace. May be omitted if it should be in the same namespace as your application.",
+                        "type": "string"
+                      },
+                      "permissions": {
+                        "description": "Permissions contains a set of permissions that are granted to the given application.\nCurrently only applicable for Azure AD clients.",
+                        "properties": {
+                          "roles": {
+                            "description": "Roles is a set of custom permission roles that are granted to a given application.",
+                            "items": {
+                              "pattern": "^[a-z0-9-_./]+$",
+                              "type": "string"
+                            },
+                            "type": "array"
+                          },
+                          "scopes": {
+                            "description": "Scopes is a set of custom permission scopes that are granted to a given application.",
+                            "items": {
+                              "pattern": "^[a-z0-9-_./]+$",
+                              "type": "string"
+                            },
+                            "type": "array"
+                          }
+                        },
+                        "type": "object"
+                      }
+                    },
+                    "required": [
+                      "application"
+                    ],
+                    "type": "object"
+                  },
+                  "type": "array"
+                }
+              },
+              "required": [
+                "rules"
+              ],
+              "type": "object"
+            },
+            "outbound": {
+              "description": "Configures outbound access for your application.",
+              "properties": {
+                "external": {
+                  "description": "List of external resources that your applications should be able to reach.",
+                  "items": {
+                    "properties": {
+                      "host": {
+                        "description": "The _host_ that your application should be able to reach, i.e. without the protocol (e.g. `https://`). \"Host\" and \"IPv4\" are mutually exclusive",
+                        "pattern": "^([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\\-]{0,61}[a-zA-Z0-9])(\\.([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\\-]{0,61}[a-zA-Z0-9]))*$",
+                        "type": "string"
+                      },
+                      "ipv4": {
+                        "description": "The IPv4 address that your application should be able to reach. \"IPv4\" and \"Host\" are mutually exclusive",
+                        "pattern": "^(([0-9])|([1-9][0-9])|(1([0-9]{2}))|(2[0-4][0-9])|(25[0-5]))((\\.(([0-9])|([1-9][0-9])|(1([0-9]{2}))|(2[0-4][0-9])|(25[0-5]))){3})$",
+                        "type": "string"
+                      },
+                      "ports": {
+                        "description": "List of port rules for external communication. Must be specified if using protocols other than HTTPS.",
+                        "items": {
+                          "properties": {
+                            "port": {
+                              "description": "The port used for communication.",
+                              "format": "int32",
+                              "type": "integer"
+                            }
+                          },
+                          "required": [
+                            "port"
+                          ],
+                          "type": "object"
+                        },
+                        "type": "array"
+                      }
+                    },
+                    "type": "object"
+                  },
+                  "type": "array"
+                },
+                "rules": {
+                  "description": "List of Nais applications that your application needs to access.\nThese settings apply to Zero Trust network connectivity.",
+                  "items": {
+                    "properties": {
+                      "application": {
+                        "description": "The application's name.",
+                        "type": "string"
+                      },
+                      "cluster": {
+                        "description": "The application's cluster. May be omitted if it should be in the same cluster as your application.",
+                        "type": "string"
+                      },
+                      "namespace": {
+                        "description": "The application's namespace. May be omitted if it should be in the same namespace as your application.",
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "application"
+                    ],
+                    "type": "object"
+                  },
+                  "type": "array"
+                }
+              },
+              "type": "object"
+            }
+          },
+          "type": "object"
+        },
+        "secretName": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "accessPolicy",
+        "secretName"
+      ],
+      "type": "object"
+    },
+    "status": {
+      "description": "JwkerStatus defines the observed state of Jwker",
+      "properties": {
+        "synchronizationHash": {
+          "type": "string"
+        },
+        "synchronizationSecretName": {
+          "type": "string"
+        },
+        "synchronizationState": {
+          "type": "string"
+        },
+        "synchronizationTime": {
+          "format": "int64",
+          "type": "integer"
+        }
+      },
+      "type": "object"
+    }
+  },
+  "type": "object",
+  "x-kubernetes-group-version-kind": [
+    {
+      "group": "nais.io",
+      "kind": "Jwker",
+      "version": "v1"
+    }
+  ]
+}
