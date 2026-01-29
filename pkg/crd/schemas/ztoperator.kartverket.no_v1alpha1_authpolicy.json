@@ -17,22 +17,106 @@
       "description": "AuthPolicySpec defines the desired state of AuthPolicy.",
       "properties": {
         "acceptedResources": {
-          "description": "AcceptedResources is used as a validation field following [RFC8707](https://datatracker.ietf.org/doc/html/rfc8707).\nIt defines accepted audience resource indicators in the JWT token.\n\n\nEach resource indicator must be a valid URI, and the indicator must be present as the `aud` claim in the JWT token.",
+          "description": "AcceptedResources specifies resource indicators used to request an audience limited access token following [RFC8707](https://datatracker.ietf.org/doc/html/rfc8707).\nIt defines accepted audience resource indicators in the JWT token.\n\nThe resource indicators specified will be added to the initial authorize request towards the configured identity provider.\nEach resource indicator must be a valid URI,\nand the access token returned by the identity provider will set the resource indicators in the `aud` claim in the JWT token.\nIf none of the specified resource indicators is present in the `aud` claim in the JWT, the request will be denied.\n\nPlease note that this alone is not sufficient to securely restrict access to a resource based on the `aud` claim.\nUse .allowedAudiences to specify one or more allowed client IDs.",
           "items": {
             "type": "string"
           },
           "type": "array",
           "x-kubernetes-list-type": "set"
         },
+        "allowedAudiences": {
+          "description": "AllowedAudiences defines the allowed audience (`aud`) values in the JWT.\nAt least one of the listed audience values must be present in the token's `aud` claim for validation to succeed.\n\nThe normative behaviour for an OAuth / OIDC-compliant identity provider is to validate the presense of one or more client IDs as allowed audiences.",
+          "items": {
+            "description": "AllowedAudience defines an audience that is validated against the `aud` claim in the JWT.\nAn audience can be defined as a static value or retrieved from a kubernetes resource.",
+            "properties": {
+              "value": {
+                "description": "Value specifies a static audience value.",
+                "type": "string"
+              },
+              "valueFrom": {
+                "description": "ValueFrom specifies a reference to a kubernetes resource to retrieve the audience value from.",
+                "properties": {
+                  "configMapKeyRef": {
+                    "description": "ConfigMapKeyRef specifies a reference to a key in a ConfigMap.",
+                    "properties": {
+                      "key": {
+                        "description": "Key specifies the data entry name within the ConfigMap/Secret; must follow key naming rules.",
+                        "minLength": 1,
+                        "pattern": "^[A-Za-z0-9]([-A-Za-z0-9_.]*[A-Za-z0-9])?$",
+                        "type": "string"
+                      },
+                      "name": {
+                        "description": "Name specifies the name of the ConfigMap/Secret; must satisfy DNS-1123 subdomain naming.",
+                        "minLength": 1,
+                        "pattern": "^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\\\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$",
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "key",
+                      "name"
+                    ],
+                    "type": "object"
+                  },
+                  "secretKeyRef": {
+                    "description": "SecretKeyRef specifies a reference to a key in a Secret.",
+                    "properties": {
+                      "key": {
+                        "description": "Key specifies the data entry name within the ConfigMap/Secret; must follow key naming rules.",
+                        "minLength": 1,
+                        "pattern": "^[A-Za-z0-9]([-A-Za-z0-9_.]*[A-Za-z0-9])?$",
+                        "type": "string"
+                      },
+                      "name": {
+                        "description": "Name specifies the name of the ConfigMap/Secret; must satisfy DNS-1123 subdomain naming.",
+                        "minLength": 1,
+                        "pattern": "^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\\\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$",
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "key",
+                      "name"
+                    ],
+                    "type": "object"
+                  }
+                },
+                "type": "object",
+                "x-kubernetes-validations": [
+                  {
+                    "message": "either 'configMapKeyRef' or 'secretKeyRef' must be set",
+                    "rule": "has(self.configMapKeyRef) || has(self.secretKeyRef)"
+                  },
+                  {
+                    "message": "cannot reference both a ConfigMap and a Secret",
+                    "rule": "!(has(self.configMapKeyRef) && has(self.secretKeyRef))"
+                  }
+                ]
+              }
+            },
+            "type": "object",
+            "x-kubernetes-validations": [
+              {
+                "message": "either 'value' or 'valueFrom' must be set",
+                "rule": "has(self.value) || has(self.valueFrom)"
+              },
+              {
+                "message": "one audience cannot be defined from both 'value' and 'valueFrom'",
+                "rule": "!(has(self.value) && has(self.valueFrom))"
+              }
+            ]
+          },
+          "type": "array"
+        },
         "audience": {
-          "description": "Audience defines the accepted audience (`aud`) values in the JWT.\nAt least one of the listed audience values must be present in the token's `aud` claim for validation to succeed.",
+          "description": "Deprecated: use .allowedAudiences instead.\nAudience defines the accepted audience (`aud`) values in the JWT.\nAt least one of the listed audience values must be present in the token's `aud` claim for validation to succeed.",
           "items": {
             "type": "string"
           },
           "type": "array"
         },
         "authRules": {
-          "description": "AuthRules defines rules for allowing HTTP requests based on conditions\nthat must be met based on JWT claims.\n\n\nAPI endpoints not covered by AuthRules and/or IgnoreAuthRules requires an authenticated JWT by default.",
+          "description": "AuthRules defines rules for allowing HTTP requests based on conditions\nthat must be met based on JWT claims.\n\nAPI endpoints not covered by AuthRules and/or IgnoreAuthRules requires an authenticated JWT by default.",
           "items": {
             "description": "RequestAuthRule defines a rule for controlling access to HTTP requests using JWT authentication.",
             "properties": {
@@ -41,7 +125,7 @@
                 "type": "boolean"
               },
               "methods": {
-                "description": "Methods specifies HTTP methods that applies for the defined paths.\nIf omitted, all methods are permitted.\n\n\nAllowed methods:\n- GET\n- POST\n- PUT\n- PATCH\n- DELETE\n- HEAD\n- OPTIONS\n- TRACE\n- CONNECT",
+                "description": "Methods specifies HTTP methods that applies for the defined paths.\nIf omitted, all methods are permitted.\n\nAllowed methods:\n- GET\n- POST\n- PUT\n- PATCH\n- DELETE\n- HEAD\n- OPTIONS\n- TRACE\n- CONNECT",
                 "items": {
                   "type": "string"
                 },
@@ -57,9 +141,9 @@
                 "x-kubernetes-list-type": "set"
               },
               "when": {
-                "description": "When defines additional conditions based on JWT claims that must be met.\n\n\nThe request is permitted if at least one of the specified conditions is satisfied.",
+                "description": "When defines additional conditions based on JWT claims that must be met.\n\nThe request is permitted if at least one of the specified conditions is satisfied.",
                 "items": {
-                  "description": "Condition represents a rule that evaluates JWT claims to determine access control.\n\n\nThis type allows defining conditions that check whether a specific claim in\nthe JWT token contains one of the expected values.\n\n\nIf multiple conditions are specified, all must be met (AND logic) for the request to be allowed.",
+                  "description": "Condition represents a rule that evaluates JWT claims to determine access control.\n\nThis type allows defining conditions that check whether a specific claim in\nthe JWT token contains one of the expected values.\n\nIf multiple conditions are specified, all must be met (AND logic) for the request to be allowed.",
                   "properties": {
                     "claim": {
                       "description": "Claim specifies the name of the JWT claim to check.",
@@ -144,12 +228,12 @@
           "type": "boolean"
         },
         "ignoreAuthRules": {
-          "description": "IgnoreAuthRules defines request matchers for HTTP requests that do not require JWT authentication.\n\n\nAPI endpoints not covered by AuthRules or IgnoreAuthRules require an authenticated JWT by default.",
+          "description": "IgnoreAuthRules defines request matchers for HTTP requests that do not require JWT authentication.\n\nAPI endpoints not covered by AuthRules or IgnoreAuthRules require an authenticated JWT by default.",
           "items": {
             "description": "RequestMatcher defines paths and methods to match incoming HTTP requests.",
             "properties": {
               "methods": {
-                "description": "Methods specifies HTTP methods that applies for the defined paths.\nIf omitted, all methods are permitted.\n\n\nAllowed methods:\n- GET\n- POST\n- PUT\n- PATCH\n- DELETE\n- HEAD\n- OPTIONS\n- TRACE\n- CONNECT",
+                "description": "Methods specifies HTTP methods that applies for the defined paths.\nIf omitted, all methods are permitted.\n\nAllowed methods:\n- GET\n- POST\n- PUT\n- PATCH\n- DELETE\n- HEAD\n- OPTIONS\n- TRACE\n- CONNECT",
                 "items": {
                   "type": "string"
                 },
@@ -243,6 +327,9 @@
               ]
             }
           },
+          "required": [
+            "matchLabels"
+          ],
           "type": "object"
         },
         "wellKnownURI": {
@@ -255,14 +342,20 @@
         "selector",
         "wellKnownURI"
       ],
-      "type": "object"
+      "type": "object",
+      "x-kubernetes-validations": [
+        {
+          "message": "acceptedResources must be non-empty when using Ansattporten or ID-Porten",
+          "rule": "!(self.wellKnownURI in ['https://test.idporten.no/.well-known/openid-configuration', 'https://idporten.no/.well-known/openid-configuration', 'https://test.ansattporten.no/.well-known/openid-configuration', 'https://ansattporten.no/.well-known/openid-configuration']) || (has(self.acceptedResources) && self.acceptedResources.size() > 0)"
+        }
+      ]
     },
     "status": {
       "description": "AuthPolicyStatus defines the observed state of AuthPolicy.",
       "properties": {
         "conditions": {
           "items": {
-            "description": "Condition contains details for one aspect of the current state of this API Resource.\n---\nThis struct is intended for direct use as an array at the field path .status.conditions.  For example,\n\n\n\ttype FooStatus struct{\n\t    // Represents the observations of a foo's current state.\n\t    // Known .status.conditions.type are: \"Available\", \"Progressing\", and \"Degraded\"\n\t    // +patchMergeKey=type\n\t    // +patchStrategy=merge\n\t    // +listType=map\n\t    // +listMapKey=type\n\t    Conditions []metav1.Condition `json:\"conditions,omitempty\" patchStrategy:\"merge\" patchMergeKey:\"type\" protobuf:\"bytes,1,rep,name=conditions\"`\n\n\n\t    // other fields\n\t}",
+            "description": "Condition contains details for one aspect of the current state of this API Resource.",
             "properties": {
               "lastTransitionTime": {
                 "description": "lastTransitionTime is the last time the condition transitioned from one status to another.\nThis should be when the underlying condition changed.  If that is not known, then using the time when the API field changed is acceptable.",
@@ -297,7 +390,7 @@
                 "type": "string"
               },
               "type": {
-                "description": "type of condition in CamelCase or in foo.example.com/CamelCase.\n---\nMany .condition.type values are consistent across resources like Available, but because arbitrary conditions can be\nuseful (see .node.status.conditions), the ability to deconflict is important.\nThe regex it matches is (dns1123SubdomainFmt/)?(qualifiedNameFmt)",
+                "description": "type of condition in CamelCase or in foo.example.com/CamelCase.",
                 "maxLength": 316,
                 "pattern": "^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*/)?(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])$",
                 "type": "string"

@@ -140,13 +140,13 @@ Exit codes: 0 success / 1 error.
 
 #### Validate K8s manifests
 
-Validates a Skiperator manifest file (in either `.jsonnet` or `.yaml` format) against Skiperator's own custom schema definitions (skiperator.kartverket.no/v1alpha1)
-**Supports the following resource types:**
-- Application
-- Routing
-- SKIPJob
+Validates manifest files (in either `.jsonnet` or `.yaml` format) against relevant CRDs for Kartverket, 
+including CRDs defined in [Skiperator](https://github.com/kartverket/skiperator), [Ztoperator](https://github.com/kartverket/ztoperator) 
+and [Accesserator](https://github.com/kartverket/accesserator). 
+The complete list of supported CRDs can be viewed [here](./pkg/crd/schemas).
 
-The API reference for these types can be found in the [SKIP docs](https://skip.kartverket.no/docs/applikasjon-utrulling/skiperator/api-docs).
+The API references for Skiperator and Ztoperator can be found in the SKIP docs, 
+respectively [here](https://skip.kartverket.no/docs/applikasjon-utrulling/skiperator/api-docs) and [here](https://skip.kartverket.no/docs/applikasjon-utrulling/tilgangsstyring/ztoperator/api-docs).
 
 Returns status code `1` if there are failures or `0` for successful validation
 
