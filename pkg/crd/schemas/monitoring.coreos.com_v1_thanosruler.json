@@ -3327,6 +3327,13 @@
         "paused": {
           "type": "boolean"
         },
+        "podManagementPolicy": {
+          "enum": [
+            "OrderedReady",
+            "Parallel"
+          ],
+          "type": "string"
+        },
         "podMetadata": {
           "properties": {
             "annotations": {
@@ -3443,12 +3450,10 @@
                   "managedIdentity": {
                     "properties": {
                       "clientId": {
+                        "minLength": 1,
                         "type": "string"
                       }
                     },
-                    "required": [
-                      "clientId"
-                    ],
                     "type": "object"
                   },
                   "oauth": {
@@ -3489,6 +3494,10 @@
                     ],
                     "type": "object"
                   },
+                  "scope": {
+                    "pattern": "^[\\w\\s:/.\\\\-]+$",
+                    "type": "string"
+                  },
                   "sdk": {
                     "properties": {
                       "tenantId": {
@@ -3496,6 +3505,23 @@
                         "type": "string"
                       }
                     },
+                    "type": "object"
+                  },
+                  "workloadIdentity": {
+                    "properties": {
+                      "clientId": {
+                        "minLength": 1,
+                        "type": "string"
+                      },
+                      "tenantId": {
+                        "minLength": 1,
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "clientId",
+                      "tenantId"
+                    ],
                     "type": "object"
                   }
                 },
@@ -5075,6 +5101,43 @@
         },
         "tracingConfigFile": {
           "type": "string"
+        },
+        "updateStrategy": {
+          "properties": {
+            "rollingUpdate": {
+              "properties": {
+                "maxUnavailable": {
+                  "anyOf": [
+                    {
+                      "type": "integer"
+                    },
+                    {
+                      "type": "string"
+                    }
+                  ],
+                  "x-kubernetes-int-or-string": true
+                }
+              },
+              "type": "object"
+            },
+            "type": {
+              "enum": [
+                "OnDelete",
+                "RollingUpdate"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "type"
+          ],
+          "type": "object",
+          "x-kubernetes-validations": [
+            {
+              "message": "rollingUpdate requires type to be RollingUpdate",
+              "rule": "!(self.type != 'RollingUpdate' && has(self.rollingUpdate))"
+            }
+          ]
         },
         "version": {
           "type": "string"

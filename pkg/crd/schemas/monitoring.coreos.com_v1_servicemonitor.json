@@ -569,7 +569,9 @@
               "scheme": {
                 "enum": [
                   "http",
-                  "https"
+                  "https",
+                  "HTTP",
+                  "HTTPS"
                 ],
                 "type": "string"
               },
@@ -813,6 +815,9 @@
           "type": "string"
         },
         "scrapeClassicHistograms": {
+          "type": "boolean"
+        },
+        "scrapeNativeHistograms": {
           "type": "boolean"
         },
         "scrapeProtocols": {

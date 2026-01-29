@@ -3558,6 +3558,13 @@
           },
           "type": "object"
         },
+        "podManagementPolicy": {
+          "enum": [
+            "OrderedReady",
+            "Parallel"
+          ],
+          "type": "string"
+        },
         "podMetadata": {
           "properties": {
             "annotations": {
@@ -3799,12 +3806,10 @@
                   "managedIdentity": {
                     "properties": {
                       "clientId": {
+                        "minLength": 1,
                         "type": "string"
                       }
                     },
-                    "required": [
-                      "clientId"
-                    ],
                     "type": "object"
                   },
                   "oauth": {
@@ -3845,6 +3850,10 @@
                     ],
                     "type": "object"
                   },
+                  "scope": {
+                    "pattern": "^[\\w\\s:/.\\\\-]+$",
+                    "type": "string"
+                  },
                   "sdk": {
                     "properties": {
                       "tenantId": {
@@ -3852,6 +3861,23 @@
                         "type": "string"
                       }
                     },
+                    "type": "object"
+                  },
+                  "workloadIdentity": {
+                    "properties": {
+                      "clientId": {
+                        "minLength": 1,
+                        "type": "string"
+                      },
+                      "tenantId": {
+                        "minLength": 1,
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "clientId",
+                      "tenantId"
+                    ],
                     "type": "object"
                   }
                 },
@@ -5068,6 +5094,9 @@
           "pattern": "^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$",
           "type": "string"
         },
+        "scrapeNativeHistograms": {
+          "type": "boolean"
+        },
         "scrapeProtocols": {
           "items": {
             "enum": [
@@ -5882,13 +5911,16 @@
             "clientType": {
               "enum": [
                 "http",
-                "grpc"
+                "grpc",
+                "HTTP",
+                "GRPC"
               ],
               "type": "string"
             },
             "compression": {
               "enum": [
-                "gzip"
+                "gzip",
+                "Gzip"
               ],
               "type": "string"
             },
@@ -6078,6 +6110,43 @@
             }
           },
           "type": "object"
+        },
+        "updateStrategy": {
+          "properties": {
+            "rollingUpdate": {
+              "properties": {
+                "maxUnavailable": {
+                  "anyOf": [
+                    {
+                      "type": "integer"
+                    },
+                    {
+                      "type": "string"
+                    }
+                  ],
+                  "x-kubernetes-int-or-string": true
+                }
+              },
+              "type": "object"
+            },
+            "type": {
+              "enum": [
+                "OnDelete",
+                "RollingUpdate"
+              ],
+              "type": "string"
+            }
+          },
+          "required": [
+            "type"
+          ],
+          "type": "object",
+          "x-kubernetes-validations": [
+            {
+              "message": "rollingUpdate requires type to be RollingUpdate",
+              "rule": "!(self.type != 'RollingUpdate' && has(self.rollingUpdate))"
+            }
+          ]
         },
         "version": {
           "type": "string"
@@ -7540,6 +7609,26 @@
         {
           "message": "probeSelector cannot be set when mode is DaemonSet",
           "rule": "!(has(self.mode) && self.mode == 'DaemonSet' && has(self.probeSelector))"
+        },
+        {
+          "message": "scrapeConfigNamespaceSelector cannot be set when mode is DaemonSet",
+          "rule": "!(has(self.mode) && self.mode == 'DaemonSet' && has(self.scrapeConfigNamespaceSelector))"
+        },
+        {
+          "message": "probeNamespaceSelector cannot be set when mode is DaemonSet",
+          "rule": "!(has(self.mode) && self.mode == 'DaemonSet' && has(self.probeNamespaceSelector))"
+        },
+        {
+          "message": "serviceMonitorSelector cannot be set when mode is DaemonSet",
+          "rule": "!(has(self.mode) && self.mode == 'DaemonSet' && has(self.serviceMonitorSelector))"
+        },
+        {
+          "message": "serviceMonitorNamespaceSelector cannot be set when mode is DaemonSet",
+          "rule": "!(has(self.mode) && self.mode == 'DaemonSet' && has(self.serviceMonitorNamespaceSelector))"
+        },
+        {
+          "message": "additionalScrapeConfigs cannot be set when mode is DaemonSet",
+          "rule": "!(has(self.mode) && self.mode == 'DaemonSet' && has(self.additionalScrapeConfigs))"
         }
       ]
     },

@@ -104,6 +104,9 @@
         "convertClassicHistogramsToNHCB": {
           "type": "boolean"
         },
+        "enableHttp2": {
+          "type": "boolean"
+        },
         "fallbackScrapeProtocol": {
           "enum": [
             "PrometheusProto",
@@ -113,6 +116,9 @@
             "PrometheusText1.0.0"
           ],
           "type": "string"
+        },
+        "followRedirects": {
+          "type": "boolean"
         },
         "interval": {
           "pattern": "^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$",
@@ -545,11 +551,14 @@
             "scheme": {
               "enum": [
                 "http",
-                "https"
+                "https",
+                "HTTP",
+                "HTTPS"
               ],
               "type": "string"
             },
             "url": {
+              "minLength": 1,
               "type": "string"
             }
           },
@@ -567,6 +576,9 @@
           "type": "string"
         },
         "scrapeClassicHistograms": {
+          "type": "boolean"
+        },
+        "scrapeNativeHistograms": {
           "type": "boolean"
         },
         "scrapeProtocols": {

@@ -19,7 +19,8 @@
                 "items": {
                   "type": "string"
                 },
-                "type": "array"
+                "type": "array",
+                "x-kubernetes-list-type": "atomic"
               },
               "sourceMatch": {
                 "items": {
@@ -49,7 +50,8 @@
                   ],
                   "type": "object"
                 },
-                "type": "array"
+                "type": "array",
+                "x-kubernetes-list-type": "atomic"
               },
               "targetMatch": {
                 "items": {
@@ -79,12 +81,14 @@
                   ],
                   "type": "object"
                 },
-                "type": "array"
+                "type": "array",
+                "x-kubernetes-list-type": "atomic"
               }
             },
             "type": "object"
           },
-          "type": "array"
+          "type": "array",
+          "x-kubernetes-list-type": "atomic"
         },
         "muteTimeIntervals": {
           "items": {
@@ -111,14 +115,16 @@
                         },
                         "type": "object"
                       },
-                      "type": "array"
+                      "type": "array",
+                      "x-kubernetes-list-type": "atomic"
                     },
                     "months": {
                       "items": {
                         "pattern": "^((?i)january|february|march|april|may|june|july|august|september|october|november|december|1[0-2]|[1-9])(?:((:((?i)january|february|march|april|may|june|july|august|september|october|november|december|1[0-2]|[1-9]))$)|$)",
                         "type": "string"
                       },
-                      "type": "array"
+                      "type": "array",
+                      "x-kubernetes-list-type": "atomic"
                     },
                     "times": {
                       "items": {
@@ -134,26 +140,30 @@
                         },
                         "type": "object"
                       },
-                      "type": "array"
+                      "type": "array",
+                      "x-kubernetes-list-type": "atomic"
                     },
                     "weekdays": {
                       "items": {
                         "pattern": "^((?i)sun|mon|tues|wednes|thurs|fri|satur)day(?:((:(sun|mon|tues|wednes|thurs|fri|satur)day)$)|$)",
                         "type": "string"
                       },
-                      "type": "array"
+                      "type": "array",
+                      "x-kubernetes-list-type": "atomic"
                     },
                     "years": {
                       "items": {
                         "pattern": "^2\\d{3}(?::2\\d{3}|$)",
                         "type": "string"
                       },
-                      "type": "array"
+                      "type": "array",
+                      "x-kubernetes-list-type": "atomic"
                     }
                   },
                   "type": "object"
                 },
-                "type": "array"
+                "type": "array",
+                "x-kubernetes-list-type": "atomic"
               }
             },
             "required": [
@@ -161,7 +171,8 @@
             ],
             "type": "object"
           },
-          "type": "array"
+          "type": "array",
+          "x-kubernetes-list-type": "atomic"
         },
         "receivers": {
           "items": {
@@ -746,7 +757,8 @@
                   ],
                   "type": "object"
                 },
-                "type": "array"
+                "type": "array",
+                "x-kubernetes-list-type": "atomic"
               },
               "emailConfigs": {
                 "items": {
@@ -815,7 +827,8 @@
                         ],
                         "type": "object"
                       },
-                      "type": "array"
+                      "type": "array",
+                      "x-kubernetes-list-type": "atomic"
                     },
                     "hello": {
                       "type": "string"
@@ -975,7 +988,8 @@
                   },
                   "type": "object"
                 },
-                "type": "array"
+                "type": "array",
+                "x-kubernetes-list-type": "atomic"
               },
               "msteamsConfigs": {
                 "items": {
@@ -1548,7 +1562,8 @@
                   ],
                   "type": "object"
                 },
-                "type": "array"
+                "type": "array",
+                "x-kubernetes-list-type": "atomic"
               },
               "msteamsv2Configs": {
                 "items": {
@@ -2117,7 +2132,8 @@
                   },
                   "type": "object"
                 },
-                "type": "array"
+                "type": "array",
+                "x-kubernetes-list-type": "atomic"
               },
               "name": {
                 "minLength": 1,
@@ -2149,6 +2165,7 @@
                       "x-kubernetes-map-type": "atomic"
                     },
                     "apiURL": {
+                      "pattern": "^https?://.+$",
                       "type": "string"
                     },
                     "description": {
@@ -2171,7 +2188,8 @@
                         ],
                         "type": "object"
                       },
-                      "type": "array"
+                      "type": "array",
+                      "x-kubernetes-list-type": "atomic"
                     },
                     "entity": {
                       "type": "string"
@@ -2745,7 +2763,8 @@
                         ],
                         "type": "object"
                       },
-                      "type": "array"
+                      "type": "array",
+                      "x-kubernetes-list-type": "atomic"
                     },
                     "sendResolved": {
                       "type": "boolean"
@@ -2762,24 +2781,29 @@
                   },
                   "type": "object"
                 },
-                "type": "array"
+                "type": "array",
+                "x-kubernetes-list-type": "atomic"
               },
               "pagerdutyConfigs": {
                 "items": {
                   "properties": {
                     "class": {
+                      "minLength": 1,
                       "type": "string"
                     },
                     "client": {
+                      "minLength": 1,
                       "type": "string"
                     },
                     "clientURL": {
                       "type": "string"
                     },
                     "component": {
+                      "minLength": 1,
                       "type": "string"
                     },
                     "description": {
+                      "minLength": 1,
                       "type": "string"
                     },
                     "details": {
@@ -2799,9 +2823,11 @@
                         ],
                         "type": "object"
                       },
-                      "type": "array"
+                      "type": "array",
+                      "x-kubernetes-list-type": "atomic"
                     },
                     "group": {
+                      "minLength": 1,
                       "type": "string"
                     },
                     "httpConfig": {
@@ -3339,23 +3365,27 @@
                       "items": {
                         "properties": {
                           "alt": {
+                            "minLength": 1,
                             "type": "string"
                           },
                           "href": {
                             "type": "string"
                           },
                           "src": {
+                            "minLength": 1,
                             "type": "string"
                           }
                         },
                         "type": "object"
                       },
-                      "type": "array"
+                      "type": "array",
+                      "x-kubernetes-list-type": "atomic"
                     },
                     "pagerDutyLinkConfigs": {
                       "items": {
                         "properties": {
                           "alt": {
+                            "minLength": 1,
                             "type": "string"
                           },
                           "href": {
@@ -3364,7 +3394,8 @@
                         },
                         "type": "object"
                       },
-                      "type": "array"
+                      "type": "array",
+                      "x-kubernetes-list-type": "atomic"
                     },
                     "routingKey": {
                       "properties": {
@@ -3408,23 +3439,32 @@
                       "x-kubernetes-map-type": "atomic"
                     },
                     "severity": {
+                      "minLength": 1,
                       "type": "string"
                     },
                     "source": {
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "timeout": {
+                      "pattern": "^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$",
                       "type": "string"
                     },
                     "url": {
+                      "pattern": "^https?://.+$",
                       "type": "string"
                     }
                   },
                   "type": "object"
                 },
-                "type": "array"
+                "type": "array",
+                "x-kubernetes-list-type": "atomic"
               },
               "pushoverConfigs": {
                 "items": {
                   "properties": {
                     "device": {
+                      "minLength": 1,
                       "type": "string"
                     },
                     "expire": {
@@ -3966,9 +4006,14 @@
                       "type": "object"
                     },
                     "message": {
+                      "minLength": 1,
                       "type": "string"
                     },
+                    "monospace": {
+                      "type": "boolean"
+                    },
                     "priority": {
+                      "minLength": 1,
                       "type": "string"
                     },
                     "retry": {
@@ -3979,9 +4024,11 @@
                       "type": "boolean"
                     },
                     "sound": {
+                      "minLength": 1,
                       "type": "string"
                     },
                     "title": {
+                      "minLength": 1,
                       "type": "string"
                     },
                     "token": {
@@ -4004,6 +4051,7 @@
                       "x-kubernetes-map-type": "atomic"
                     },
                     "tokenFile": {
+                      "minLength": 1,
                       "type": "string"
                     },
                     "ttl": {
@@ -4014,6 +4062,7 @@
                       "type": "string"
                     },
                     "urlTitle": {
+                      "minLength": 1,
                       "type": "string"
                     },
                     "userKey": {
@@ -4036,12 +4085,14 @@
                       "x-kubernetes-map-type": "atomic"
                     },
                     "userKeyFile": {
+                      "minLength": 1,
                       "type": "string"
                     }
                   },
                   "type": "object"
                 },
-                "type": "array"
+                "type": "array",
+                "x-kubernetes-list-type": "atomic"
               },
               "rocketchatConfigs": {
                 "items": {
@@ -4058,14 +4109,14 @@
                             "type": "string"
                           },
                           "url": {
-                            "pattern": "^https?://.+$",
                             "type": "string"
                           }
                         },
                         "type": "object"
                       },
                       "minItems": 1,
-                      "type": "array"
+                      "type": "array",
+                      "x-kubernetes-list-type": "atomic"
                     },
                     "apiURL": {
                       "pattern": "^https?://.+$",
@@ -4101,7 +4152,8 @@
                         "type": "object"
                       },
                       "minItems": 1,
-                      "type": "array"
+                      "type": "array",
+                      "x-kubernetes-list-type": "atomic"
                     },
                     "httpConfig": {
                       "properties": {
@@ -4635,11 +4687,9 @@
                       "type": "object"
                     },
                     "iconURL": {
-                      "pattern": "^https?://.+$",
                       "type": "string"
                     },
                     "imageURL": {
-                      "pattern": "^https?://.+$",
                       "type": "string"
                     },
                     "linkNames": {
@@ -4656,7 +4706,6 @@
                       "type": "string"
                     },
                     "thumbURL": {
-                      "pattern": "^https?://.+$",
                       "type": "string"
                     },
                     "title": {
@@ -4712,7 +4761,8 @@
                   ],
                   "type": "object"
                 },
-                "type": "array"
+                "type": "array",
+                "x-kubernetes-list-type": "atomic"
               },
               "slackConfigs": {
                 "items": {
@@ -4723,9 +4773,11 @@
                           "confirm": {
                             "properties": {
                               "dismissText": {
+                                "minLength": 1,
                                 "type": "string"
                               },
                               "okText": {
+                                "minLength": 1,
                                 "type": "string"
                               },
                               "text": {
@@ -4733,6 +4785,7 @@
                                 "type": "string"
                               },
                               "title": {
+                                "minLength": 1,
                                 "type": "string"
                               }
                             },
@@ -4742,9 +4795,11 @@
                             "type": "object"
                           },
                           "name": {
+                            "minLength": 1,
                             "type": "string"
                           },
                           "style": {
+                            "minLength": 1,
                             "type": "string"
                           },
                           "text": {
@@ -4759,6 +4814,7 @@
                             "type": "string"
                           },
                           "value": {
+                            "minLength": 1,
                             "type": "string"
                           }
                         },
@@ -4768,7 +4824,9 @@
                         ],
                         "type": "object"
                       },
-                      "type": "array"
+                      "minItems": 1,
+                      "type": "array",
+                      "x-kubernetes-list-type": "atomic"
                     },
                     "apiURL": {
                       "properties": {
@@ -4790,15 +4848,19 @@
                       "x-kubernetes-map-type": "atomic"
                     },
                     "callbackId": {
+                      "minLength": 1,
                       "type": "string"
                     },
                     "channel": {
+                      "minLength": 1,
                       "type": "string"
                     },
                     "color": {
+                      "minLength": 1,
                       "type": "string"
                     },
                     "fallback": {
+                      "minLength": 1,
                       "type": "string"
                     },
                     "fields": {
@@ -4822,9 +4884,12 @@
                         ],
                         "type": "object"
                       },
-                      "type": "array"
+                      "minItems": 1,
+                      "type": "array",
+                      "x-kubernetes-list-type": "atomic"
                     },
                     "footer": {
+                      "minLength": 1,
                       "type": "string"
                     },
                     "httpConfig": {
@@ -5359,6 +5424,7 @@
                       "type": "object"
                     },
                     "iconEmoji": {
+                      "minLength": 1,
                       "type": "string"
                     },
                     "iconURL": {
@@ -5372,11 +5438,15 @@
                     },
                     "mrkdwnIn": {
                       "items": {
+                        "minLength": 1,
                         "type": "string"
                       },
-                      "type": "array"
+                      "minItems": 1,
+                      "type": "array",
+                      "x-kubernetes-list-type": "atomic"
                     },
                     "pretext": {
+                      "minLength": 1,
                       "type": "string"
                     },
                     "sendResolved": {
@@ -5386,24 +5456,32 @@
                       "type": "boolean"
                     },
                     "text": {
+                      "minLength": 1,
                       "type": "string"
                     },
                     "thumbURL": {
                       "type": "string"
                     },
+                    "timeout": {
+                      "pattern": "^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$",
+                      "type": "string"
+                    },
                     "title": {
+                      "minLength": 1,
                       "type": "string"
                     },
                     "titleLink": {
                       "type": "string"
                     },
                     "username": {
+                      "minLength": 1,
                       "type": "string"
                     }
                   },
                   "type": "object"
                 },
-                "type": "array"
+                "type": "array",
+                "x-kubernetes-list-type": "atomic"
               },
               "snsConfigs": {
                 "items": {
@@ -6024,12 +6102,14 @@
                   },
                   "type": "object"
                 },
-                "type": "array"
+                "type": "array",
+                "x-kubernetes-list-type": "atomic"
               },
               "telegramConfigs": {
                 "items": {
                   "properties": {
                     "apiURL": {
+                      "pattern": "^https?://.+$",
                       "type": "string"
                     },
                     "botToken": {
@@ -6616,7 +6696,8 @@
                   ],
                   "type": "object"
                 },
-                "type": "array"
+                "type": "array",
+                "x-kubernetes-list-type": "atomic"
               },
               "victoropsConfigs": {
                 "items": {
@@ -6641,6 +6722,7 @@
                       "x-kubernetes-map-type": "atomic"
                     },
                     "apiUrl": {
+                      "pattern": "^https?://.+$",
                       "type": "string"
                     },
                     "customFields": {
@@ -6660,9 +6742,11 @@
                         ],
                         "type": "object"
                       },
-                      "type": "array"
+                      "type": "array",
+                      "x-kubernetes-list-type": "atomic"
                     },
                     "entityDisplayName": {
+                      "minLength": 1,
                       "type": "string"
                     },
                     "httpConfig": {
@@ -7197,24 +7281,32 @@
                       "type": "object"
                     },
                     "messageType": {
+                      "minLength": 1,
                       "type": "string"
                     },
                     "monitoringTool": {
+                      "minLength": 1,
                       "type": "string"
                     },
                     "routingKey": {
+                      "minLength": 1,
                       "type": "string"
                     },
                     "sendResolved": {
                       "type": "boolean"
                     },
                     "stateMessage": {
+                      "minLength": 1,
                       "type": "string"
                     }
                   },
+                  "required": [
+                    "routingKey"
+                  ],
                   "type": "object"
                 },
-                "type": "array"
+                "type": "array",
+                "x-kubernetes-list-type": "atomic"
               },
               "webexConfigs": {
                 "items": {
@@ -7770,7 +7862,8 @@
                   ],
                   "type": "object"
                 },
-                "type": "array"
+                "type": "array",
+                "x-kubernetes-list-type": "atomic"
               },
               "webhookConfigs": {
                 "items": {
@@ -8343,7 +8436,8 @@
                   },
                   "type": "object"
                 },
-                "type": "array"
+                "type": "array",
+                "x-kubernetes-list-type": "atomic"
               },
               "wechatConfigs": {
                 "items": {
@@ -8371,6 +8465,7 @@
                       "x-kubernetes-map-type": "atomic"
                     },
                     "apiURL": {
+                      "pattern": "^https?://.+$",
                       "type": "string"
                     },
                     "corpID": {
@@ -8928,7 +9023,8 @@
                   },
                   "type": "object"
                 },
-                "type": "array"
+                "type": "array",
+                "x-kubernetes-list-type": "atomic"
               }
             },
             "required": [
@@ -8936,7 +9032,11 @@
             ],
             "type": "object"
           },
-          "type": "array"
+          "type": "array",
+          "x-kubernetes-list-map-keys": [
+            "name"
+          ],
+          "x-kubernetes-list-type": "map"
         },
         "route": {
           "properties": {
@@ -8944,7 +9044,8 @@
               "items": {
                 "type": "string"
               },
-              "type": "array"
+              "type": "array",
+              "x-kubernetes-list-type": "set"
             },
             "continue": {
               "type": "boolean"
@@ -8953,7 +9054,8 @@
               "items": {
                 "type": "string"
               },
-              "type": "array"
+              "type": "array",
+              "x-kubernetes-list-type": "set"
             },
             "groupInterval": {
               "type": "string"
@@ -8989,13 +9091,15 @@
                 ],
                 "type": "object"
               },
-              "type": "array"
+              "type": "array",
+              "x-kubernetes-list-type": "atomic"
             },
             "muteTimeIntervals": {
               "items": {
                 "type": "string"
               },
-              "type": "array"
+              "type": "array",
+              "x-kubernetes-list-type": "set"
             },
             "receiver": {
               "type": "string"
@@ -9007,10 +9111,102 @@
               "items": {
                 "x-kubernetes-preserve-unknown-fields": true
               },
-              "type": "array"
+              "type": "array",
+              "x-kubernetes-list-type": "atomic"
             }
           },
           "type": "object"
+        }
+      },
+      "type": "object"
+    },
+    "status": {
+      "properties": {
+        "bindings": {
+          "items": {
+            "properties": {
+              "conditions": {
+                "items": {
+                  "properties": {
+                    "lastTransitionTime": {
+                      "format": "date-time",
+                      "type": "string"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "observedGeneration": {
+                      "format": "int64",
+                      "type": "integer"
+                    },
+                    "reason": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "minLength": 1,
+                      "type": "string"
+                    },
+                    "type": {
+                      "enum": [
+                        "Accepted"
+                      ],
+                      "minLength": 1,
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "lastTransitionTime",
+                    "status",
+                    "type"
+                  ],
+                  "type": "object"
+                },
+                "type": "array",
+                "x-kubernetes-list-map-keys": [
+                  "type"
+                ],
+                "x-kubernetes-list-type": "map"
+              },
+              "group": {
+                "enum": [
+                  "monitoring.coreos.com"
+                ],
+                "type": "string"
+              },
+              "name": {
+                "minLength": 1,
+                "type": "string"
+              },
+              "namespace": {
+                "minLength": 1,
+                "type": "string"
+              },
+              "resource": {
+                "enum": [
+                  "prometheuses",
+                  "prometheusagents",
+                  "thanosrulers",
+                  "alertmanagers"
+                ],
+                "type": "string"
+              }
+            },
+            "required": [
+              "group",
+              "name",
+              "namespace",
+              "resource"
+            ],
+            "type": "object"
+          },
+          "type": "array",
+          "x-kubernetes-list-map-keys": [
+            "group",
+            "resource",
+            "name",
+            "namespace"
+          ],
+          "x-kubernetes-list-type": "map"
         }
       },
       "type": "object"
