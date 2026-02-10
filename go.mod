@@ -12,7 +12,7 @@ require (
 	github.com/oklog/run v1.2.0
 	github.com/pkg/errors v0.9.1
 	github.com/posthog/posthog-go v1.10.0
-	github.com/prometheus-community/pro-bing v0.7.0
+	github.com/prometheus-community/pro-bing v0.8.0
 	github.com/prometheus/client_golang v1.23.2
 	github.com/sergi/go-diff v1.4.0
 	github.com/spf13/cobra v1.10.2
