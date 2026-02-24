@@ -21,7 +21,7 @@ require (
 	github.com/yannh/kubeconform v0.7.0
 	go.yaml.in/yaml/v4 v4.0.0-rc.4
 	golang.org/x/oauth2 v0.35.0
-	google.golang.org/api v0.267.0
+	google.golang.org/api v0.268.0
 	google.golang.org/grpc v1.79.1
 	google.golang.org/protobuf v1.36.11
 	sigs.k8s.io/kustomize/api v0.21.1
