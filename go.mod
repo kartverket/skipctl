@@ -5,7 +5,7 @@ go 1.25.6
 require (
 	github.com/PumpkinSeed/slog-context v0.1.2
 	github.com/bufbuild/buf v1.66.1
-	github.com/fatih/color v1.18.0
+	github.com/fatih/color v1.19.0
 	github.com/go-git/go-git/v5 v5.17.0
 	github.com/google/go-jsonnet v0.22.0
 	github.com/grpc-ecosystem/go-grpc-middleware/providers/prometheus v1.1.0
