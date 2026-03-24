@@ -7,7 +7,7 @@ require (
 	github.com/bufbuild/buf v1.66.1
 	github.com/fatih/color v1.18.0
 	github.com/go-git/go-git/v5 v5.17.0
-	github.com/google/go-jsonnet v0.21.0
+	github.com/google/go-jsonnet v0.22.0
 	github.com/grpc-ecosystem/go-grpc-middleware/providers/prometheus v1.1.0
 	github.com/oklog/run v1.2.0
 	github.com/pkg/errors v0.9.1
