@@ -4,7 +4,7 @@ go 1.25.7
 
 require (
 	github.com/PumpkinSeed/slog-context v0.1.2
-	github.com/bufbuild/buf v1.68.3
+	github.com/bufbuild/buf v1.68.4
 	github.com/fatih/color v1.19.0
 	github.com/go-git/go-git/v5 v5.17.2
 	github.com/google/go-jsonnet v0.22.0
@@ -56,7 +56,7 @@ require (
 	github.com/antlr4-go/antlr/v4 v4.13.1 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/blang/semver/v4 v4.0.0 // indirect
-	github.com/bufbuild/protocompile v0.14.2-0.20260420203553-9e5399662822 // indirect
+	github.com/bufbuild/protocompile v0.14.2-0.20260422150859-0395838fcd3c // indirect
 	github.com/bufbuild/protoplugin v0.0.0-20260414125817-25d1d281b46b // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/cli/browser v1.3.0 // indirect
