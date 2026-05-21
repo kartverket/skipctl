@@ -6,7 +6,7 @@ require (
 	github.com/PumpkinSeed/slog-context v0.1.2
 	github.com/bufbuild/buf v1.69.0
 	github.com/fatih/color v1.19.0
-	github.com/go-git/go-git/v5 v5.19.0
+	github.com/go-git/go-git/v5 v5.19.1
 	github.com/google/go-jsonnet v0.22.0
 	github.com/grpc-ecosystem/go-grpc-middleware/providers/prometheus v1.1.0
 	github.com/oklog/run v1.2.0
