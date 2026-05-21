@@ -59,11 +59,11 @@ func defineMetrics(reg *prometheus.Registry) {
 	pingOK = promauto.With(reg).NewCounterVec(prometheus.CounterOpts{
 		Name: "pings_ok_total",
 		Help: "The total number of OK pings",
-	}, []string{"hostname"})
+	}, []string{constants.HostnameKey})
 	pingFailed = promauto.With(reg).NewCounterVec(prometheus.CounterOpts{
 		Name: "pings_failed_total",
 		Help: "The total number of failed pings",
-	}, []string{"hostname"})
+	}, []string{constants.HostnameKey})
 
 	probeProcessed = promauto.With(reg).NewCounter(prometheus.CounterOpts{
 		Name: "probes_processed_total",
@@ -72,11 +72,11 @@ func defineMetrics(reg *prometheus.Registry) {
 	probeOK = promauto.With(reg).NewCounterVec(prometheus.CounterOpts{
 		Name: "probes_ok_total",
 		Help: "The total number of OK port probes",
-	}, []string{"hostname", "port"})
+	}, []string{constants.HostnameKey, constants.PortKey})
 	probeFailed = promauto.With(reg).NewCounterVec(prometheus.CounterOpts{
 		Name: "probes_failed_total",
 		Help: "The total number of failed port probes",
-	}, []string{"hostname", "port"})
+	}, []string{constants.HostnameKey, constants.PortKey})
 }
 
 func (d DiagnosticService) Ping(ctx context.Context, req *api.PingRequest) (*api.PingResponse, error) {
@@ -123,7 +123,7 @@ func doPing(ctx context.Context, host string, count int, timeout *time.Duration)
 	}
 
 	if err = p.RunWithContext(ctx); err != nil {
-		pingFailed.With(prometheus.Labels{"hostname": host}).Inc()
+		pingFailed.With(prometheus.Labels{constants.HostnameKey: host}).Inc()
 		return nil, fmt.Errorf("ping failed: %w", err)
 	}
 
@@ -151,9 +151,9 @@ func doPing(ctx context.Context, host string, count int, timeout *time.Duration)
 	}
 
 	if r.GetPingable() {
-		pingOK.With(prometheus.Labels{"hostname": host}).Inc()
+		pingOK.With(prometheus.Labels{constants.HostnameKey: host}).Inc()
 	} else {
-		pingFailed.With(prometheus.Labels{"hostname": host}).Inc()
+		pingFailed.With(prometheus.Labels{constants.HostnameKey: host}).Inc()
 	}
 
 	return r, nil
@@ -168,7 +168,7 @@ func doProbe(ctx context.Context, host string, port int, timeout *time.Duration)
 	var remoteAddr string
 	conn, err := d.DialContext(ctx, "tcp4", fmt.Sprintf("%s:%d", host, port))
 	if err != nil {
-		probeFailed.With(prometheus.Labels{"hostname": host, "port": strconv.Itoa(port)}).Inc()
+		probeFailed.With(prometheus.Labels{constants.HostnameKey: host, constants.PortKey: strconv.Itoa(port)}).Inc()
 		return &api.PortProbeResponse{
 			Open:       false,
 			AddrProbed: nil,
@@ -177,7 +177,7 @@ func doProbe(ctx context.Context, host string, port int, timeout *time.Duration)
 	defer conn.Close()
 	remoteAddr = conn.RemoteAddr().String()
 
-	probeOK.With(prometheus.Labels{"hostname": host, "port": strconv.Itoa(port)}).Inc()
+	probeOK.With(prometheus.Labels{constants.HostnameKey: host, constants.PortKey: strconv.Itoa(port)}).Inc()
 	return &api.PortProbeResponse{
 		Open:       true,
 		AddrProbed: &remoteAddr,

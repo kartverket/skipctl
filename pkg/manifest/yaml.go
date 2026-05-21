@@ -3,13 +3,17 @@ package manifest
 import (
 	"bytes"
 	"errors"
+	"fmt"
 	"log/slog"
 	"os"
 
+	"github.com/kartverket/skipctl/pkg/constants"
 	"github.com/kartverket/skipctl/pkg/diff"
 	"github.com/kartverket/skipctl/pkg/logging"
 	"go.yaml.in/yaml/v4"
 )
+
+var divider = fmt.Sprintf("%s\n", constants.DocumentSeparator)
 
 // YamlRenderer renders yaml files.
 type YamlRenderer struct {
@@ -33,7 +37,7 @@ func NewYamlRenderer(output *slog.Logger, dividerEnabled ...bool) *YamlRenderer 
 
 func (r *YamlRenderer) addDivider() {
 	if r.printDivider && r.dividerEnabled {
-		r.output.Info("---\n")
+		r.output.Info(divider)
 	}
 	r.printDivider = true
 }

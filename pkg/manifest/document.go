@@ -15,6 +15,8 @@ import (
 	"github.com/kartverket/skipctl/pkg/utils"
 )
 
+var splitMarker = []byte(fmt.Sprintf("\n%s\n", constants.DocumentSeparator))
+
 type Document struct {
 	Name        string
 	Extension   string
@@ -98,7 +100,7 @@ func FromStdin() ([]*Document, error) {
 	if err != nil {
 		return nil, err
 	}
-	files := bytes.Split(content, []byte("\n---\n"))
+	files := bytes.Split(content, splitMarker)
 
 	var manifestFiles []*Document
 

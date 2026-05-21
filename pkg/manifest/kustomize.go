@@ -55,7 +55,7 @@ func NewKustomizeRenderer(output *slog.Logger, sortOutput bool, dividerEnabled .
 }
 func (r *KustomizeRenderer) addDivider() {
 	if r.printDivider && r.dividerEnabled {
-		r.output.Info("---\n")
+		r.output.Info(fmt.Sprintf("%s\n", constants.DocumentSeparator))
 	}
 	r.printDivider = true
 }
@@ -197,7 +197,7 @@ type docRange struct{ start, end int }
 func splitYAMLDocRanges(lines []string) []docRange {
 	starts := []int{0}
 	for i := 1; i < len(lines); i++ {
-		if strings.TrimSpace(lines[i]) == "---" {
+		if strings.TrimSpace(lines[i]) == constants.DocumentSeparator {
 			starts = append(starts, i)
 		}
 	}
@@ -229,7 +229,7 @@ func parseResourceMetaFromDocLines(docLines []string) kustomizeResourceMeta {
 	i := 0
 	for i < len(docLines) {
 		t := strings.TrimSpace(docLines[i])
-		if t == "" || t == "---" {
+		if t == "" || t == constants.DocumentSeparator {
 			i++
 			continue
 		}

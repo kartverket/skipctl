@@ -149,7 +149,7 @@ func DiffsToPrettyPrint(diffs []*ManifestDiff, filename string) string {
 		return ""
 	}
 
-	out.WriteString(fmt.Sprintf("%s%s%s\n", textBold, filename, colorReset))
+	fmt.Fprintf(&out, "%s%s%s\n", textBold, filename, colorReset)
 	hunks := groupIntoHunks(diffs)
 
 	for i, hunk := range hunks {
@@ -160,12 +160,12 @@ func DiffsToPrettyPrint(diffs []*ManifestDiff, filename string) string {
 			out.WriteByte('\n')
 		}
 		if hdr := resourceHeaderForHunk(hunk); hdr != "" {
-			out.WriteString(fmt.Sprintf("%s%s%s\n", textBold, hdr, colorReset))
+			fmt.Fprintf(&out, "%s%s%s\n", textBold, hdr, colorReset)
 		}
 		out.WriteString(formatPrettyHeader(hunk))
 		for _, d := range hunk {
-			out.WriteString(fmt.Sprintf("%s%d %s %s%s\n",
-				diffColorMap[d.Type], d.Line, diffSymbolMap[d.Type], d.Text, colorReset))
+			fmt.Fprintf(&out, "%s%d %s %s%s\n",
+				diffColorMap[d.Type], d.Line, diffSymbolMap[d.Type], d.Text, colorReset)
 		}
 	}
 	return out.String()
@@ -304,7 +304,7 @@ func DiffsToPatch(diffs []*ManifestDiff, fileName string) string {
 func writePatchHeaders(fileName string) string {
 	var b strings.Builder
 	// Shortstat
-	fmt.Fprintf(&b, "--- remote /%s\n", fileName)
+	fmt.Fprintf(&b, "%s remote /%s\n", constants.DocumentSeparator, fileName)
 	fmt.Fprintf(&b, "+++ local /%s\n", fileName)
 	return b.String()
 }

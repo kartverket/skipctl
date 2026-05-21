@@ -8,6 +8,7 @@ import (
 
 	api "github.com/kartverket/skipctl/pkg/api/v1"
 	"github.com/kartverket/skipctl/pkg/auth"
+	"github.com/kartverket/skipctl/pkg/constants"
 	"github.com/kartverket/skipctl/pkg/logging"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
@@ -50,7 +51,7 @@ func NewTester(_ context.Context, serverAddr string, useTLS bool) (*Tester, erro
 }
 
 func (t *Tester) Ping(ctx context.Context, hostname string, count int32, timeout time.Duration) (*api.PingResponse, error) {
-	t.log.InfoContext(ctx, "starting ping", "hostname", hostname, "count", count)
+	t.log.InfoContext(ctx, "starting ping", constants.HostnameKey, hostname, "count", count)
 	res, err := t.client.Ping(ctx, &api.PingRequest{
 		Host:    hostname,
 		Count:   count,
@@ -66,7 +67,7 @@ func (t *Tester) PortProbe(ctx context.Context, hostname string, port int32, tim
 		return nil, fmt.Errorf("invalid port: %d", port)
 	}
 
-	t.log.InfoContext(ctx, "starting port probe", "hostname", hostname, "port", port)
+	t.log.InfoContext(ctx, "starting port probe", constants.HostnameKey, hostname, constants.PortKey, port)
 	res, err := t.client.PortProbe(context.Background(), &api.PortProbeRequest{
 		Host:    hostname,
 		Port:    port,

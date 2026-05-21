@@ -35,9 +35,9 @@ var pingCmd = &cobra.Command{
 		}
 
 		if res.GetPingable() {
-			log.Info("successfully pinged", "hostname", pingHostname, "result", res)
+			log.Info("successfully pinged", constants.HostnameKey, pingHostname, "result", res)
 		} else {
-			log.Info("host not responsive to ping", "hostname", pingHostname, "result", res)
+			log.Info("host not responsive to ping", constants.HostnameKey, pingHostname, "result", res)
 		}
 
 		return nil

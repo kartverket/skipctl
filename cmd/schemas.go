@@ -25,7 +25,7 @@ func runSchemas(_ *cobra.Command, _ []string) error {
 	var sb strings.Builder
 	sb.WriteString("Supported schemas:\n")
 	for _, schema := range schemas {
-		sb.WriteString(fmt.Sprintf(" - %s\n", schema))
+		fmt.Fprintf(&sb, " - %s\n", schema)
 	}
 	logging.RawLogger().Info(sb.String())
 	return nil

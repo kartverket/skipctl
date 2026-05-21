@@ -34,8 +34,14 @@ const (
 	DiffVerbosityFull    = "full"
 )
 const (
-	DefaultChunkSize = 3
-	YamlIndent       = 2
+	DefaultChunkSize  = 3
+	YamlIndent        = 2
+	DocumentSeparator = "---"
+)
+
+const (
+	HostnameKey = "hostname"
+	PortKey     = "port"
 )
 
 const (

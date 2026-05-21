@@ -51,7 +51,7 @@ func Execute() error {
 		return err
 	}
 	for _, schema := range schemas {
-		schemasText.WriteString(fmt.Sprintf(" - %s\n", schema))
+		fmt.Fprintf(&schemasText, " - %s\n", schema)
 	}
 
 	rootCmd.SetVersionTemplate(fmt.Sprintf("skipctl %s (%s)\n", GitTag, GitCommitHash))

@@ -26,7 +26,7 @@ func TestNormalizeLines_StripsTrailingEmptyLine(t *testing.T) {
 
 func TestParseResourceMetaFromDocLines_ParsesAndSkipsSeparators(t *testing.T) {
 	doc := []string{
-		"---",
+		constants.DocumentSeparator,
 		"",
 		"apiVersion: apps/v1",
 		"kind: Deployment",
@@ -76,7 +76,7 @@ func TestBuildLineToResourceMetaMap_AssignsAcrossDocsAndSeparatorBelongsToNextDo
 		"  namespace: ns1\n" +
 		"data:\n" +
 		"  a: b\n" +
-		"---\n" +
+		constants.DocumentSeparator + "\n" +
 		"apiVersion: apps/v1\n" +
 		"kind: Deployment\n" +
 		"metadata:\n" +
@@ -127,7 +127,7 @@ func TestAnnotateKustomizeDiffsWithResourceMeta_AssignsBasedOnDiffType(t *testin
 		"  namespace: ns1\n" +
 		"data:\n" +
 		"  a: b\n" +
-		"---\n" +
+		constants.DocumentSeparator + "\n" +
 		"apiVersion: apps/v1\n" +
 		"kind: Deployment\n" +
 		"metadata:\n" +
@@ -141,7 +141,7 @@ func TestAnnotateKustomizeDiffsWithResourceMeta_AssignsBasedOnDiffType(t *testin
 	diffs := []*diff.ManifestDiff{
 		{Type: constants.Deletion, Text: "  name: cm1", Line: 4, OldLine: 4, NewLine: 4},
 		{Type: constants.Insertion, Text: "  name: dep1", Line: 12, OldLine: 12, NewLine: 12},
-		{Type: constants.Equals, Text: "---", Line: 8, OldLine: 8, NewLine: 8},
+		{Type: constants.Equals, Text: constants.DocumentSeparator, Line: 8, OldLine: 8, NewLine: 8},
 		{Type: constants.Insertion, Text: "x", Line: 999, OldLine: 999, NewLine: 999},
 	}
 
