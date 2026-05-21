@@ -192,8 +192,7 @@ func protoDuration(pbDuration *durationpb.Duration) *time.Duration {
 	if pbDuration == nil {
 		return nil
 	}
-	d := pbDuration.AsDuration()
-	return &d
+	return new(pbDuration.AsDuration())
 }
 
 func safeIntToInt32(value int) (int32, error) {
