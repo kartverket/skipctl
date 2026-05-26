@@ -17,11 +17,11 @@ package crd
 
 //go:generate crdjson -outdir=./schemas -url=https://github.com/prometheus-operator/prometheus-operator/releases/latest/download/stripped-down-crds.yaml
 
-//go:generate crdjson -outdir=./schemas -one-per-kind -url=https://raw.githubusercontent.com/istio/api/refs/tags/1.28.0/kubernetes/customresourcedefinitions.gen.yaml
+//go:generate crdjson -outdir=./schemas -one-per-kind -url=https://raw.githubusercontent.com/istio/api/refs/tags/1.29.2/kubernetes/customresourcedefinitions.gen.yaml
 
-//go:generate crdjson -outdir=./schemas -url=https://github.com/cert-manager/cert-manager/releases/download/v1.19.1/cert-manager.crds.yaml
+//go:generate crdjson -outdir=./schemas -url=https://github.com/cert-manager/cert-manager/releases/download/v1.20.2/cert-manager.crds.yaml
 
-//go:generate crdjson -outdir=./schemas -one-per-kind -url=https://github.com/external-secrets/external-secrets/releases/download/v1.0.0/external-secrets.yaml
+//go:generate crdjson -outdir=./schemas -one-per-kind -url=https://github.com/external-secrets/external-secrets/releases/download/v2.4.1/external-secrets.yaml
 
 //go:generate crdjson -outdir=./schemas -url=https://github.com/cloudnative-pg/cloudnative-pg/releases/download/v1.27.1/cnpg-1.27.1.yaml
 
@@ -32,4 +32,4 @@ package crd
 //go:generate crdjson -outdir=./schemas -url=https://raw.githubusercontent.com/kartverket/accesserator/refs/heads/main/config/crd/bases/accesserator.kartverket.no_securityconfigs.yaml
 
 // Accesserator dependencies down below
-//go:generate crdjson -outdir=./schemas -url=https://raw.githubusercontent.com/nais/liberator/34a9e8ad9d4bf1b6f8e292e05ccb71db1147fbcb/config/crd/bases/nais.io_jwkers.yaml
+//go:generate crdjson -outdir=./schemas -url=https://raw.githubusercontent.com/nais/liberator/refs/heads/main/config/crd/bases/nais.io_jwkers.yaml

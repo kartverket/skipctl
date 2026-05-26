@@ -18,13 +18,242 @@
       "properties": {
         "applicationRef": {
           "description": "ApplicationRef is a reference to the name of the SKIP application for which this SecurityConfig applies.",
+          "maxLength": 253,
+          "minLength": 1,
+          "pattern": "^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$",
           "type": "string"
         },
-        "tokenx": {
-          "description": "Tokenx indicates whether a sidecar (called Texas) is started with the application referred to by `applicationRef`\nthat provides an endpoint which is available to the application on the env var TEXAS_URL.\nThe endpoint conforms to the OAuth 2.0 Token Exchange standard (RFC 8693).\naccessPolicies in the Application manifest of the application referred to by applicationRef\nwill be used to restrict which applications can exchange tokens where the specified application is the intended audience.",
+        "maskinporten": {
+          "description": "Maskinporten specifies whether to configure the maskinporten API consumer capability for an application referred to by `applicationRef`.\nThe configuration can either be provided inline via the `client` field,\nby referencing an existing MaskinportenClient resource via the `clientRef` field,\nor by sourcing credentials from existing Kubernetes secrets via the `secretRef` field.",
           "properties": {
+            "client": {
+              "description": "Client defines the Maskinporten client configuration inline.\nUse this when you want to configure the client directly.",
+              "properties": {
+                "clientName": {
+                  "description": "ClientName is the client name to be registered at DigDir.\nIt is shown during login for user-centric flows, and is otherwise a human-readable way to differentiate between clients at DigDir's self-service portal.",
+                  "maxLength": 100,
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "scopes": {
+                  "description": "Scopes is an object of consumed scopes.",
+                  "properties": {
+                    "consumes": {
+                      "description": "`consumes` is a list of scopes that your client can request access to.",
+                      "items": {
+                        "properties": {
+                          "name": {
+                            "description": "The scope consumed by the application to gain access to an external organization API.\nEnsure that the NAV organization has been granted access to the scope prior to requesting access.",
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "name"
+                        ],
+                        "type": "object"
+                      },
+                      "maxItems": 100,
+                      "minItems": 1,
+                      "type": "array"
+                    }
+                  },
+                  "required": [
+                    "consumes"
+                  ],
+                  "type": "object"
+                }
+              },
+              "required": [
+                "clientName"
+              ],
+              "type": "object"
+            },
+            "clientRef": {
+              "description": "ClientRef references an existing MaskinportenClient by name.\nUse this when a MaskinportenClient exists, and you want to reference it.",
+              "properties": {
+                "name": {
+                  "description": "Name of the referenced MaskinportenClient.",
+                  "maxLength": 253,
+                  "minLength": 1,
+                  "pattern": "^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "name"
+              ],
+              "type": "object"
+            },
             "enabled": {
-              "description": "Enabled indicates whether the TokenX sidecar should be included for the application.",
+              "description": "Enabled indicates whether Maskinporten should be configured for the application.",
+              "type": "boolean"
+            },
+            "secretRef": {
+              "description": "SecretRef sources the Maskinporten client credentials from one or more existing Kubernetes secrets.\nUse this when you have an existing OAuth client registered outside the SecurityConfig CRD\nand MaskinportenClient CRD (e.g. manually registered at DigDir).",
+              "properties": {
+                "clientID": {
+                  "description": "ClientID references the secret key containing the Maskinporten client ID (MASKINPORTEN_CLIENT_ID).",
+                  "properties": {
+                    "key": {
+                      "description": "Key is the key within the secret whose value should be used.",
+                      "maxLength": 63,
+                      "minLength": 1,
+                      "pattern": "^[a-zA-Z0-9]([-._a-zA-Z0-9]*[a-zA-Z0-9])?$",
+                      "type": "string"
+                    },
+                    "name": {
+                      "description": "Name is the name of the Kubernetes secret.",
+                      "maxLength": 253,
+                      "minLength": 1,
+                      "pattern": "^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "key",
+                    "name"
+                  ],
+                  "type": "object"
+                },
+                "clientJWK": {
+                  "description": "ClientJWK references the secret key containing the Maskinporten client JWK (MASKINPORTEN_CLIENT_JWK).",
+                  "properties": {
+                    "key": {
+                      "description": "Key is the key within the secret whose value should be used.",
+                      "maxLength": 63,
+                      "minLength": 1,
+                      "pattern": "^[a-zA-Z0-9]([-._a-zA-Z0-9]*[a-zA-Z0-9])?$",
+                      "type": "string"
+                    },
+                    "name": {
+                      "description": "Name is the name of the Kubernetes secret.",
+                      "maxLength": 253,
+                      "minLength": 1,
+                      "pattern": "^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "key",
+                    "name"
+                  ],
+                  "type": "object"
+                }
+              },
+              "required": [
+                "clientID",
+                "clientJWK"
+              ],
+              "type": "object"
+            }
+          },
+          "required": [
+            "enabled"
+          ],
+          "type": "object",
+          "x-kubernetes-validations": [
+            {
+              "message": "At most one of client, clientRef, or secretRef may be specified.",
+              "rule": "[has(self.client), has(self.clientRef), has(self.secretRef)].filter(x, x).size() <= 1"
+            }
+          ]
+        },
+        "opa": {
+          "description": "Opa specifies whether to configure the open policy agent capability for an application referred to by `applicationRef`.\nThe configuration includes which bundles compiled from rego policies, and how often OPA should check for updates to these bundles.",
+          "properties": {
+            "bundleUrls": {
+              "description": "BundleURLs is a list of URLs pointing to OPA bundles containing compiled rego policies.",
+              "items": {
+                "description": "BundleSource defines a source for an OPA bundle.",
+                "properties": {
+                  "name": {
+                    "description": "Name specifies a human-readable name for the OPA bundle.\nIt is used to differentiate between bundles which is used by OPA.",
+                    "maxLength": 63,
+                    "minLength": 1,
+                    "pattern": "^[a-zA-Z0-9]([-._a-zA-Z0-9]*[a-zA-Z0-9])?$",
+                    "type": "string"
+                  },
+                  "url": {
+                    "description": "URL is the OCI registry location of the OPA bundle.",
+                    "maxLength": 253,
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "name",
+                  "url"
+                ],
+                "type": "object"
+              },
+              "maxItems": 20,
+              "minItems": 1,
+              "type": "array",
+              "x-kubernetes-validations": [
+                {
+                  "message": "Each bundle name must be unique",
+                  "rule": "self.all(x, self.filter(y, y.name == x.name).size() == 1)"
+                },
+                {
+                  "message": "Each bundle URL must be unique",
+                  "rule": "self.all(x, self.filter(y, y.url == x.url).size() == 1)"
+                }
+              ]
+            },
+            "enabled": {
+              "description": "Enabled indicates whether OPA should be configured for the application.",
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "bundleUrls",
+            "enabled"
+          ],
+          "type": "object"
+        },
+        "tokenx": {
+          "description": "Tokenx specifies whether to configure the token exchange capability for an application referred to by `applicationRef`.\naccessPolicies of the application referred to by applicationRef\nwill be used to restrict which applications can exchange tokens where the specified application is the intended audience.",
+          "properties": {
+            "accessPolicy": {
+              "description": "AccessPolicy specifies configuration of which clients can exchange tokens with the application as target when\ntoken exchange is enabled. If not specified, no clients are allowed.",
+              "properties": {
+                "clients": {
+                  "description": "Clients which may perform token exchange with your application as target.",
+                  "items": {
+                    "description": "AccessPolicyClient define client applications which may perform token exchange with your application as target.",
+                    "properties": {
+                      "application": {
+                        "description": "Application is the name of the client application that can exchange tokens with the target application.",
+                        "maxLength": 253,
+                        "minLength": 1,
+                        "pattern": "^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$",
+                        "type": "string"
+                      },
+                      "namespace": {
+                        "description": "Namespace is the namespace which the client application resides. If not specified, the namespace of the\nSecurityConfig's referenced application will be used.",
+                        "maxLength": 253,
+                        "minLength": 1,
+                        "pattern": "^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$",
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "application"
+                    ],
+                    "type": "object"
+                  },
+                  "maxItems": 100,
+                  "minItems": 1,
+                  "type": "array"
+                },
+                "inheritInboundRules": {
+                  "description": "InheritInboundRules specifies whether the inbound access policy rules of the corresponding Skiperator Application\nshould be used as clients for token exchange. Defaults to false. When set to true, the complete list of clients\nwill be the union of the explicitly specified clients in Clients and the clients resolved from inbound rules.",
+                  "type": "boolean"
+                }
+              },
+              "type": "object"
+            },
+            "enabled": {
+              "description": "Enabled indicates whether token exchange should be configured for the application.",
               "type": "boolean"
             }
           },
@@ -96,12 +325,33 @@
           },
           "type": "array"
         },
+        "jwkerSecretName": {
+          "type": "string"
+        },
+        "maskinportenSecretName": {
+          "type": "string"
+        },
         "message": {
           "type": "string"
         },
         "observedGeneration": {
           "format": "int64",
           "type": "integer"
+        },
+        "opaBundleSource": {
+          "description": "OpaBundleSource defines the source of OPA bundles used for policy evaluation.",
+          "properties": {
+            "bundleNames": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "configMapName": {
+              "type": "string"
+            }
+          },
+          "type": "object"
         },
         "phase": {
           "type": "string"

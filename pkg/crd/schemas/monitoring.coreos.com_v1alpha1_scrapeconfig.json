@@ -46,7 +46,8 @@
                 "enum": [
                   "OAuth",
                   "ManagedIdentity",
-                  "SDK"
+                  "SDK",
+                  "WorkloadIdentity"
                 ],
                 "type": "string"
               },
@@ -654,6 +655,10 @@
           },
           "type": "object"
         },
+        "bodySizeLimit": {
+          "pattern": "(^0|([0-9]*[.])?[0-9]+((K|M|G|T|E|P)i?)?B)$",
+          "type": "string"
+        },
         "consulSDConfigs": {
           "items": {
             "properties": {
@@ -743,6 +748,10 @@
               },
               "followRedirects": {
                 "type": "boolean"
+              },
+              "healthFilter": {
+                "minLength": 1,
+                "type": "string"
               },
               "namespace": {
                 "minLength": 1,
@@ -1854,6 +1863,7 @@
                 "items": {
                   "properties": {
                     "name": {
+                      "minLength": 1,
                       "type": "string"
                     },
                     "values": {
@@ -1883,6 +1893,7 @@
               },
               "host": {
                 "minLength": 1,
+                "pattern": "^[a-zA-Z][a-zA-Z0-9+.-]*://.+$",
                 "type": "string"
               },
               "hostNetworkingHost": {
@@ -2418,6 +2429,7 @@
                 "items": {
                   "properties": {
                     "name": {
+                      "minLength": 1,
                       "type": "string"
                     },
                     "values": {
@@ -2933,6 +2945,7 @@
                 "items": {
                   "properties": {
                     "name": {
+                      "minLength": 1,
                       "type": "string"
                     },
                     "values": {
@@ -3556,8 +3569,7 @@
                 "type": "string"
               },
               "server": {
-                "minLength": 1,
-                "pattern": "^http(s)?://.+$",
+                "pattern": "^https?://.+$",
                 "type": "string"
               },
               "tlsConfig": {
@@ -4830,8 +4842,7 @@
                 "type": "object"
               },
               "url": {
-                "minLength": 1,
-                "pattern": "^http(s)?://.+$",
+                "pattern": "^https?://.+$",
                 "type": "string"
               }
             },
@@ -6878,6 +6889,7 @@
                 "type": "string"
               },
               "roleARN": {
+                "minLength": 1,
                 "type": "string"
               },
               "secretKey": {
@@ -7706,6 +7718,7 @@
                 "type": "boolean"
               },
               "namespace": {
+                "minLength": 1,
                 "type": "string"
               },
               "noProxy": {
@@ -8007,13 +8020,15 @@
                 "type": "string"
               },
               "region": {
-                "type": "string"
-              },
-              "server": {
                 "minLength": 1,
                 "type": "string"
               },
+              "server": {
+                "pattern": "^https?://.+$",
+                "type": "string"
+              },
               "tagSeparator": {
+                "minLength": 1,
                 "type": "string"
               },
               "tlsConfig": {
@@ -8423,6 +8438,7 @@
                 "type": "boolean"
               },
               "applicationCredentialId": {
+                "minLength": 1,
                 "type": "string"
               },
               "applicationCredentialName": {
@@ -8468,7 +8484,7 @@
                 "type": "string"
               },
               "identityEndpoint": {
-                "pattern": "^http(s)?:\\/\\/.+$",
+                "pattern": "^https?://.+$",
                 "type": "string"
               },
               "password": {
@@ -9310,8 +9326,7 @@
                 "type": "object"
               },
               "url": {
-                "minLength": 1,
-                "pattern": "^http(s)?://.+$",
+                "pattern": "^https?://.+$",
                 "type": "string"
               }
             },
@@ -9394,7 +9409,7 @@
                 "type": "string"
               },
               "apiURL": {
-                "pattern": "^http(s)?://.+$",
+                "pattern": "^https?://.+$",
                 "type": "string"
               },
               "enableHTTP2": {
@@ -9695,6 +9710,7 @@
               },
               "targets": {
                 "items": {
+                  "minLength": 1,
                   "type": "string"
                 },
                 "minItems": 1,
@@ -9851,7 +9867,13 @@
           "type": "boolean"
         }
       },
-      "type": "object"
+      "type": "object",
+      "x-kubernetes-validations": [
+        {
+          "message": "at most one of basicAuth, authorization, or oauth2 can be configured",
+          "rule": "[has(self.basicAuth), has(self.authorization), has(self.oauth2)].filter(x, x).size() <= 1"
+        }
+      ]
     },
     "status": {
       "properties": {

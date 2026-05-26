@@ -154,8 +154,21 @@
     "status": {
       "description": "JwkerStatus defines the observed state of Jwker",
       "properties": {
-        "synchronizationHash": {
+        "clientID": {
+          "description": "ClientID is the OAuth2 Client ID associated with this Jwker",
           "type": "string"
+        },
+        "keyIDs": {
+          "description": "KeyIDs are the JWK Key IDs (kid) associated with this Jwker",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "observedGeneration": {
+          "description": "ObservedGeneration is the most recent generation observed by the controller.\nIf this is equal to metadata.generation, then that means that the current reported status reflects the most recent desired state of the resource.",
+          "format": "int64",
+          "type": "integer"
         },
         "synchronizationSecretName": {
           "type": "string"
@@ -163,9 +176,9 @@
         "synchronizationState": {
           "type": "string"
         },
-        "synchronizationTime": {
-          "format": "int64",
-          "type": "integer"
+        "synchronizationTimestamp": {
+          "format": "date-time",
+          "type": "string"
         }
       },
       "type": "object"

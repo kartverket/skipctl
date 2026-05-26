@@ -1307,6 +1307,30 @@
                   },
                   "type": "object"
                 },
+                "mattermost": {
+                  "properties": {
+                    "webhookURL": {
+                      "properties": {
+                        "key": {
+                          "type": "string"
+                        },
+                        "name": {
+                          "default": "",
+                          "type": "string"
+                        },
+                        "optional": {
+                          "type": "boolean"
+                        }
+                      },
+                      "required": [
+                        "key"
+                      ],
+                      "type": "object",
+                      "x-kubernetes-map-type": "atomic"
+                    }
+                  },
+                  "type": "object"
+                },
                 "opsGenieApiKey": {
                   "properties": {
                     "key": {
@@ -1464,6 +1488,9 @@
                     },
                     "authUsername": {
                       "type": "string"
+                    },
+                    "forceImplicitTLS": {
+                      "type": "boolean"
                     },
                     "from": {
                       "type": "string"
@@ -3289,6 +3316,9 @@
           ],
           "x-kubernetes-list-type": "map"
         },
+        "hostNetwork": {
+          "type": "boolean"
+        },
         "hostUsers": {
           "type": "boolean"
         },
@@ -4593,6 +4623,10 @@
           "type": "string"
         },
         "routePrefix": {
+          "type": "string"
+        },
+        "schedulerName": {
+          "minLength": 1,
           "type": "string"
         },
         "secrets": {
@@ -6282,6 +6316,12 @@
                             },
                             "signerName": {
                               "type": "string"
+                            },
+                            "userAnnotations": {
+                              "additionalProperties": {
+                                "type": "string"
+                              },
+                              "type": "object"
                             }
                           },
                           "required": [

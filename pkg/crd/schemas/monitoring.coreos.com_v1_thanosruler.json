@@ -2046,6 +2046,22 @@
             "certFile": {
               "type": "string"
             },
+            "cipherSuites": {
+              "items": {
+                "type": "string"
+              },
+              "minItems": 1,
+              "type": "array",
+              "x-kubernetes-list-type": "set"
+            },
+            "curves": {
+              "items": {
+                "type": "string"
+              },
+              "minItems": 1,
+              "type": "array",
+              "x-kubernetes-list-type": "set"
+            },
             "insecureSkipVerify": {
               "type": "boolean"
             },
@@ -3982,6 +3998,10 @@
                     "type": "object",
                     "x-kubernetes-map-type": "atomic"
                   },
+                  "externalId": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
                   "profile": {
                     "type": "string"
                   },
@@ -4014,7 +4034,13 @@
                     "type": "boolean"
                   }
                 },
-                "type": "object"
+                "type": "object",
+                "x-kubernetes-validations": [
+                  {
+                    "message": "externalId can only be used when roleArn is specified",
+                    "rule": "!has(self.externalId) || has(self.roleArn)"
+                  }
+                ]
               },
               "tlsConfig": {
                 "properties": {
@@ -4160,7 +4186,7 @@
                 "type": "object"
               },
               "url": {
-                "minLength": 1,
+                "pattern": "^(http|https)://.+$",
                 "type": "string"
               },
               "writeRelabelConfigs": {
@@ -4393,6 +4419,10 @@
           },
           "type": "object",
           "x-kubernetes-map-type": "atomic"
+        },
+        "schedulerName": {
+          "minLength": 1,
+          "type": "string"
         },
         "securityContext": {
           "properties": {
@@ -6091,6 +6121,12 @@
                             },
                             "signerName": {
                               "type": "string"
+                            },
+                            "userAnnotations": {
+                              "additionalProperties": {
+                                "type": "string"
+                              },
+                              "type": "object"
                             }
                           },
                           "required": [

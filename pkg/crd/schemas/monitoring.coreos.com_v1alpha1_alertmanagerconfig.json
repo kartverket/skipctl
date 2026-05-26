@@ -764,6 +764,7 @@
                 "items": {
                   "properties": {
                     "authIdentity": {
+                      "minLength": 1,
                       "type": "string"
                     },
                     "authPassword": {
@@ -805,9 +806,14 @@
                       "x-kubernetes-map-type": "atomic"
                     },
                     "authUsername": {
+                      "minLength": 1,
                       "type": "string"
                     },
+                    "forceImplicitTLS": {
+                      "type": "boolean"
+                    },
                     "from": {
+                      "minLength": 1,
                       "type": "string"
                     },
                     "headers": {
@@ -831,6 +837,7 @@
                       "x-kubernetes-list-type": "atomic"
                     },
                     "hello": {
+                      "minLength": 1,
                       "type": "string"
                     },
                     "html": {
@@ -843,10 +850,27 @@
                       "type": "boolean"
                     },
                     "smarthost": {
+                      "minLength": 1,
                       "type": "string"
                     },
                     "text": {
+                      "minLength": 1,
                       "type": "string"
+                    },
+                    "threading": {
+                      "properties": {
+                        "threadByDate": {
+                          "enum": [
+                            "Daily",
+                            "None"
+                          ],
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "threadByDate"
+                      ],
+                      "type": "object"
                     },
                     "tlsConfig": {
                       "properties": {
@@ -983,6 +1007,7 @@
                       "type": "object"
                     },
                     "to": {
+                      "minLength": 1,
                       "type": "string"
                     }
                   },
@@ -2143,6 +2168,7 @@
                 "items": {
                   "properties": {
                     "actions": {
+                      "minLength": 1,
                       "type": "string"
                     },
                     "apiKey": {
@@ -2169,6 +2195,7 @@
                       "type": "string"
                     },
                     "description": {
+                      "minLength": 1,
                       "type": "string"
                     },
                     "details": {
@@ -2192,6 +2219,7 @@
                       "x-kubernetes-list-type": "atomic"
                     },
                     "entity": {
+                      "minLength": 1,
                       "type": "string"
                     },
                     "httpConfig": {
@@ -2726,21 +2754,26 @@
                       "type": "object"
                     },
                     "message": {
+                      "minLength": 1,
                       "type": "string"
                     },
                     "note": {
+                      "minLength": 1,
                       "type": "string"
                     },
                     "priority": {
+                      "minLength": 1,
                       "type": "string"
                     },
                     "responders": {
                       "items": {
                         "properties": {
                           "id": {
+                            "minLength": 1,
                             "type": "string"
                           },
                           "name": {
+                            "minLength": 1,
                             "type": "string"
                           },
                           "type": {
@@ -2755,6 +2788,7 @@
                             "type": "string"
                           },
                           "username": {
+                            "minLength": 1,
                             "type": "string"
                           }
                         },
@@ -2770,9 +2804,11 @@
                       "type": "boolean"
                     },
                     "source": {
+                      "minLength": 1,
                       "type": "string"
                     },
                     "tags": {
+                      "minLength": 1,
                       "type": "string"
                     },
                     "updateAlerts": {
@@ -5436,6 +5472,10 @@
                     "linkNames": {
                       "type": "boolean"
                     },
+                    "messageText": {
+                      "minLength": 1,
+                      "type": "string"
+                    },
                     "mrkdwnIn": {
                       "items": {
                         "minLength": 1,
@@ -6027,9 +6067,11 @@
                       "type": "object"
                     },
                     "message": {
+                      "minLength": 1,
                       "type": "string"
                     },
                     "phoneNumber": {
+                      "minLength": 1,
                       "type": "string"
                     },
                     "sendResolved": {
@@ -6055,6 +6097,10 @@
                           ],
                           "type": "object",
                           "x-kubernetes-map-type": "atomic"
+                        },
+                        "externalId": {
+                          "minLength": 1,
+                          "type": "string"
                         },
                         "profile": {
                           "type": "string"
@@ -6088,15 +6134,24 @@
                           "type": "boolean"
                         }
                       },
-                      "type": "object"
+                      "type": "object",
+                      "x-kubernetes-validations": [
+                        {
+                          "message": "externalId can only be used when roleArn is specified",
+                          "rule": "!has(self.externalId) || has(self.roleArn)"
+                        }
+                      ]
                     },
                     "subject": {
+                      "minLength": 1,
                       "type": "string"
                     },
                     "targetARN": {
+                      "minLength": 1,
                       "type": "string"
                     },
                     "topicARN": {
+                      "minLength": 1,
                       "type": "string"
                     }
                   },
@@ -8443,6 +8498,7 @@
                 "items": {
                   "properties": {
                     "agentID": {
+                      "minLength": 1,
                       "type": "string"
                     },
                     "apiSecret": {
@@ -8469,6 +8525,7 @@
                       "type": "string"
                     },
                     "corpID": {
+                      "minLength": 1,
                       "type": "string"
                     },
                     "httpConfig": {
@@ -9003,21 +9060,26 @@
                       "type": "object"
                     },
                     "message": {
+                      "minLength": 1,
                       "type": "string"
                     },
                     "messageType": {
+                      "minLength": 1,
                       "type": "string"
                     },
                     "sendResolved": {
                       "type": "boolean"
                     },
                     "toParty": {
+                      "minLength": 1,
                       "type": "string"
                     },
                     "toTag": {
+                      "minLength": 1,
                       "type": "string"
                     },
                     "toUser": {
+                      "minLength": 1,
                       "type": "string"
                     }
                   },
@@ -9058,9 +9120,13 @@
               "x-kubernetes-list-type": "set"
             },
             "groupInterval": {
+              "minLength": 1,
+              "pattern": "^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$",
               "type": "string"
             },
             "groupWait": {
+              "minLength": 1,
+              "pattern": "^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$",
               "type": "string"
             },
             "matchers": {
@@ -9105,6 +9171,8 @@
               "type": "string"
             },
             "repeatInterval": {
+              "minLength": 1,
+              "pattern": "^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$",
               "type": "string"
             },
             "routes": {

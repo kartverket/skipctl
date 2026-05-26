@@ -431,7 +431,7 @@
                           "aggression": {
                             "description": "This parameter controls the speed of traffic increase over the warmup duration.",
                             "format": "double",
-                            "minimum": 1,
+                            "minimum": 0,
                             "nullable": true,
                             "type": "number"
                           },
@@ -936,7 +936,7 @@
                                 "aggression": {
                                   "description": "This parameter controls the speed of traffic increase over the warmup duration.",
                                   "format": "double",
-                                  "minimum": 1,
+                                  "minimum": 0,
                                   "nullable": true,
                                   "type": "number"
                                 },
@@ -1630,7 +1630,7 @@
                     "aggression": {
                       "description": "This parameter controls the speed of traffic increase over the warmup duration.",
                       "format": "double",
-                      "minimum": 1,
+                      "minimum": 0,
                       "nullable": true,
                       "type": "number"
                     },
@@ -2135,7 +2135,7 @@
                           "aggression": {
                             "description": "This parameter controls the speed of traffic increase over the warmup duration.",
                             "format": "double",
-                            "minimum": 1,
+                            "minimum": 0,
                             "nullable": true,
                             "type": "number"
                           },

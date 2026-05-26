@@ -4338,6 +4338,10 @@
                     "type": "object",
                     "x-kubernetes-map-type": "atomic"
                   },
+                  "externalId": {
+                    "minLength": 1,
+                    "type": "string"
+                  },
                   "profile": {
                     "type": "string"
                   },
@@ -4370,7 +4374,13 @@
                     "type": "boolean"
                   }
                 },
-                "type": "object"
+                "type": "object",
+                "x-kubernetes-validations": [
+                  {
+                    "message": "externalId can only be used when roleArn is specified",
+                    "rule": "!has(self.externalId) || has(self.roleArn)"
+                  }
+                ]
               },
               "tlsConfig": {
                 "properties": {
@@ -4516,7 +4526,7 @@
                 "type": "object"
               },
               "url": {
-                "minLength": 1,
+                "pattern": "^(http|https)://.+$",
                 "type": "string"
               },
               "writeRelabelConfigs": {
@@ -4676,6 +4686,10 @@
         "sampleLimit": {
           "format": "int64",
           "type": "integer"
+        },
+        "schedulerName": {
+          "minLength": 1,
+          "type": "string"
         },
         "scrapeClasses": {
           "items": {
@@ -5329,6 +5343,39 @@
         "serviceName": {
           "minLength": 1,
           "type": "string"
+        },
+        "shardingStrategy": {
+          "properties": {
+            "mode": {
+              "enum": [
+                "Address",
+                "Topology"
+              ],
+              "type": "string"
+            },
+            "topology": {
+              "properties": {
+                "externalLabelName": {
+                  "type": "string"
+                },
+                "values": {
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array",
+                  "x-kubernetes-list-type": "atomic"
+                }
+              },
+              "type": "object"
+            }
+          },
+          "type": "object",
+          "x-kubernetes-validations": [
+            {
+              "message": "topology can only be defined when mode is set to 'Topology'",
+              "rule": "!has(self.topology) || (has(self.mode) && self.mode == 'Topology')"
+            }
+          ]
         },
         "shards": {
           "format": "int32",
@@ -7100,6 +7147,12 @@
                             },
                             "signerName": {
                               "type": "string"
+                            },
+                            "userAnnotations": {
+                              "additionalProperties": {
+                                "type": "string"
+                              },
+                              "type": "object"
                             }
                           },
                           "required": [
@@ -7629,6 +7682,14 @@
         {
           "message": "additionalScrapeConfigs cannot be set when mode is DaemonSet",
           "rule": "!(has(self.mode) && self.mode == 'DaemonSet' && has(self.additionalScrapeConfigs))"
+        },
+        {
+          "message": "shardingStrategy cannot be set when mode is DaemonSet",
+          "rule": "!(has(self.mode) && self.mode == 'DaemonSet' && has(self.shardingStrategy))"
+        },
+        {
+          "message": "shards must be greater than or equal to the number of topology values when sharding strategy mode is Topology",
+          "rule": "!has(self.shardingStrategy) || !has(self.shardingStrategy.mode) || self.shardingStrategy.mode != 'Topology' || !has(self.shardingStrategy.topology) || !has(self.shardingStrategy.topology.values) || self.shardingStrategy.topology.values.size() == 0 || (has(self.shards) ? self.shards : 1) >= self.shardingStrategy.topology.values.size()"
         }
       ]
     },

@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "description": "Application\n\nRoot object for Application resource. An application resource is a resource for easily managing a Dockerized container within the context of a Kartverket cluster.\nThis allows product teams to avoid the need to set up networking on the cluster, as well as a lot of out of the box security features.",
+  "description": "SKIPJob is the Schema for the skipjobs API",
   "properties": {
     "apiVersion": {
       "description": "APIVersion defines the versioned schema of this representation of an object.\nServers should convert recognized schemas to the latest internal value, and\nmay reject unrecognized values.\nMore info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources",
@@ -14,9 +14,10 @@
       "type": "object"
     },
     "spec": {
+      "description": "SKIPJobSpec defines the desired state of SKIPJob\n\nA SKIPJob is either defined as a one-off or a scheduled job. If the Cron field is set for SKIPJob, it may not be removed. If the Cron field is unset, it may not be added.",
       "properties": {
         "accessPolicy": {
-          "description": "The root AccessPolicy for managing zero trust access to your Application. See AccessPolicy for more information.",
+          "description": "AccessPolicy\n\nZero trust dictates that only applications with a reason for being able\nto access another resource should be able to reach it. This is set up by\ndefault by denying all ingress and egress traffic from the Pods in the\nDeployment. The AccessPolicy field is an allowlist of other applications and hostnames\nthat are allowed to talk with this Application and which resources this app can talk to",
           "properties": {
             "inbound": {
               "description": "Inbound specifies the ingress rules. Which apps on the cluster can talk to this app?",
@@ -209,7 +210,6 @@
           "type": "object"
         },
         "additionalPorts": {
-          "description": "An optional list of extra port to expose on a pod level basis,\nfor example so Instana or other APM tools can reach it",
           "items": {
             "properties": {
               "name": {
@@ -238,48 +238,49 @@
           },
           "type": "array"
         },
-        "appProtocol": {
-          "default": "http",
-          "description": "Protocol that the application speaks.",
-          "enum": [
-            "http",
-            "tcp",
-            "udp"
-          ],
-          "type": "string"
-        },
-        "authorizationSettings": {
-          "description": "Used for allow listing certain default blocked endpoints, such as /actuator/ end points",
-          "properties": {
-            "allowAll": {
-              "default": false,
-              "description": "Allows all endpoints by not creating an AuthorizationPolicy, and ignores the content of AllowList.\nIf field is false, the contents of AllowList will be used instead if AllowList is set.",
-              "type": "boolean"
-            },
-            "allowList": {
-              "description": "Allows specific endpoints. Common endpoints one might want to allow include /actuator/health, /actuator/startup, /actuator/info.\n\nNote that endpoints are matched specifically on the input, so if you allow /actuator/health, you will *not* allow /actuator/health/",
-              "items": {
-                "type": "string"
-              },
-              "type": "array"
-            }
-          },
-          "type": "object"
-        },
         "command": {
-          "description": "Override the command set in the Dockerfile. Usually only used when debugging\nor running third-party containers where you don't have control over the Dockerfile",
           "items": {
             "type": "string"
           },
           "type": "array"
         },
-        "enablePDB": {
-          "default": true,
-          "description": "Whether to enable automatic Pod Disruption Budget creation for this application.",
-          "type": "boolean"
+        "cron": {
+          "description": "Settings for the Job if you are running a scheduled job. Optional as Jobs may be one-off.",
+          "properties": {
+            "allowConcurrency": {
+              "default": "Allow",
+              "description": "Denotes how Kubernetes should react to multiple instances of the Job being started at the same time.\nAllow will allow concurrent jobs. Forbid will not allow this, and instead skip the newer schedule Job.\nReplace will replace the current active Job with the newer scheduled Job.",
+              "enum": [
+                "Allow",
+                "Forbid",
+                "Replace"
+              ],
+              "type": "string"
+            },
+            "schedule": {
+              "description": "A CronJob string for denoting the schedule of this job. See https://crontab.guru/ for help creating CronJob strings.\nKubernetes CronJobs also include the extended \"Vixie cron\" step values: https://man.freebsd.org/cgi/man.cgi?crontab%285%29.",
+              "type": "string"
+            },
+            "startingDeadlineSeconds": {
+              "description": "Denotes the deadline in seconds for starting a job on its schedule, if for some reason the Job's controller was not ready upon the scheduled time.\nIf unset, Jobs missing their deadline will be considered failed jobs and will not start.",
+              "format": "int64",
+              "type": "integer"
+            },
+            "suspend": {
+              "description": "If set to true, this tells Kubernetes to suspend this Job till the field is set to false. If the Job is active while this field is set to true,\nall running Pods will be terminated.",
+              "type": "boolean"
+            },
+            "timeZone": {
+              "description": "The time zone name for the given schedule, see https://en.wikipedia.org/wiki/List_of_tz_database_time_zones. If not specified,\nthis will default to the time zone of the cluster.\n\nExample: \"Europe/Oslo\"",
+              "type": "string"
+            }
+          },
+          "required": [
+            "schedule"
+          ],
+          "type": "object"
         },
         "env": {
-          "description": "Environment variables that will be set inside the Deployment's Pod. See https://pkg.go.dev/k8s.io/api/core/v1#EnvVar for examples.",
           "items": {
             "description": "EnvVar represents an environment variable present in a Container.",
             "properties": {
@@ -430,7 +431,6 @@
           "type": "array"
         },
         "envFrom": {
-          "description": "Environment variables mounted from files. When specified all the keys of the\nresource will be assigned as environment variables. Supports both configmaps\nand secrets.\n\nFor mounting as files see FilesFrom.",
           "items": {
             "properties": {
               "configMap": {
@@ -447,7 +447,6 @@
           "type": "array"
         },
         "filesFrom": {
-          "description": "Mounting volumes into the Deployment are done using the FilesFrom argument\n\nFilesFrom supports ConfigMaps, Secrets and PVCs. The Application resource\nassumes these have already been created by you, and will fail if this is not the case.\n\nFor mounting environment variables see EnvFrom.",
           "items": {
             "description": "FilesFrom\n\nStruct representing information needed to mount a Kubernetes resource as a file to a Pod's directory.\nOne of ConfigMap, Secret, EmptyDir or PersistentVolumeClaim must be present, and just represent the name of the resource in question\nNB. Out-of-the-box, skiperator provides a writable 'emptyDir'-volume at '/tmp'",
             "properties": {
@@ -480,7 +479,7 @@
           "type": "array"
         },
         "gcp": {
-          "description": "GCP is used to configure Google Cloud Platform specific settings for the application.",
+          "description": "GCP\n\nConfiguration for interacting with Google Cloud Platform",
           "properties": {
             "auth": {
               "description": "Configuration for authenticating a Pod with Google Cloud Platform\nFor authentication with GCP, to use services like Secret Manager and/or Pub/Sub we need\nto set the GCP Service Account Pods should identify as. To allow this, we need the IAM role iam.workloadIdentityUser set on a GCP\nservice account and bind this to the Pod's Kubernetes SA.\nDocumentation on how this is done can be found here (Closed Wiki):\nhttps://kartverket.atlassian.net/wiki/spaces/SKIPDOK/pages/422346824/Autentisering+mot+GCP+som+Kubernetes+SA",
@@ -530,163 +529,8 @@
           },
           "type": "object"
         },
-        "idporten": {
-          "description": "Settings for IDPorten integration with Digitaliseringsdirektoratet",
-          "properties": {
-            "accessTokenLifetime": {
-              "description": "AccessTokenLifetime is the lifetime in seconds for any issued access token from ID-porten.\n\nIf unspecified, defaults to `3600` seconds (1 hour).",
-              "maximum": 3600,
-              "minimum": 1,
-              "type": "integer"
-            },
-            "clientName": {
-              "description": "The name of the Client as shown in Digitaliseringsdirektoratet's Samarbeidsportal\nMeant to be a human-readable name for separating clients in the portal.",
-              "type": "string"
-            },
-            "clientURI": {
-              "description": "ClientURI is the URL shown to the user at ID-porten when displaying a 'back' button or on errors.",
-              "pattern": "^(https:\\/\\/)|(http:\\/\\/localhost\\:).+$",
-              "type": "string"
-            },
-            "enabled": {
-              "description": "Whether to enable provisioning of an ID-porten client.\nIf enabled, an ID-porten client will be provisioned.",
-              "type": "boolean"
-            },
-            "frontchannelLogoutPath": {
-              "description": "FrontchannelLogoutPath is a valid path for your application where ID-porten sends a request to whenever the user has\ninitiated a logout elsewhere as part of a single logout (front channel logout) process.",
-              "pattern": "^\\/.*$",
-              "type": "string"
-            },
-            "integrationType": {
-              "description": "IntegrationType is used to make sensible choices for your client.\nWhich type of integration you choose will provide guidance on which scopes you can use with the client.\nA client can only have one integration type.\n\nNB! It is not possible to change the integration type after creation.",
-              "enum": [
-                "krr",
-                "idporten",
-                "api_klient"
-              ],
-              "type": "string"
-            },
-            "postLogoutRedirectPath": {
-              "description": "PostLogoutRedirectPath is a simpler verison of PostLogoutRedirectURIs\nthat will be appended to the ingress",
-              "pattern": "^\\/.*$",
-              "type": "string"
-            },
-            "postLogoutRedirectURIs": {
-              "description": "PostLogoutRedirectURIs are valid URIs that ID-porten will allow redirecting the end-user to after a single logout\nhas been initiated and performed by the application.",
-              "items": {
-                "pattern": "^(https:\\/\\/)|(http:\\/\\/localhost\\:).+$",
-                "type": "string"
-              },
-              "type": "array"
-            },
-            "redirectPath": {
-              "description": "RedirectPath is a valid path that ID-porten redirects back to after a successful authorization request.",
-              "pattern": "^\\/.*$",
-              "type": "string"
-            },
-            "requestAuthentication": {
-              "description": "RequestAuthentication specifies how incoming JWTs should be validated.",
-              "properties": {
-                "enabled": {
-                  "description": "Whether to enable JWT validation.\nIf enabled, incoming JWTs will be validated against the issuer specified in the app registration and the generated audience.",
-                  "type": "boolean"
-                },
-                "forwardJwt": {
-                  "default": true,
-                  "description": "If set to `true`, the original token will be kept for the upstream request. Defaults to `true`.",
-                  "type": "boolean"
-                },
-                "ignorePaths": {
-                  "description": "IgnorePaths specifies paths that do not require an authenticated JWT.\n\nThe specified paths must be a valid URI path. It has to start with '/' and cannot end with '/'.\nThe paths can also contain the wildcard operator '*', but only at the end.",
-                  "items": {
-                    "type": "string"
-                  },
-                  "maxItems": 50,
-                  "type": "array",
-                  "x-kubernetes-list-type": "set"
-                },
-                "outputClaimToHeaders": {
-                  "description": "This field specifies a list of operations to copy the claim to HTTP headers on a successfully verified token.\nThe header specified in each operation in the list must be unique. Nested claims of type string/int/bool is supported as well.",
-                  "items": {
-                    "properties": {
-                      "claim": {
-                        "description": "The claim to be copied.",
-                        "maxLength": 128,
-                        "pattern": "^[a-zA-Z0-9-._]+$",
-                        "type": "string"
-                      },
-                      "header": {
-                        "description": "The name of the HTTP header for which the specified claim will be copied to.",
-                        "maxLength": 64,
-                        "pattern": "^[a-zA-Z0-9-]+$",
-                        "type": "string"
-                      }
-                    },
-                    "required": [
-                      "claim",
-                      "header"
-                    ],
-                    "type": "object"
-                  },
-                  "maxItems": 10,
-                  "type": "array"
-                },
-                "paths": {
-                  "description": "Paths specifies paths that require an authenticated JWT.\n\nThe specified paths must be a valid URI path. It has to start with '/' and cannot end with '/'.\nThe paths can also contain the wildcard operator '*', but only at the end.",
-                  "items": {
-                    "type": "string"
-                  },
-                  "maxItems": 50,
-                  "type": "array",
-                  "x-kubernetes-list-type": "set"
-                },
-                "secretName": {
-                  "description": "The name of the Kubernetes Secret containing OAuth2 credentials.\n\nIf omitted, the associated client registration in the application manifest is used for JWT validation.",
-                  "type": "string"
-                },
-                "tokenLocation": {
-                  "description": "Where to find the JWT in the incoming request\n\nAn enum value of `header` means that the JWT is present in the `Authorization` header as a `Bearer` token.\nAn enum value of `cookie` means that the JWT is present as a cookie called `BearerToken`.\n\nIf omitted, its default value depends on the provider type:\n  Defaults to \"cookie\" for providers supporting user login (e.g. IDPorten).\n  Defaults to \"header\" for providers not supporting user login (e.g. Maskinporten).",
-                  "enum": [
-                    "header",
-                    "cookie"
-                  ],
-                  "type": "string"
-                }
-              },
-              "required": [
-                "enabled"
-              ],
-              "type": "object"
-            },
-            "scopes": {
-              "description": "Register different oauth2 Scopes on your client.\nYou will not be able to add a scope to your client that conflicts with the client's IntegrationType.\nFor example, you can not add a scope that is limited to the IntegrationType `krr` of IntegrationType `idporten`, and vice versa.\n\nDefault for IntegrationType `krr` = (\"krr:global/kontaktinformasjon.read\", \"krr:global/digitalpost.read\")\nDefault for IntegrationType `idporten` = (\"openid\", \"profile\")\nIntegrationType `api_klient` have no Default, checkout Digdir documentation.",
-              "items": {
-                "type": "string"
-              },
-              "type": "array"
-            },
-            "sessionLifetime": {
-              "description": "SessionLifetime is the maximum lifetime in seconds for any given user's session in your application.\nThe timeout starts whenever the user is redirected from the `authorization_endpoint` at ID-porten.\n\nIf unspecified, defaults to `7200` seconds (2 hours).\nNote: Attempting to refresh the user's `access_token` beyond this timeout will yield an error.",
-              "maximum": 7200,
-              "minimum": 3600,
-              "type": "integer"
-            }
-          },
-          "required": [
-            "enabled"
-          ],
-          "type": "object"
-        },
         "image": {
-          "description": "The image the application will run. This image will be added to a Deployment resource",
           "type": "string"
-        },
-        "ingresses": {
-          "description": "Any external hostnames that route to this application. Using a skip.statkart.no-address\nwill make the application reachable for kartverket-clients (internal), other addresses\nmake the app reachable on the internet. Note that other addresses than skip.statkart.no\n(also known as pretty hostnames) requires additional DNS setup.\nThe below hostnames will also have TLS certificates issued and be reachable on both\nHTTP and HTTPS.\n\nIngresses must be lowercase, contain no spaces, be a non-empty string, and have a hostname/domain separated by a period\nThey can optionally be suffixed with a plus and name of a custom TLS secret located in the istio-gateways namespace.\nE.g. \"foo.atkv3-dev.kartverket-intern.cloud+env-wildcard-cert\"",
-          "items": {
-            "type": "string"
-          },
-          "type": "array"
         },
         "istioSettings": {
           "default": {
@@ -700,66 +544,6 @@
           },
           "description": "IstioSettings are used to configure istio specific resources such as telemetry. Currently, adjusting sampling\ninterval for tracing is the only supported option.\nBy default, tracing is enabled with a random sampling percentage of 10%.",
           "properties": {
-            "retries": {
-              "description": "Retries is configurable automatic retries for requests towards the application.\nBy default requests falling under: \"connect-failure,refused-stream,unavailable,cancelled\" will be retried.",
-              "properties": {
-                "attempts": {
-                  "description": "Attempts is the number of retries to be allowed for a given request before giving up. The interval between retries will be determined automatically (25ms+).\nDefault is 2",
-                  "format": "int32",
-                  "minimum": 1,
-                  "type": "integer"
-                },
-                "perTryTimeout": {
-                  "description": "PerTryTimeout is the timeout per attempt for a given request, including the initial call and any retries. Format: 1h/1m/1s/1ms. MUST be >=1ms.\nDefault: no timeout",
-                  "format": "duration",
-                  "type": "string"
-                },
-                "retryOnHttpResponseCodes": {
-                  "description": "RetryOnHttpResponseCodes HTTP response codes that should trigger a retry. A typical value is [503].\nYou may also use 5xx and retriable-4xx (only 409).\nmixed types are allowed such as [503, \"retriable-4xx\"]",
-                  "items": {
-                    "anyOf": [
-                      {
-                        "type": "integer"
-                      },
-                      {
-                        "type": "string"
-                      }
-                    ],
-                    "enum": [
-                      "500",
-                      500,
-                      "501",
-                      501,
-                      "502",
-                      502,
-                      "503",
-                      503,
-                      "504",
-                      504,
-                      "505",
-                      505,
-                      "506",
-                      506,
-                      "507",
-                      507,
-                      "508",
-                      508,
-                      "510",
-                      510,
-                      "511",
-                      511,
-                      "409",
-                      409,
-                      "retriable-4xx",
-                      "5xx"
-                    ],
-                    "x-kubernetes-int-or-string": true
-                  },
-                  "type": "array"
-                }
-              },
-              "type": "object"
-            },
             "telemetry": {
               "default": {
                 "tracing": [
@@ -798,15 +582,40 @@
           },
           "type": "object"
         },
+        "job": {
+          "description": "Settings for the actual Job. If you use a scheduled job, the settings in here will also specify the template of the job.",
+          "properties": {
+            "activeDeadlineSeconds": {
+              "description": "ActiveDeadlineSeconds denotes a duration in seconds started from when the job is first active. If the deadline is reached during the job's workload\nthe job and its Pods are terminated. If the job is suspended using the Suspend field, this timer is stopped and reset when unsuspended.",
+              "format": "int64",
+              "type": "integer"
+            },
+            "backoffLimit": {
+              "description": "Specifies the number of retry attempts before determining the job as failed. Defaults to 6.",
+              "format": "int32",
+              "type": "integer"
+            },
+            "suspend": {
+              "description": "If set to true, this tells Kubernetes to suspend this Job till the field is set to false. If the Job is active while this field is set to false,\nall running Pods will be terminated.",
+              "type": "boolean"
+            },
+            "ttlSecondsAfterFinished": {
+              "description": "The number of seconds to wait before removing the Job after it has finished. If unset, Job will not be cleaned up.\nIt is recommended to set this to avoid clutter in your resource tree.",
+              "format": "int32",
+              "type": "integer"
+            }
+          },
+          "type": "object"
+        },
         "labels": {
           "additionalProperties": {
             "type": "string"
           },
-          "description": "Labels can be used if you want every resource created by your application to\nhave the same labels, including your application. This could for example be useful for\nmetrics, where a certain label and the corresponding resources liveliness can be combined.\nAny amount of labels can be added as wanted, and they will all cascade down to all resources.",
+          "description": "Labels can be used if you want every resource created by your SKIPJob to\nhave the same labels, including the Job/CronJob itself. This could for example be useful for\nmetrics, where a certain label and the corresponding resources liveliness can be combined.\nAny amount of labels can be added as wanted, and they will all cascade down to all resources.",
           "type": "object"
         },
         "liveness": {
-          "description": "Liveness probes define a resource that returns 200 OK when the app is running\nas intended. Returning a non-200 code will make kubernetes restart the app.\nLiveness is optional, but when provided, path and port are required\n\nSee Probe for structure definition.",
+          "description": "Probe\n\nType configuration for all types of Kubernetes probes.",
           "properties": {
             "failureThreshold": {
               "default": 3,
@@ -861,216 +670,8 @@
           ],
           "type": "object"
         },
-        "maskinporten": {
-          "description": "Settings for Maskinporten integration with Digitaliseringsdirektoratet",
-          "properties": {
-            "clientName": {
-              "description": "The name of the Client as shown in Digitaliseringsdirektoratet's Samarbeidsportal\nMeant to be a human-readable name for separating clients in the portal",
-              "type": "string"
-            },
-            "enabled": {
-              "description": "If enabled, provisions and configures a Maskinporten client with consumed scopes and/or Exposed scopes with DigDir.",
-              "type": "boolean"
-            },
-            "requestAuthentication": {
-              "description": "RequestAuthentication specifies how incoming JWTs should be validated.",
-              "properties": {
-                "enabled": {
-                  "description": "Whether to enable JWT validation.\nIf enabled, incoming JWTs will be validated against the issuer specified in the app registration and the generated audience.",
-                  "type": "boolean"
-                },
-                "forwardJwt": {
-                  "default": true,
-                  "description": "If set to `true`, the original token will be kept for the upstream request. Defaults to `true`.",
-                  "type": "boolean"
-                },
-                "ignorePaths": {
-                  "description": "IgnorePaths specifies paths that do not require an authenticated JWT.\n\nThe specified paths must be a valid URI path. It has to start with '/' and cannot end with '/'.\nThe paths can also contain the wildcard operator '*', but only at the end.",
-                  "items": {
-                    "type": "string"
-                  },
-                  "maxItems": 50,
-                  "type": "array",
-                  "x-kubernetes-list-type": "set"
-                },
-                "outputClaimToHeaders": {
-                  "description": "This field specifies a list of operations to copy the claim to HTTP headers on a successfully verified token.\nThe header specified in each operation in the list must be unique. Nested claims of type string/int/bool is supported as well.",
-                  "items": {
-                    "properties": {
-                      "claim": {
-                        "description": "The claim to be copied.",
-                        "maxLength": 128,
-                        "pattern": "^[a-zA-Z0-9-._]+$",
-                        "type": "string"
-                      },
-                      "header": {
-                        "description": "The name of the HTTP header for which the specified claim will be copied to.",
-                        "maxLength": 64,
-                        "pattern": "^[a-zA-Z0-9-]+$",
-                        "type": "string"
-                      }
-                    },
-                    "required": [
-                      "claim",
-                      "header"
-                    ],
-                    "type": "object"
-                  },
-                  "maxItems": 10,
-                  "type": "array"
-                },
-                "paths": {
-                  "description": "Paths specifies paths that require an authenticated JWT.\n\nThe specified paths must be a valid URI path. It has to start with '/' and cannot end with '/'.\nThe paths can also contain the wildcard operator '*', but only at the end.",
-                  "items": {
-                    "type": "string"
-                  },
-                  "maxItems": 50,
-                  "type": "array",
-                  "x-kubernetes-list-type": "set"
-                },
-                "secretName": {
-                  "description": "The name of the Kubernetes Secret containing OAuth2 credentials.\n\nIf omitted, the associated client registration in the application manifest is used for JWT validation.",
-                  "type": "string"
-                },
-                "tokenLocation": {
-                  "description": "Where to find the JWT in the incoming request\n\nAn enum value of `header` means that the JWT is present in the `Authorization` header as a `Bearer` token.\nAn enum value of `cookie` means that the JWT is present as a cookie called `BearerToken`.\n\nIf omitted, its default value depends on the provider type:\n  Defaults to \"cookie\" for providers supporting user login (e.g. IDPorten).\n  Defaults to \"header\" for providers not supporting user login (e.g. Maskinporten).",
-                  "enum": [
-                    "header",
-                    "cookie"
-                  ],
-                  "type": "string"
-                }
-              },
-              "required": [
-                "enabled"
-              ],
-              "type": "object"
-            },
-            "scopes": {
-              "description": "Schema to configure Maskinporten clients with consumed scopes and/or exposed scopes.",
-              "properties": {
-                "consumes": {
-                  "description": "This is the Schema for the consumes and exposes API.\n`consumes` is a list of scopes that your client can request access to.",
-                  "items": {
-                    "properties": {
-                      "name": {
-                        "description": "The scope consumed by the application to gain access to an external organization API.\nEnsure that the NAV organization has been granted access to the scope prior to requesting access.",
-                        "type": "string"
-                      }
-                    },
-                    "required": [
-                      "name"
-                    ],
-                    "type": "object"
-                  },
-                  "type": "array"
-                },
-                "exposes": {
-                  "description": "`exposes` is a list of scopes your application want to expose to other organization where access to the scope is based on organization number.",
-                  "items": {
-                    "properties": {
-                      "accessibleForAll": {
-                        "description": "Allow any organization to access the scope.",
-                        "type": "boolean"
-                      },
-                      "allowedIntegrations": {
-                        "description": "Whitelisting of integration's allowed.\nDefault is `maskinporten`",
-                        "items": {
-                          "type": "string"
-                        },
-                        "minItems": 1,
-                        "type": "array"
-                      },
-                      "atMaxAge": {
-                        "description": "Max time in seconds for a issued access_token.\nDefault is `30` sec.",
-                        "maximum": 680,
-                        "minimum": 30,
-                        "type": "integer"
-                      },
-                      "consumers": {
-                        "description": "External consumers granted access to this scope and able to request access_token.",
-                        "items": {
-                          "properties": {
-                            "name": {
-                              "description": "This is a describing field intended for clarity not used for any other purpose.",
-                              "type": "string"
-                            },
-                            "orgno": {
-                              "description": "The external business/organization number.",
-                              "pattern": "^\\d{9}$",
-                              "type": "string"
-                            }
-                          },
-                          "required": [
-                            "orgno"
-                          ],
-                          "type": "object"
-                        },
-                        "type": "array"
-                      },
-                      "delegationSource": {
-                        "description": "Delegation source for the scope. Default is empty, which means no delegation is allowed.",
-                        "enum": [
-                          "altinn"
-                        ],
-                        "type": "string"
-                      },
-                      "enabled": {
-                        "description": "If Enabled the configured scope is available to be used and consumed by organizations granted access.",
-                        "type": "boolean"
-                      },
-                      "name": {
-                        "description": "The actual subscope combined with `Product`.\nEnsure that `<Product><Name>` matches `Pattern`.",
-                        "pattern": "^([a-zæøå0-9]+\\/?)+(\\:[a-zæøå0-9]+)*[a-zæøå0-9]+(\\.[a-zæøå0-9]+)*$",
-                        "type": "string"
-                      },
-                      "product": {
-                        "description": "The product-area your application belongs to e.g. arbeid, helse ...\nThis will be included in the final scope `nav:<Product><Name>`.",
-                        "pattern": "^[a-z0-9]+$",
-                        "type": "string"
-                      },
-                      "separator": {
-                        "description": "Separator is the character that separates `product` and `name` in the final scope:\n`scope := <prefix>:<product><separator><name>`\nThis overrides the default separator.\nThe default separator is `:`. If `name` contains `/`, the default separator is instead `/`.",
-                        "maxLength": 1,
-                        "minLength": 1,
-                        "pattern": "^[\\/:.]$",
-                        "type": "string"
-                      },
-                      "visibility": {
-                        "description": "Visibility controls the scope's visibility.\nPublic scopes are visible for everyone.\nPrivate scopes are only visible for the organization that owns the scope as well as\norganizations that have been granted consumer access.",
-                        "enum": [
-                          "private",
-                          "public"
-                        ],
-                        "type": "string"
-                      }
-                    },
-                    "required": [
-                      "enabled",
-                      "name",
-                      "product"
-                    ],
-                    "type": "object",
-                    "x-kubernetes-validations": [
-                      {
-                        "message": "scopes.exposes[].separator must be set to \"/\" when scopes.exposes[].delegationSource is set",
-                        "rule": "!has(self.delegationSource) || (has(self.separator) && self.separator == \"/\")"
-                      }
-                    ]
-                  },
-                  "type": "array"
-                }
-              },
-              "type": "object"
-            }
-          },
-          "required": [
-            "enabled"
-          ],
-          "type": "object"
-        },
         "podSettings": {
-          "description": "PodSettings are used to apply specific settings to the Pod Template used by Skiperator to create Deployments. This allows you to set\nthings like annotations on the Pod to change the behaviour of sidecars, and set relevant Pod options such as TerminationGracePeriodSeconds.",
+          "description": "PodSettings",
           "properties": {
             "annotations": {
               "additionalProperties": {
@@ -1093,13 +694,8 @@
           },
           "type": "object"
         },
-        "port": {
-          "description": "The port the deployment exposes",
-          "type": "integer"
-        },
         "priority": {
           "default": "medium",
-          "description": "An optional priority. Supported values are 'low', 'medium' and 'high'.\nThe default value is 'medium'.\n\nMost workloads should not have to specify this field. If you think you\ndo, please consult with SKIP beforehand.",
           "enum": [
             "low",
             "medium",
@@ -1108,7 +704,7 @@
           "type": "string"
         },
         "prometheus": {
-          "description": "Optional settings for how Prometheus compatible metrics should be scraped.",
+          "description": "Prometheus settings for pod running in job. Fields are identical to Application and if set,\na podmonitoring object is created.",
           "properties": {
             "allowAllMetrics": {
               "default": false,
@@ -1154,7 +750,7 @@
           "type": "object"
         },
         "readiness": {
-          "description": "Readiness probes define a resource that returns 200 OK when the app is running\nas intended. Kubernetes will wait until the resource returns 200 OK before\nmarking the pod as Running and progressing with the deployment strategy.\nReadiness is optional, but when provided, path and port are required",
+          "description": "Probe\n\nType configuration for all types of Kubernetes probes.",
           "properties": {
             "failureThreshold": {
               "default": 3,
@@ -1209,27 +805,8 @@
           ],
           "type": "object"
         },
-        "redirectToHTTPS": {
-          "default": true,
-          "description": "Controls whether the application will automatically redirect all HTTP calls to HTTPS via the istio VirtualService.\nThis redirect does not happen on the route /.well-known/acme-challenge/, as the ACME challenge can only be done on port 80.",
-          "type": "boolean"
-        },
-        "replicas": {
-          "description": "The number of replicas can either be specified as a static number as follows:\n\n\treplicas: 2\n\nOr by specifying a range between min and max to enable HorizontalPodAutoscaling.\nThe default value for replicas is:\n\treplicas:\n\t\tmin: 2\n\t\tmax: 5\n\t\ttargetCpuUtilization: 80\n     targetMemoryUtilization: 80\nUsing autoscaling is the recommended configuration for replicas.",
-          "x-kubernetes-preserve-unknown-fields": true
-        },
-        "resourceLabels": {
-          "additionalProperties": {
-            "additionalProperties": {
-              "type": "string"
-            },
-            "type": "object"
-          },
-          "description": "ResourceLabels can be used if you want to add a label to a specific resources created by\nthe application. One such label could for example be set on a Deployment, such that\nthe deployment avoids certain rules from Gatekeeper, or similar. Any amount of labels may be added per ResourceLabels item.",
-          "type": "object"
-        },
         "resources": {
-          "description": "ResourceRequirements to apply to the deployment. It's common to set some of these to\nprevent the app from swelling in resource usage and consuming all the\nresources of other apps on the cluster.",
+          "description": "ResourceRequirements\n\nA simplified version of the Kubernetes native ResourceRequirement field, in which only Limits and Requests are present.\nFor the units used for resources, see https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/#resource-units-in-kubernetes",
           "properties": {
             "limits": {
               "additionalProperties": {
@@ -1266,8 +843,17 @@
           },
           "type": "object"
         },
+        "restartPolicy": {
+          "default": "Never",
+          "description": "RestartPolicy describes how the container should be restarted.\nOnly one of the following restart policies may be specified.\nIf none of the following policies is specified, the default one\nis RestartPolicyAlways.",
+          "enum": [
+            "OnFailure",
+            "Never"
+          ],
+          "type": "string"
+        },
         "startup": {
-          "description": "Kubernetes uses startup probes to know when a container application has started.\nIf such a probe is configured, it disables liveness and readiness checks until it\nsucceeds, making sure those probes don't interfere with the application startup.\nThis can be used to adopt liveness checks on slow starting containers, avoiding them\ngetting killed by Kubernetes before they are up and running.\nStartup is optional, but when provided, path and port are required",
+          "description": "Probe\n\nType configuration for all types of Kubernetes probes.",
           "properties": {
             "failureThreshold": {
               "default": 3,
@@ -1322,31 +908,25 @@
           ],
           "type": "object"
         },
-        "strategy": {
-          "description": "Defines an alternative strategy for the Kubernetes deployment. This is useful when\nthe default strategy, RollingUpdate, is not usable. Setting type to\nRecreate will take down all the pods before starting new pods, whereas the\ndefault of RollingUpdate will try to start the new pods before taking down the\nold ones.\n\nValid values are: RollingUpdate, Recreate. Default is RollingUpdate",
-          "properties": {
-            "type": {
-              "default": "RollingUpdate",
-              "description": "Valid values are: RollingUpdate, Recreate. Default is RollingUpdate",
-              "enum": [
-                "RollingUpdate",
-                "Recreate"
-              ],
-              "type": "string"
-            }
-          },
-          "type": "object"
-        },
         "team": {
-          "description": "Team specifies the team who owns this particular app.\nUsually sourced from the namespace label.",
+          "description": "Team specifies the team who owns this particular SKIPJob.\nUsually sourced from the namespace label.",
           "type": "string"
         }
       },
       "required": [
-        "image",
-        "port"
+        "image"
       ],
-      "type": "object"
+      "type": "object",
+      "x-kubernetes-validations": [
+        {
+          "message": "After creation of a SKIPJob you may not remove the Cron field if it was previously present, or add it if it was previously omitted. Please delete the SKIPJob to change its nature from a one-off/scheduled job.",
+          "rule": "(has(oldSelf.cron) && has(self.cron)) || (!has(oldSelf.cron) && !has(self.cron))"
+        },
+        {
+          "message": "The container configuration is immutable for one-off jobs. Please delete your SKIPJob to change image, command, resources, networking, probes, env/files, or pod settings.",
+          "rule": "((!has(self.cron) && oldSelf.image == self.image && oldSelf.priority == self.priority && (has(oldSelf.command) == has(self.command)) && (!has(self.command) || oldSelf.command == self.command) && (has(oldSelf.resources) == has(self.resources)) && (!has(self.resources) || oldSelf.resources == self.resources) && (has(oldSelf.env) == has(self.env)) && (!has(self.env) || oldSelf.env == self.env) && (has(oldSelf.envFrom) == has(self.envFrom)) && (!has(self.envFrom) || oldSelf.envFrom == self.envFrom) && (has(oldSelf.filesFrom) == has(self.filesFrom)) && (!has(self.filesFrom) || oldSelf.filesFrom == self.filesFrom) && (has(oldSelf.additionalPorts) == has(self.additionalPorts)) && (!has(self.additionalPorts) || oldSelf.additionalPorts == self.additionalPorts) && (has(oldSelf.liveness) == has(self.liveness)) && (!has(self.liveness) || oldSelf.liveness == self.liveness) && (has(oldSelf.readiness) == has(self.readiness)) && (!has(self.readiness) || oldSelf.readiness == self.readiness) && (has(oldSelf.startup) == has(self.startup)) && (!has(self.startup) || oldSelf.startup == self.startup) && (has(oldSelf.accessPolicy) == has(self.accessPolicy)) && (!has(self.accessPolicy) || oldSelf.accessPolicy == self.accessPolicy) && (has(oldSelf.gcp) == has(self.gcp)) && (!has(self.gcp) || oldSelf.gcp == self.gcp) && (has(oldSelf.restartPolicy) == has(self.restartPolicy)) && (!has(self.restartPolicy) || oldSelf.restartPolicy == self.restartPolicy) && (has(oldSelf.podSettings) == has(self.podSettings)) && (!has(self.podSettings) || oldSelf.podSettings == self.podSettings)) || has(self.cron))"
+        }
+      ]
     },
     "status": {
       "description": "SkiperatorStatus\n\nA status field shown on a Skiperator resource which contains information regarding deployment of the resource.",
@@ -1466,12 +1046,15 @@
       "type": "object"
     }
   },
+  "required": [
+    "spec"
+  ],
   "type": "object",
   "x-kubernetes-group-version-kind": [
     {
       "group": "skiperator.kartverket.no",
-      "kind": "Application",
-      "version": "v1alpha1"
+      "kind": "SKIPJob",
+      "version": "v1beta1"
     }
   ]
 }

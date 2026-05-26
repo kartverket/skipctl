@@ -25,7 +25,7 @@
           "x-kubernetes-list-type": "set"
         },
         "allowedAudiences": {
-          "description": "AllowedAudiences defines the allowed audience (`aud`) values in the JWT.\nAt least one of the listed audience values must be present in the token's `aud` claim for validation to succeed.\n\nThe normative behaviour for an OAuth / OIDC-compliant identity provider is to validate the presense of one or more client IDs as allowed audiences.",
+          "description": "AllowedAudiences defines the allowed audience (`aud`) values in the JWT.\nAt least one of the listed audience values must be present in the token's `aud` claim for validation to succeed.\n\nThe normative behaviour for an OAuth / OIDC-compliant identity provider is to validate the presence of one or more client IDs as allowed audiences.",
           "items": {
             "description": "AllowedAudience defines an audience that is validated against the `aud` claim in the JWT.\nAn audience can be defined as a static value or retrieved from a kubernetes resource.",
             "properties": {
@@ -103,15 +103,12 @@
               {
                 "message": "one audience cannot be defined from both 'value' and 'valueFrom'",
                 "rule": "!(has(self.value) && has(self.valueFrom))"
+              },
+              {
+                "message": "field 'value' cannot be empty string",
+                "rule": "!has(self.value) || size(self.value) > 0"
               }
             ]
-          },
-          "type": "array"
-        },
-        "audience": {
-          "description": "Deprecated: use .allowedAudiences instead.\nAudience defines the accepted audience (`aud`) values in the JWT.\nAt least one of the listed audience values must be present in the token's `aud` claim for validation to succeed.",
-          "items": {
-            "type": "string"
           },
           "type": "array"
         },
@@ -127,8 +124,20 @@
               "methods": {
                 "description": "Methods specifies HTTP methods that applies for the defined paths.\nIf omitted, all methods are permitted.\n\nAllowed methods:\n- GET\n- POST\n- PUT\n- PATCH\n- DELETE\n- HEAD\n- OPTIONS\n- TRACE\n- CONNECT",
                 "items": {
+                  "enum": [
+                    "GET",
+                    "POST",
+                    "PUT",
+                    "PATCH",
+                    "DELETE",
+                    "HEAD",
+                    "OPTIONS",
+                    "TRACE",
+                    "CONNECT"
+                  ],
                   "type": "string"
                 },
+                "maxItems": 9,
                 "type": "array",
                 "x-kubernetes-list-type": "set"
               },
@@ -141,7 +150,7 @@
                 "x-kubernetes-list-type": "set"
               },
               "when": {
-                "description": "When defines additional conditions based on JWT claims that must be met.\n\nThe request is permitted if at least one of the specified conditions is satisfied.",
+                "description": "When defines additional conditions based on JWT claims that must be met.\n\nThe request is permitted if all the specified conditions are satisfied.",
                 "items": {
                   "description": "Condition represents a rule that evaluates JWT claims to determine access control.\n\nThis type allows defining conditions that check whether a specific claim in\nthe JWT token contains one of the expected values.\n\nIf multiple conditions are specified, all must be met (AND logic) for the request to be allowed.",
                   "properties": {
@@ -185,8 +194,15 @@
               "additionalProperties": {
                 "type": "string"
               },
-              "description": "LoginParams specifies a map of query parameters and their values which will be added in the authorize request made towards the configured identity provider.",
-              "type": "object"
+              "description": "LoginParams specifies a map of query parameters and their values which will be added in the authorize request made towards the configured identity provider.\nKeys must be valid OAuth parameter names (letters, digits, and underscores).",
+              "maxProperties": 32,
+              "type": "object",
+              "x-kubernetes-validations": [
+                {
+                  "message": "loginParams keys must match ^[a-zA-Z_][a-zA-Z0-9_]*$",
+                  "rule": "self.all(k, k.matches('^[a-zA-Z_][a-zA-Z0-9_]*$'))"
+                }
+              ]
             },
             "loginPath": {
               "description": "LoginPath specifies a list of URI paths that should trigger the auto-login behavior.\nWhen a request matches any of these paths, the user will be redirected to log in if not already authenticated.",
@@ -219,6 +235,47 @@
           ],
           "type": "object"
         },
+        "baselineAuth": {
+          "description": "BaselineAuth defines additional JWT authentication, beyond standard JWT verification.\nBaseline authentication applies to all combinations of paths and methods not explicitly ignored by .ignoreAuthRules.",
+          "properties": {
+            "claims": {
+              "description": "Claims defines conditions based on JWT claims that must be met.\nThese conditions are applied to all paths and methods not explicitly ignored in .ignoreAuthRules,\nincluding those covered by other specified AuthRules.\n\nThe request is permitted if all the specified conditions are satisfied.",
+              "items": {
+                "description": "Condition represents a rule that evaluates JWT claims to determine access control.\n\nThis type allows defining conditions that check whether a specific claim in\nthe JWT token contains one of the expected values.\n\nIf multiple conditions are specified, all must be met (AND logic) for the request to be allowed.",
+                "properties": {
+                  "claim": {
+                    "description": "Claim specifies the name of the JWT claim to check.",
+                    "type": "string"
+                  },
+                  "values": {
+                    "description": "Values specifies a list of allowed values for the claim.\nIf the claim in the JWT contains any of these values (OR logic), the condition is met.",
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array",
+                    "x-kubernetes-list-type": "set"
+                  }
+                },
+                "required": [
+                  "claim",
+                  "values"
+                ],
+                "type": "object"
+              },
+              "type": "array"
+            }
+          },
+          "required": [
+            "claims"
+          ],
+          "type": "object",
+          "x-kubernetes-validations": [
+            {
+              "message": "claims must be a non-empty list",
+              "rule": "has(self.claims) && self.claims.size() > 0"
+            }
+          ]
+        },
         "enabled": {
           "description": "Whether to enable JWT validation.\nIf enabled, incoming JWTs will be validated against the issuer specified in the app registration and the generated audience.",
           "type": "boolean"
@@ -235,8 +292,20 @@
               "methods": {
                 "description": "Methods specifies HTTP methods that applies for the defined paths.\nIf omitted, all methods are permitted.\n\nAllowed methods:\n- GET\n- POST\n- PUT\n- PATCH\n- DELETE\n- HEAD\n- OPTIONS\n- TRACE\n- CONNECT",
                 "items": {
+                  "enum": [
+                    "GET",
+                    "POST",
+                    "PUT",
+                    "PATCH",
+                    "DELETE",
+                    "HEAD",
+                    "OPTIONS",
+                    "TRACE",
+                    "CONNECT"
+                  ],
                   "type": "string"
                 },
+                "maxItems": 9,
                 "type": "array",
                 "x-kubernetes-list-type": "set"
               },
@@ -347,6 +416,10 @@
         {
           "message": "acceptedResources must be non-empty when using Ansattporten or ID-Porten",
           "rule": "!(self.wellKnownURI in ['https://test.idporten.no/.well-known/openid-configuration', 'https://idporten.no/.well-known/openid-configuration', 'https://test.ansattporten.no/.well-known/openid-configuration', 'https://ansattporten.no/.well-known/openid-configuration']) || (has(self.acceptedResources) && self.acceptedResources.size() > 0)"
+        },
+        {
+          "message": "oAuthCredentials must be set when autoLogin is enabled",
+          "rule": "!has(self.autoLogin) || !self.autoLogin.enabled || has(self.oAuthCredentials)"
         }
       ]
     },
