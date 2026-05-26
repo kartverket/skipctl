@@ -8,4 +8,4 @@ breaking:
   use:
     - FILE
 deps:
-  - buf.build/protocolbuffers/wellknowntypes:v32.0
+  - buf.build/protocolbuffers/wellknowntypes:v35.0
