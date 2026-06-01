@@ -23,6 +23,190 @@
           "pattern": "^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$",
           "type": "string"
         },
+        "entraid": {
+          "description": "EntraID specifies whether to configure the Entra ID API consumer capability for an application referred to by `applicationRef`.\nThe configuration can either be provided inline via the `client` field,\nby referencing an existing AzureAdApplication resource via the `clientRef` field,\nor by sourcing credentials from existing Kubernetes secrets via the `secretRef` field.",
+          "properties": {
+            "client": {
+              "description": "Client defines the Entra ID client configuration inline.\nUse this when you want to configure the client directly.",
+              "properties": {
+                "groups": {
+                  "description": "Groups is a list of Entra ID group IDs to be emitted in the `groups` claim in tokens issued by Entra ID. This\nalso assigns groups to the application for access control. Only direct members of the groups are granted access.",
+                  "items": {
+                    "properties": {
+                      "id": {
+                        "description": "ID is the actual `object ID` associated with the given group in Azure AD.",
+                        "type": "string"
+                      }
+                    },
+                    "type": "object"
+                  },
+                  "type": "array"
+                },
+                "logoutUrl": {
+                  "description": "LogoutUrl is the URL where Entra ID sends a request to have the application clear the user's session data. This\nis required if single sign-out should work correctly. Must start with 'https'",
+                  "type": "string"
+                },
+                "preAuthorizedApplications": {
+                  "description": "PreAuthorizedApplications is a list of Entra ID Applications that are authorized to perform client credential\nflow with this application as scope, or the on-behalf-of (OBO) flow.",
+                  "items": {
+                    "properties": {
+                      "application": {
+                        "description": "The application's name.",
+                        "type": "string"
+                      },
+                      "cluster": {
+                        "description": "The application's cluster. May be omitted if it should be in the same cluster as your application.",
+                        "type": "string"
+                      },
+                      "namespace": {
+                        "description": "The application's namespace. May be omitted if it should be in the same namespace as your application.",
+                        "type": "string"
+                      },
+                      "permissions": {
+                        "description": "Permissions contains a set of permissions that are granted to the given application.\nCurrently only applicable for Azure AD clients.",
+                        "properties": {
+                          "roles": {
+                            "description": "Roles is a set of custom permission roles that are granted to a given application.",
+                            "items": {
+                              "pattern": "^[a-z0-9-_./]+$",
+                              "type": "string"
+                            },
+                            "type": "array"
+                          },
+                          "scopes": {
+                            "description": "Scopes is a set of custom permission scopes that are granted to a given application.",
+                            "items": {
+                              "pattern": "^[a-z0-9-_./]+$",
+                              "type": "string"
+                            },
+                            "type": "array"
+                          }
+                        },
+                        "type": "object"
+                      }
+                    },
+                    "required": [
+                      "application"
+                    ],
+                    "type": "object"
+                  },
+                  "type": "array"
+                },
+                "replyUrls": {
+                  "description": "ReplyUrls is a list of authorized redirect URIs Entra ID may use when performing authorization code flow. All\nproduction URLs must use the 'https' scheme.",
+                  "items": {
+                    "description": "AzureAdReplyUrl defines the valid reply URLs for callbacks after OIDC flows for this application",
+                    "properties": {
+                      "url": {
+                        "pattern": "^https?:\\/\\/.+$",
+                        "type": "string"
+                      }
+                    },
+                    "type": "object"
+                  },
+                  "type": "array"
+                },
+                "secretName": {
+                  "description": "SecretName is the name of the resulting Secret resource to be created. If not set, the secret will be given a\na name based on the name of the SecurityConfig resource.",
+                  "type": "string"
+                },
+                "singlePageApplication": {
+                  "description": "SinglePageApplication denotes whether this Entra ID application should be registered as a single-page-application\nfor usage in client-side applications without access to secrets.",
+                  "type": "boolean"
+                }
+              },
+              "type": "object"
+            },
+            "clientRef": {
+              "description": "ClientRef references an existing AzureAdApplication by name.\nUse this when a AzureAdApplication exists, and you want to reference it.",
+              "properties": {
+                "name": {
+                  "description": "Name of the referenced resource.",
+                  "maxLength": 253,
+                  "minLength": 1,
+                  "pattern": "^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "name"
+              ],
+              "type": "object"
+            },
+            "enabled": {
+              "description": "Enabled indicates whether Entra ID should be configured for the application.",
+              "type": "boolean"
+            },
+            "secretRef": {
+              "description": "SecretRef sources the client registration credentials from one or more existing Kubernetes secrets.\nUse this when you have an existing OAuth client registered outside the SecurityConfig CRD\nand AzureAdApplication CRD (e.g. manually registered at Entra).",
+              "properties": {
+                "clientID": {
+                  "description": "ClientID references the secret key containing the Maskinporten client ID (MASKINPORTEN_CLIENT_ID).",
+                  "properties": {
+                    "key": {
+                      "description": "Key is the key within the secret whose value should be used.",
+                      "maxLength": 63,
+                      "minLength": 1,
+                      "pattern": "^[a-zA-Z0-9]([-._a-zA-Z0-9]*[a-zA-Z0-9])?$",
+                      "type": "string"
+                    },
+                    "name": {
+                      "description": "Name is the name of the Kubernetes secret.",
+                      "maxLength": 253,
+                      "minLength": 1,
+                      "pattern": "^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "key",
+                    "name"
+                  ],
+                  "type": "object"
+                },
+                "clientJWK": {
+                  "description": "ClientJWK references the secret key containing the Maskinporten client JWK (MASKINPORTEN_CLIENT_JWK).",
+                  "properties": {
+                    "key": {
+                      "description": "Key is the key within the secret whose value should be used.",
+                      "maxLength": 63,
+                      "minLength": 1,
+                      "pattern": "^[a-zA-Z0-9]([-._a-zA-Z0-9]*[a-zA-Z0-9])?$",
+                      "type": "string"
+                    },
+                    "name": {
+                      "description": "Name is the name of the Kubernetes secret.",
+                      "maxLength": 253,
+                      "minLength": 1,
+                      "pattern": "^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "key",
+                    "name"
+                  ],
+                  "type": "object"
+                }
+              },
+              "required": [
+                "clientID",
+                "clientJWK"
+              ],
+              "type": "object"
+            }
+          },
+          "required": [
+            "enabled"
+          ],
+          "type": "object",
+          "x-kubernetes-validations": [
+            {
+              "message": "At most one of client, clientRef, or secretRef may be specified.",
+              "rule": "[has(self.client), has(self.clientRef), has(self.secretRef)].filter(x, x).size() <= 1"
+            }
+          ]
+        },
         "maskinporten": {
           "description": "Maskinporten specifies whether to configure the maskinporten API consumer capability for an application referred to by `applicationRef`.\nThe configuration can either be provided inline via the `client` field,\nby referencing an existing MaskinportenClient resource via the `clientRef` field,\nor by sourcing credentials from existing Kubernetes secrets via the `secretRef` field.",
           "properties": {
@@ -69,10 +253,10 @@
               "type": "object"
             },
             "clientRef": {
-              "description": "ClientRef references an existing MaskinportenClient by name.\nUse this when a MaskinportenClient exists, and you want to reference it.",
+              "description": "ClientRef references an existing MaskinportenClient by name.\nUse this when a client registration resource exists, and you want to reference it.",
               "properties": {
                 "name": {
-                  "description": "Name of the referenced MaskinportenClient.",
+                  "description": "Name of the referenced resource.",
                   "maxLength": 253,
                   "minLength": 1,
                   "pattern": "^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$",
@@ -89,7 +273,7 @@
               "type": "boolean"
             },
             "secretRef": {
-              "description": "SecretRef sources the Maskinporten client credentials from one or more existing Kubernetes secrets.\nUse this when you have an existing OAuth client registered outside the SecurityConfig CRD\nand MaskinportenClient CRD (e.g. manually registered at DigDir).",
+              "description": "SecretRef sources the client registration client credentials from one or more existing Kubernetes secrets.\nUse this when you have an existing OAuth client registered outside the SecurityConfig CRD\nand MaskinportenClient CRD (e.g. manually registered at DigDir).",
               "properties": {
                 "clientID": {
                   "description": "ClientID references the secret key containing the Maskinporten client ID (MASKINPORTEN_CLIENT_ID).",
@@ -324,6 +508,9 @@
             "type": "object"
           },
           "type": "array"
+        },
+        "entraIdSecretName": {
+          "type": "string"
         },
         "jwkerSecretName": {
           "type": "string"
