@@ -139,7 +139,11 @@ func RawLogger() *slog.Logger {
 }
 
 func LogValidationErrors(filename string, validationErrors []validator.ValidationError, err error, outputJSON bool) {
-	if rawLogger == nil {
+	LogValidationErrorsTo(rawLogger, filename, validationErrors, err, outputJSON)
+}
+
+func LogValidationErrorsTo(l *slog.Logger, filename string, validationErrors []validator.ValidationError, err error, outputJSON bool) {
+	if l == nil {
 		panic("logger not initialized")
 	}
 
@@ -150,29 +154,29 @@ func LogValidationErrors(filename string, validationErrors []validator.Validatio
 	if outputJSON {
 		// JSON mode: only log structured errors
 		if err != nil {
-			logger.Error("validation error", "file", filename, "error", err.Error())
+			l.Error("validation error", "file", filename, "error", err.Error())
 		}
 		if len(validationErrors) > 0 {
 			errorMsgs := make([]string, len(validationErrors))
 			for i, ve := range validationErrors {
 				errorMsgs[i] = fmt.Sprintf("{%s %s}", ve.Path, strings.Trim(ve.Error(), "{}"))
 			}
-			logger.Error("validation errors", "file", filename, "errors", errorMsgs)
+			l.Error("validation errors", "file", filename, "errors", errorMsgs)
 		}
 	} else {
 		// Text mode: human-readable formatting
-		rawLogger.Error(
+		l.Error(
 			errStyle("ERROR:") + fmt.Sprintf(" file is invalid at %s", filename),
 		)
 
 		// Print each validation error
 		for _, ve := range validationErrors {
 			cleanedMsg := strings.Trim(ve.Error(), "{}") // remove outer braces
-			rawLogger.Error(fmt.Sprintf("  — %s: %s\n", ve.Path, cleanedMsg))
+			l.Error(fmt.Sprintf("  — %s: %s\n", ve.Path, cleanedMsg))
 		}
 
 		if err != nil {
-			rawLogger.Error(fmt.Sprintf("  — %s\n", strings.TrimSpace(err.Error())))
+			l.Error(fmt.Sprintf("  — %s\n", strings.TrimSpace(err.Error())))
 		}
 	}
 }

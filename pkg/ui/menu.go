@@ -18,14 +18,14 @@ func NewMenuView() tview.Primitive {
 		SetWrap(false).
 		SetDynamicColors(false)
 	list := tview.NewList().
-		AddItem("Port Probe", "Check if a TCP port is open", 'p', func() {
+		AddItem("Port Probe", "Check if a TCP port is open from a SKIP cluster", 'p', func() {
 			pages.SwitchToPage("probe")
 		}).
-		AddItem("Ping Host", "Check if a host is responsive", 'i', func() {
+		AddItem("Ping Host", "Check if a host is responsive from a SKIP cluster", 'i', func() {
 			pages.SwitchToPage("ping")
 		}).
-		AddItem("Validate Manifests", "Validate Kubernetes manifests", 'v', func() {
-			pages.SwitchToPage("validate")
+		AddItem("Manifests", "Validate and render SKIP Kubernetes manifests", 'm', func() {
+			pages.SwitchToPage("manifests")
 		}).
 		AddItem("Quit", "Exit the application", 'q', func() {
 			app.Stop()

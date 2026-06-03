@@ -51,12 +51,12 @@ func Run(discoveryHost, apiServerName string) error {
 	menuView := NewMenuView()
 	probeView := NewProbeView(servers, activeServer)
 	pingView := NewPingView(servers, activeServer)
-	validateView := NewValidateView()
+	manifestsView := NewManifestsView()
 
 	pages.AddPage("menu", menuView, true, true)
 	pages.AddPage("probe", probeView, true, false)
 	pages.AddPage("ping", pingView, true, false)
-	pages.AddPage("validate", validateView, true, false)
+	pages.AddPage("manifests", manifestsView, true, false)
 
 	flex := tview.NewFlex().
 		SetDirection(tview.FlexRow).

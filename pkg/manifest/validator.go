@@ -1,6 +1,8 @@
 package manifest
 
 import (
+	"log/slog"
+
 	"github.com/google/go-jsonnet"
 	"github.com/kartverket/skipctl/pkg/constants"
 	"github.com/kartverket/skipctl/pkg/logging"
@@ -10,6 +12,7 @@ type Validator struct {
 	k8s        *K8sValidator
 	res        *ValidateResult
 	outputJSON bool
+	log        *slog.Logger
 }
 
 func NewValidator(tempDir string, outputJSON bool) *Validator {
@@ -17,7 +20,13 @@ func NewValidator(tempDir string, outputJSON bool) *Validator {
 		k8s:        NewK8sValidator(tempDir),
 		res:        &ValidateResult{},
 		outputJSON: outputJSON,
+		log:        logging.RawLogger(),
 	}
+}
+
+func (v *Validator) WithLogger(l *slog.Logger) *Validator {
+	v.log = l
+	return v
 }
 
 func (v *Validator) ValidateManifest(file *Document) error {
@@ -44,21 +53,21 @@ func (v *Validator) validateJsonnet(file *Document) error {
 	node, err := jsonnet.SnippetToAST(file.Name, file.Content)
 	if err != nil {
 		v.res.ErrorCount++
-		logging.LogValidationErrors(file.Name, nil, err, v.outputJSON)
+		logging.LogValidationErrorsTo(v.log, file.Name, nil, err, v.outputJSON)
 		return err
 	}
 
 	content, err := vm.Evaluate(node)
 	if err != nil {
 		v.res.ErrorCount++
-		logging.LogValidationErrors(file.Name, nil, err, v.outputJSON)
+		logging.LogValidationErrorsTo(v.log, file.Name, nil, err, v.outputJSON)
 		return err
 	}
 	res, results, k8err := v.k8s.validateK8sSchema(file.Name, content)
 
 	// Log validation errors for each result
 	for _, result := range results {
-		logging.LogValidationErrors(file.Name, result.ValidationErrors, result.Err, v.outputJSON)
+		logging.LogValidationErrorsTo(v.log, file.Name, result.ValidationErrors, result.Err, v.outputJSON)
 	}
 
 	v.countValidateRes(&res)
@@ -70,7 +79,7 @@ func (v *Validator) validateYaml(d *Document) error {
 
 	// Log validation errors for each result
 	for _, r := range results {
-		logging.LogValidationErrors(d.Name, r.ValidationErrors, r.Err, v.outputJSON)
+		logging.LogValidationErrorsTo(v.log, d.Name, r.ValidationErrors, r.Err, v.outputJSON)
 	}
 
 	v.countValidateRes(&result)
