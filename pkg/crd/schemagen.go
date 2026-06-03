@@ -21,7 +21,7 @@ package crd
 
 //go:generate crdjson -outdir=./schemas -url=https://github.com/cert-manager/cert-manager/releases/download/v1.20.2/cert-manager.crds.yaml
 
-//go:generate crdjson -outdir=./schemas -one-per-kind -url=https://github.com/external-secrets/external-secrets/releases/download/v2.4.1/external-secrets.yaml
+//go:generate crdjson -outdir=./schemas -one-per-kind -url=https://github.com/external-secrets/external-secrets/releases/download/v2.5.0/external-secrets.yaml
 
 //go:generate crdjson -outdir=./schemas -url=https://github.com/cloudnative-pg/cloudnative-pg/releases/download/v1.27.1/cnpg-1.27.1.yaml
 
