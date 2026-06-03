@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/gdamore/tcell/v2"
 	"github.com/kartverket/skipctl/pkg/constants"
 	"github.com/kartverket/skipctl/pkg/discovery"
 	"github.com/kartverket/skipctl/pkg/test"
@@ -87,6 +88,45 @@ func NewPingView(servers []discovery.APIServer, activeServer *discovery.APIServe
 	})
 
 	form.SetBorder(true).SetTitle("Ping Tool").SetTitleAlign(tview.AlignLeft)
+
+	// Focus management
+	focusList := []tview.Primitive{form, results}
+	currentFocus := 0
+
+	switchFocus := func() {
+		currentFocus = (currentFocus + 1) % len(focusList)
+		app.SetFocus(focusList[currentFocus])
+	}
+
+	form.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
+		if event.Key() == tcell.KeyCtrlN {
+			switchFocus()
+			return nil
+		}
+		return event
+	})
+
+	results.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
+		if event.Key() == tcell.KeyTab || event.Key() == tcell.KeyCtrlN {
+			switchFocus()
+			return nil
+		}
+		return event
+	})
+
+	// Add visual feedback for focus
+	form.SetFocusFunc(func() {
+		form.SetBorderColor(tcell.ColorYellow)
+	})
+	form.SetBlurFunc(func() {
+		form.SetBorderColor(tcell.ColorWhite)
+	})
+	results.SetFocusFunc(func() {
+		results.SetBorderColor(tcell.ColorYellow)
+	})
+	results.SetBlurFunc(func() {
+		results.SetBorderColor(tcell.ColorWhite)
+	})
 
 	flex.AddItem(form, 0, 1, true)
 	flex.AddItem(results, 0, 2, false)

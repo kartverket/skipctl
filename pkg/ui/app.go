@@ -40,12 +40,12 @@ func Run(discoveryHost, apiServerName string) error {
 	header = tview.NewTextView().
 		SetDynamicColors(true).
 		SetTextAlign(tview.AlignCenter).
-		SetText("[yellow]SKIP Dashboard[white]")
+		SetText("[yellow]SKIPCTL[white]")
 
 	footer = tview.NewTextView().
 		SetDynamicColors(true).
 		SetTextAlign(tview.AlignCenter).
-		SetText("[darkgray]m: Menu | q: Quit[white]")
+		SetText("[darkgray]Esc: Menu | Ctrl-C: Quit[white]")
 
 	// Initialize Views
 	menuView := NewMenuView()
@@ -65,11 +65,11 @@ func Run(discoveryHost, apiServerName string) error {
 		AddItem(footer, 1, 1, false)
 
 	app.SetInputCapture(func(event *tcell.EventKey) *tcell.EventKey {
-		if event.Rune() == 'q' {
+		if event.Key() == tcell.KeyCtrlC {
 			app.Stop()
 			return nil
 		}
-		if event.Rune() == 'm' {
+		if event.Key() == tcell.KeyEsc {
 			pages.SwitchToPage("menu")
 			return nil
 		}
