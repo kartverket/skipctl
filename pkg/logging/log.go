@@ -72,6 +72,10 @@ func init() {
 }
 
 func ConfigureLogging(mode string, isDebug bool) *slog.Logger {
+	return ConfigureLoggingWithWriter(mode, isDebug, os.Stdout, os.Stderr)
+}
+
+func ConfigureLoggingWithWriter(mode string, isDebug bool, stdout, stderr io.Writer) *slog.Logger {
 	parsedMode, err := parseOutputMode(mode)
 	if err != nil {
 		panic(err)
@@ -97,7 +101,7 @@ func ConfigureLogging(mode string, isDebug bool) *slog.Logger {
 		}
 	}
 
-	splitHandler := &splitHandler{stdout: newHandler(os.Stdout), stderr: newHandler(os.Stderr)}
+	splitHandler := &splitHandler{stdout: newHandler(stdout), stderr: newHandler(stderr)}
 	// slog-context outputs key-values found in the context to the log output
 	ctxHandler := slogcontext.NewHandler(splitHandler)
 
@@ -105,6 +109,11 @@ func ConfigureLogging(mode string, isDebug bool) *slog.Logger {
 	defer lock.Unlock()
 	logger = slog.New(ctxHandler)
 	return logger
+}
+
+func Mute() {
+	ConfigureLoggingWithWriter("json", false, io.Discard, io.Discard)
+	rawLogger = slog.New(&rawHandler{w: io.Discard})
 }
 
 func ForceStdoutContext(parent context.Context) context.Context {
