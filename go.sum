@@ -235,8 +235,8 @@ github.com/pkg/errors v0.9.1/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINE
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
 github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 h1:Jamvg5psRIccs7FGNTlIRMkT8wgtp5eCXdBlqhYGL6U=
 github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
-github.com/posthog/posthog-go v1.14.0 h1:pN0+v7kvKkykRQDf6E0KNYJvKqhJ+VzQGlfxYHfZMhs=
-github.com/posthog/posthog-go v1.14.0/go.mod h1:xsVOW9YImilUcazwPNEq4PJDqEZf2KeCS758zXjwkPg=
+github.com/posthog/posthog-go v1.15.0 h1:Fizkdct7zGg050hnYpxEiq/iD/OJO7tVaQE9Vyoh0q0=
+github.com/posthog/posthog-go v1.15.0/go.mod h1:xsVOW9YImilUcazwPNEq4PJDqEZf2KeCS758zXjwkPg=
 github.com/prometheus-community/pro-bing v0.8.0 h1:CEY/g1/AgERRDjxw5P32ikcOgmrSuXs7xon7ovx6mNc=
 github.com/prometheus-community/pro-bing v0.8.0/go.mod h1:Idyxz8raDO6TgkUN6ByiEGvWJNyQd40kN9ZUeho3lN0=
 github.com/prometheus/client_golang v1.23.2 h1:Je96obch5RDVy3FDMndoUsjAhG5Edi49h0RJWRi/o0o=
