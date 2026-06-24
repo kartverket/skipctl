@@ -1117,7 +1117,7 @@
                           "type": "object"
                         },
                         "tokenUrl": {
-                          "minLength": 1,
+                          "pattern": "^(http|https)://.+$",
                           "type": "string"
                         }
                       },

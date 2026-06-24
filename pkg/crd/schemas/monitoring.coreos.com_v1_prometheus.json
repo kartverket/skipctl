@@ -4069,6 +4069,12 @@
             "keepIdentifyingResourceAttributes": {
               "type": "boolean"
             },
+            "labelNamePreserveMultipleUnderscores": {
+              "type": "boolean"
+            },
+            "labelNameUnderscoreSanitization": {
+              "type": "boolean"
+            },
             "promoteAllResourceAttributes": {
               "type": "boolean"
             },
@@ -4707,7 +4713,7 @@
                     "type": "object"
                   },
                   "tokenUrl": {
-                    "minLength": 1,
+                    "pattern": "^(http|https)://.+$",
                     "type": "string"
                   }
                 },
@@ -4908,6 +4914,7 @@
                 "type": "object"
               },
               "url": {
+                "pattern": "^(http|https)://.+$",
                 "type": "string"
               }
             },
@@ -5379,7 +5386,7 @@
                     "type": "object"
                   },
                   "tokenUrl": {
-                    "minLength": 1,
+                    "pattern": "^(http|https)://.+$",
                     "type": "string"
                   }
                 },
@@ -7826,6 +7833,18 @@
             "outOfOrderTimeWindow": {
               "pattern": "^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$",
               "type": "string"
+            },
+            "staleSeriesCompactionThreshold": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "string"
+                }
+              ],
+              "pattern": "^(\\+|-)?(([0-9]+(\\.[0-9]*)?)|(\\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\\+|-)?(([0-9]+(\\.[0-9]*)?)|(\\.[0-9]+))))?$",
+              "x-kubernetes-int-or-string": true
             }
           },
           "type": "object"
