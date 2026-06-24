@@ -17,7 +17,7 @@ package crd
 
 //go:generate crdjson -outdir=./schemas -url=https://github.com/prometheus-operator/prometheus-operator/releases/latest/download/stripped-down-crds.yaml
 
-//go:generate crdjson -outdir=./schemas -one-per-kind -url=https://raw.githubusercontent.com/istio/api/refs/tags/1.29.2/kubernetes/customresourcedefinitions.gen.yaml
+//go:generate crdjson -outdir=./schemas -one-per-kind -url=https://raw.githubusercontent.com/istio/api/refs/tags/1.30.1/kubernetes/customresourcedefinitions.gen.yaml
 
 //go:generate crdjson -outdir=./schemas -url=https://github.com/cert-manager/cert-manager/releases/download/v1.20.2/cert-manager.crds.yaml
 
@@ -33,3 +33,6 @@ package crd
 
 // Accesserator dependencies down below
 //go:generate crdjson -outdir=./schemas -url=https://raw.githubusercontent.com/nais/liberator/refs/heads/main/config/crd/bases/nais.io_jwkers.yaml
+
+// Gateway API
+//go:generate crdjson -outdir=./schemas -url=https://github.com/kubernetes-sigs/gateway-api/releases/download/v1.5.1/standard-install.yaml

@@ -554,7 +554,7 @@
                               "type": "object"
                             },
                             "tokenUrl": {
-                              "minLength": 1,
+                              "pattern": "^(http|https)://.+$",
                               "type": "string"
                             }
                           },
@@ -1366,7 +1366,7 @@
                               "type": "object"
                             },
                             "tokenUrl": {
-                              "minLength": 1,
+                              "pattern": "^(http|https)://.+$",
                               "type": "string"
                             }
                           },
@@ -1940,7 +1940,7 @@
                               "type": "object"
                             },
                             "tokenUrl": {
-                              "minLength": 1,
+                              "pattern": "^(http|https)://.+$",
                               "type": "string"
                             }
                           },
@@ -2569,7 +2569,7 @@
                               "type": "object"
                             },
                             "tokenUrl": {
-                              "minLength": 1,
+                              "pattern": "^(http|https)://.+$",
                               "type": "string"
                             }
                           },
@@ -3213,7 +3213,7 @@
                               "type": "object"
                             },
                             "tokenUrl": {
-                              "minLength": 1,
+                              "pattern": "^(http|https)://.+$",
                               "type": "string"
                             }
                           },
@@ -3857,7 +3857,7 @@
                               "type": "object"
                             },
                             "tokenUrl": {
-                              "minLength": 1,
+                              "pattern": "^(http|https)://.+$",
                               "type": "string"
                             }
                           },
@@ -4538,7 +4538,7 @@
                               "type": "object"
                             },
                             "tokenUrl": {
-                              "minLength": 1,
+                              "pattern": "^(http|https)://.+$",
                               "type": "string"
                             }
                           },
@@ -5275,7 +5275,7 @@
                               "type": "object"
                             },
                             "tokenUrl": {
-                              "minLength": 1,
+                              "pattern": "^(http|https)://.+$",
                               "type": "string"
                             }
                           },
@@ -5882,7 +5882,7 @@
                               "type": "object"
                             },
                             "tokenUrl": {
-                              "minLength": 1,
+                              "pattern": "^(http|https)://.+$",
                               "type": "string"
                             }
                           },
@@ -6543,7 +6543,7 @@
                               "type": "object"
                             },
                             "tokenUrl": {
-                              "minLength": 1,
+                              "pattern": "^(http|https)://.+$",
                               "type": "string"
                             }
                           },
@@ -7151,7 +7151,7 @@
                               "type": "object"
                             },
                             "tokenUrl": {
-                              "minLength": 1,
+                              "pattern": "^(http|https)://.+$",
                               "type": "string"
                             }
                           },
@@ -7717,7 +7717,7 @@
                               "type": "object"
                             },
                             "tokenUrl": {
-                              "minLength": 1,
+                              "pattern": "^(http|https)://.+$",
                               "type": "string"
                             }
                           },
@@ -8270,7 +8270,7 @@
                               "type": "object"
                             },
                             "tokenUrl": {
-                              "minLength": 1,
+                              "pattern": "^(http|https)://.+$",
                               "type": "string"
                             }
                           },
@@ -8458,6 +8458,10 @@
                       "format": "int32",
                       "minimum": 0,
                       "type": "integer"
+                    },
+                    "payload": {
+                      "minLength": 1,
+                      "type": "string"
                     },
                     "sendResolved": {
                       "type": "boolean"
@@ -8875,7 +8879,7 @@
                               "type": "object"
                             },
                             "tokenUrl": {
-                              "minLength": 1,
+                              "pattern": "^(http|https)://.+$",
                               "type": "string"
                             }
                           },

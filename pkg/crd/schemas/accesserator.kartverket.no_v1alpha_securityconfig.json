@@ -361,6 +361,54 @@
                     "description": "URL is the OCI registry location of the OPA bundle.",
                     "maxLength": 253,
                     "type": "string"
+                  },
+                  "verification": {
+                    "description": "Verification specifies how to verify the integrity of the bundle.\nIf not specified, the bundle will not be verified.",
+                    "properties": {
+                      "source": {
+                        "description": "Source is the GitHub repository where the bundle was created.",
+                        "properties": {
+                          "ref": {
+                            "description": "Ref is the Git reference (branch, tag, or commit) of the bundle.",
+                            "maxLength": 255,
+                            "minLength": 1,
+                            "pattern": "^refs/(heads|tags|pull)/[a-zA-Z0-9/_.-]{1,243}$",
+                            "type": "string",
+                            "x-kubernetes-validations": [
+                              {
+                                "message": "ref must not contain '..'",
+                                "rule": "!self.contains('..')"
+                              },
+                              {
+                                "message": "ref must not end with '.lock'",
+                                "rule": "!self.endsWith('.lock')"
+                              }
+                            ]
+                          },
+                          "repository": {
+                            "description": "Repository is the GitHub repository where the bundle was created,\nin the form \"<org-or-user>/<repo>\" (e.g. \"kartverket/accesserator\").",
+                            "maxLength": 140,
+                            "minLength": 3,
+                            "pattern": "^[a-zA-Z0-9][a-zA-Z0-9-]{0,38}/[a-zA-Z0-9_][a-zA-Z0-9._-]{0,99}$",
+                            "type": "string"
+                          },
+                          "workflow": {
+                            "description": "Workflow is the name of the GitHub workflow that created the bundle.",
+                            "maxLength": 300,
+                            "pattern": "^\\.github/workflows/[a-zA-Z0-9_.-]+\\.(yml|yaml)$",
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "repository"
+                        ],
+                        "type": "object"
+                      }
+                    },
+                    "required": [
+                      "source"
+                    ],
+                    "type": "object"
                   }
                 },
                 "required": [
