@@ -23,7 +23,10 @@ package crd
 
 //go:generate crdjson -outdir=./schemas -one-per-kind -url=https://github.com/external-secrets/external-secrets/releases/download/v2.5.0/external-secrets.yaml
 
+// CNPG Operator
 //go:generate crdjson -outdir=./schemas -url=https://github.com/cloudnative-pg/cloudnative-pg/releases/download/v1.27.1/cnpg-1.27.1.yaml
+// Barman Object Storage Backup plugin (helmChart=0.5.0, appVersion=0.11.0)
+//go:generate crdjson -outdir=./schemas -url=https://github.com/cloudnative-pg/plugin-barman-cloud/releases/download/v0.11.0/manifest.yaml
 
 // Ztoperator CRD
 //go:generate crdjson -outdir=./schemas -url=https://raw.githubusercontent.com/kartverket/ztoperator/refs/heads/main/config/crd/bases/ztoperator.kartverket.no_authpolicies.yaml
