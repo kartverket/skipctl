@@ -16,6 +16,104 @@
     "spec": {
       "description": "spec defines the desired state of SecurityConfig",
       "properties": {
+        "ansattporten": {
+          "description": "Ansattporten specifies whether to configure Ansattporten token validation for an application referred to by `applicationRef`.\nWhen enabled, an Istio ServiceEntry is created to allow egress to Ansattporten, and the Texas sidecar is configured\nto validate Ansattporten tokens against the audiences specified in `allowedAudience`.",
+          "properties": {
+            "allowedAudience": {
+              "description": "AllowedAudience defines the audience (`aud`) value that Ansattporten tokens are validated against by the Texas\nsidecar. Either a static value or sourced from a ConfigMap or Secret.",
+              "properties": {
+                "value": {
+                  "description": "Value specifies a static audience value.",
+                  "type": "string"
+                },
+                "valueFrom": {
+                  "description": "ValueFrom specifies a reference to a kubernetes resource to retrieve the audience value from.",
+                  "properties": {
+                    "configMapKeyRef": {
+                      "description": "ConfigMapKeyRef specifies a reference to a key in a ConfigMap.",
+                      "properties": {
+                        "key": {
+                          "description": "Key specifies the data entry name within the ConfigMap/Secret; must follow key naming rules.",
+                          "minLength": 1,
+                          "pattern": "^[A-Za-z0-9]([-A-Za-z0-9_.]*[A-Za-z0-9])?$",
+                          "type": "string"
+                        },
+                        "name": {
+                          "description": "Name specifies the name of the ConfigMap/Secret; must satisfy DNS-1123 subdomain naming.",
+                          "minLength": 1,
+                          "pattern": "^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "key",
+                        "name"
+                      ],
+                      "type": "object"
+                    },
+                    "secretKeyRef": {
+                      "description": "SecretKeyRef specifies a reference to a key in a Secret.",
+                      "properties": {
+                        "key": {
+                          "description": "Key specifies the data entry name within the ConfigMap/Secret; must follow key naming rules.",
+                          "minLength": 1,
+                          "pattern": "^[A-Za-z0-9]([-A-Za-z0-9_.]*[A-Za-z0-9])?$",
+                          "type": "string"
+                        },
+                        "name": {
+                          "description": "Name specifies the name of the ConfigMap/Secret; must satisfy DNS-1123 subdomain naming.",
+                          "minLength": 1,
+                          "pattern": "^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "key",
+                        "name"
+                      ],
+                      "type": "object"
+                    }
+                  },
+                  "type": "object",
+                  "x-kubernetes-validations": [
+                    {
+                      "message": "either 'configMapKeyRef' or 'secretKeyRef' must be set",
+                      "rule": "has(self.configMapKeyRef) || has(self.secretKeyRef)"
+                    },
+                    {
+                      "message": "cannot reference both a ConfigMap and a Secret",
+                      "rule": "!(has(self.configMapKeyRef) && has(self.secretKeyRef))"
+                    }
+                  ]
+                }
+              },
+              "type": "object",
+              "x-kubernetes-validations": [
+                {
+                  "message": "either 'value' or 'valueFrom' must be set",
+                  "rule": "has(self.value) || has(self.valueFrom)"
+                },
+                {
+                  "message": "one audience cannot be defined from both 'value' and 'valueFrom'",
+                  "rule": "!(has(self.value) && has(self.valueFrom))"
+                },
+                {
+                  "message": "field 'value' cannot be empty string",
+                  "rule": "!has(self.value) || size(self.value) > 0"
+                }
+              ]
+            },
+            "enabled": {
+              "description": "Enabled indicates whether Ansattporten token validation should be configured for the application.",
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "allowedAudience",
+            "enabled"
+          ],
+          "type": "object"
+        },
         "applicationRef": {
           "description": "ApplicationRef is a reference to the name of the SKIP application for which this SecurityConfig applies.",
           "maxLength": 253,
@@ -206,6 +304,104 @@
               "rule": "[has(self.client), has(self.clientRef), has(self.secretRef)].filter(x, x).size() <= 1"
             }
           ]
+        },
+        "idporten": {
+          "description": "Idporten specifies whether to configure ID-porten token validation for an application referred to by `applicationRef`.\nWhen enabled, an Istio ServiceEntry is created to allow egress to ID-porten, and the Texas sidecar is configured\nto validate ID-porten tokens against the audience specified in `allowedAudience`.",
+          "properties": {
+            "allowedAudience": {
+              "description": "AllowedAudience defines the audience (`aud`) value that ID-porten tokens are validated against by the Texas\nsidecar. Either a static value or sourced from a ConfigMap or Secret.",
+              "properties": {
+                "value": {
+                  "description": "Value specifies a static audience value.",
+                  "type": "string"
+                },
+                "valueFrom": {
+                  "description": "ValueFrom specifies a reference to a kubernetes resource to retrieve the audience value from.",
+                  "properties": {
+                    "configMapKeyRef": {
+                      "description": "ConfigMapKeyRef specifies a reference to a key in a ConfigMap.",
+                      "properties": {
+                        "key": {
+                          "description": "Key specifies the data entry name within the ConfigMap/Secret; must follow key naming rules.",
+                          "minLength": 1,
+                          "pattern": "^[A-Za-z0-9]([-A-Za-z0-9_.]*[A-Za-z0-9])?$",
+                          "type": "string"
+                        },
+                        "name": {
+                          "description": "Name specifies the name of the ConfigMap/Secret; must satisfy DNS-1123 subdomain naming.",
+                          "minLength": 1,
+                          "pattern": "^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "key",
+                        "name"
+                      ],
+                      "type": "object"
+                    },
+                    "secretKeyRef": {
+                      "description": "SecretKeyRef specifies a reference to a key in a Secret.",
+                      "properties": {
+                        "key": {
+                          "description": "Key specifies the data entry name within the ConfigMap/Secret; must follow key naming rules.",
+                          "minLength": 1,
+                          "pattern": "^[A-Za-z0-9]([-A-Za-z0-9_.]*[A-Za-z0-9])?$",
+                          "type": "string"
+                        },
+                        "name": {
+                          "description": "Name specifies the name of the ConfigMap/Secret; must satisfy DNS-1123 subdomain naming.",
+                          "minLength": 1,
+                          "pattern": "^[a-z0-9]([-a-z0-9]*[a-z0-9])?(\\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*$",
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "key",
+                        "name"
+                      ],
+                      "type": "object"
+                    }
+                  },
+                  "type": "object",
+                  "x-kubernetes-validations": [
+                    {
+                      "message": "either 'configMapKeyRef' or 'secretKeyRef' must be set",
+                      "rule": "has(self.configMapKeyRef) || has(self.secretKeyRef)"
+                    },
+                    {
+                      "message": "cannot reference both a ConfigMap and a Secret",
+                      "rule": "!(has(self.configMapKeyRef) && has(self.secretKeyRef))"
+                    }
+                  ]
+                }
+              },
+              "type": "object",
+              "x-kubernetes-validations": [
+                {
+                  "message": "either 'value' or 'valueFrom' must be set",
+                  "rule": "has(self.value) || has(self.valueFrom)"
+                },
+                {
+                  "message": "one audience cannot be defined from both 'value' and 'valueFrom'",
+                  "rule": "!(has(self.value) && has(self.valueFrom))"
+                },
+                {
+                  "message": "field 'value' cannot be empty string",
+                  "rule": "!has(self.value) || size(self.value) > 0"
+                }
+              ]
+            },
+            "enabled": {
+              "description": "Enabled indicates whether ID-porten token validation should be configured for the application.",
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "allowedAudience",
+            "enabled"
+          ],
+          "type": "object"
         },
         "maskinporten": {
           "description": "Maskinporten specifies whether to configure the maskinporten API consumer capability for an application referred to by `applicationRef`.\nThe configuration can either be provided inline via the `client` field,\nby referencing an existing MaskinportenClient resource via the `clientRef` field,\nor by sourcing credentials from existing Kubernetes secrets via the `secretRef` field.",
@@ -503,6 +699,9 @@
     "status": {
       "description": "status defines the observed state of SecurityConfig",
       "properties": {
+        "ansattportenAudience": {
+          "type": "string"
+        },
         "conditions": {
           "items": {
             "description": "Condition contains details for one aspect of the current state of this API Resource.",
@@ -558,6 +757,9 @@
           "type": "array"
         },
         "entraIdSecretName": {
+          "type": "string"
+        },
+        "idportenAudience": {
           "type": "string"
         },
         "jwkerSecretName": {

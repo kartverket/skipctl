@@ -237,7 +237,13 @@
                   "port",
                   "protocol"
                 ],
-                "type": "object"
+                "type": "object",
+                "x-kubernetes-validations": [
+                  {
+                    "message": "port names 'main' and 'istio-metrics' are reserved",
+                    "rule": "self.name != 'main' && self.name != 'istio-metrics'"
+                  }
+                ]
               },
               "type": "array"
             },
