@@ -179,6 +179,10 @@
                 "name"
               ],
               "type": "object"
+            },
+            "useDefaultAzureCredentials": {
+              "description": "Use the default Azure authentication flow, which includes DefaultAzureCredential.\nThis allows authentication using environment variables and managed identities.",
+              "type": "boolean"
             }
           },
           "type": "object"
@@ -292,6 +296,10 @@
             "podName": {
               "description": "The pod name",
               "type": "string"
+            },
+            "sessionID": {
+              "description": "The instance manager session ID. This is a unique identifier generated at instance manager\nstartup and changes on every restart (including container reboots). Used to detect if\nthe instance manager was restarted during long-running operations like backups, which\nwould terminate any running backup process.",
+              "type": "string"
             }
           },
           "type": "object"
@@ -318,6 +326,16 @@
           },
           "description": "A map containing the plugin metadata",
           "type": "object"
+        },
+        "reconciliationStartedAt": {
+          "description": "When the backup process was started by the operator",
+          "format": "date-time",
+          "type": "string"
+        },
+        "reconciliationTerminatedAt": {
+          "description": "When the reconciliation was terminated by the operator (either successfully or not)",
+          "format": "date-time",
+          "type": "string"
         },
         "s3Credentials": {
           "description": "The credentials to use to upload data to S3",
@@ -438,12 +456,12 @@
           "type": "object"
         },
         "startedAt": {
-          "description": "When the backup was started",
+          "description": "When the backup execution was started by the backup tool",
           "format": "date-time",
           "type": "string"
         },
         "stoppedAt": {
-          "description": "When the backup was terminated",
+          "description": "When the backup execution was terminated by the backup tool",
           "format": "date-time",
           "type": "string"
         },

@@ -457,13 +457,17 @@
             "description": "FilesFrom\n\nStruct representing information needed to mount a Kubernetes resource as a file to a Pod's directory.\nOne of ConfigMap, Secret, EmptyDir or PersistentVolumeClaim must be present, and just represent the name of the resource in question\nNB. Out-of-the-box, skiperator provides a writable 'emptyDir'-volume at '/tmp'",
             "properties": {
               "configMap": {
+                "minLength": 1,
                 "type": "string"
               },
               "defaultMode": {
-                "description": "defaultMode is optional: mode bits used to set permissions on created files by default.\nMust be an octal value between 0000 and 0777 or a decimal value between 0 and 511.\nYAML accepts both octal and decimal values, JSON requires decimal values for mode bits.\nDefaults to 0644.\nDirectories within the path are not affected by this setting.\nThis might be in conflict with other options that affect the file\nmode, like fsGroup, and the result can be other mode bits set.",
+                "description": "defaultMode is optional: mode bits used to set permissions on created files by default.\nMust be between 0000 and 0777 when written as YAML octal, or between 0 and 511 as JSON/decimal.\nYAML values with a leading zero are parsed as octal before CRD validation, so 0777 is validated as 511.\nDefaults to 0644.\nDirectories within the path are not affected by this setting.\nThis might be in conflict with other options that affect the file\nmode, like fsGroup, and the result can be other mode bits set.",
+                "maximum": 511,
+                "minimum": 0,
                 "type": "integer"
               },
               "emptyDir": {
+                "minLength": 1,
                 "type": "string"
               },
               "mountPath": {
@@ -471,16 +475,28 @@
                 "type": "string"
               },
               "persistentVolumeClaim": {
+                "minLength": 1,
                 "type": "string"
               },
               "secret": {
+                "minLength": 1,
+                "type": "string"
+              },
+              "subPath": {
+                "description": "The sub-path inside the volume from which the file should be mounted. Optional, defaults to the root of the volume.",
                 "type": "string"
               }
             },
             "required": [
               "mountPath"
             ],
-            "type": "object"
+            "type": "object",
+            "x-kubernetes-validations": [
+              {
+                "message": "Exactly one of configMap, secret, emptyDir or persistentVolumeClaim must be set",
+                "rule": "(has(self.configMap) ? 1 : 0) + (has(self.secret) ? 1 : 0) + (has(self.emptyDir) ? 1 : 0) + (has(self.persistentVolumeClaim) ? 1 : 0) == 1"
+              }
+            ]
           },
           "type": "array"
         },

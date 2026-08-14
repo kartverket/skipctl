@@ -5513,6 +5513,9 @@
                     "titleLink": {
                       "type": "string"
                     },
+                    "updateMessage": {
+                      "type": "boolean"
+                    },
                     "username": {
                       "minLength": 1,
                       "type": "string"
@@ -6153,6 +6156,9 @@
                     "topicARN": {
                       "minLength": 1,
                       "type": "string"
+                    },
+                    "useAWSHTTPClient": {
+                      "type": "boolean"
                     }
                   },
                   "type": "object"

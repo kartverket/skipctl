@@ -420,6 +420,10 @@
         {
           "message": "oAuthCredentials must be set when autoLogin is enabled",
           "rule": "!has(self.autoLogin) || !self.autoLogin.enabled || has(self.oAuthCredentials)"
+        },
+        {
+          "message": "oAuthCredentials cannot be set unless autoLogin is configured",
+          "rule": "!has(self.oAuthCredentials) || has(self.autoLogin)"
         }
       ]
     },

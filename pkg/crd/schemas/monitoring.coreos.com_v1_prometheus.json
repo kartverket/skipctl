@@ -765,6 +765,7 @@
                         },
                         "modulus": {
                           "format": "int64",
+                          "minimum": 0,
                           "type": "integer"
                         },
                         "regex": {
@@ -967,6 +968,7 @@
                         },
                         "modulus": {
                           "format": "int64",
+                          "minimum": 0,
                           "type": "integer"
                         },
                         "regex": {
@@ -2724,18 +2726,22 @@
         },
         "enforcedKeepDroppedTargets": {
           "format": "int64",
+          "minimum": 0,
           "type": "integer"
         },
         "enforcedLabelLimit": {
           "format": "int64",
+          "minimum": 0,
           "type": "integer"
         },
         "enforcedLabelNameLengthLimit": {
           "format": "int64",
+          "minimum": 0,
           "type": "integer"
         },
         "enforcedLabelValueLengthLimit": {
           "format": "int64",
+          "minimum": 0,
           "type": "integer"
         },
         "enforcedNamespaceLabel": {
@@ -2743,10 +2749,12 @@
         },
         "enforcedSampleLimit": {
           "format": "int64",
+          "minimum": 0,
           "type": "integer"
         },
         "enforcedTargetLimit": {
           "format": "int64",
+          "minimum": 0,
           "type": "integer"
         },
         "evaluationInterval": {
@@ -3985,18 +3993,22 @@
         },
         "keepDroppedTargets": {
           "format": "int64",
+          "minimum": 0,
           "type": "integer"
         },
         "labelLimit": {
           "format": "int64",
+          "minimum": 0,
           "type": "integer"
         },
         "labelNameLengthLimit": {
           "format": "int64",
+          "minimum": 0,
           "type": "integer"
         },
         "labelValueLengthLimit": {
           "format": "int64",
+          "minimum": 0,
           "type": "integer"
         },
         "listenLocal": {
@@ -5727,6 +5739,7 @@
                     },
                     "modulus": {
                       "format": "int64",
+                      "minimum": 0,
                       "type": "integer"
                     },
                     "regex": {
@@ -5957,6 +5970,7 @@
         },
         "sampleLimit": {
           "format": "int64",
+          "minimum": 0,
           "type": "integer"
         },
         "schedulerName": {
@@ -6050,6 +6064,7 @@
                     },
                     "modulus": {
                       "format": "int64",
+                      "minimum": 0,
                       "type": "integer"
                     },
                     "regex": {
@@ -6112,6 +6127,7 @@
                     },
                     "modulus": {
                       "format": "int64",
+                      "minimum": 0,
                       "type": "integer"
                     },
                     "regex": {
@@ -6677,6 +6693,7 @@
           ]
         },
         "shards": {
+          "default": 1,
           "format": "int32",
           "type": "integer"
         },
@@ -7139,6 +7156,7 @@
         },
         "targetLimit": {
           "format": "int64",
+          "minimum": 0,
           "type": "integer"
         },
         "terminationGracePeriodSeconds": {
@@ -7830,6 +7848,18 @@
         },
         "tsdb": {
           "properties": {
+            "chunkEncoding": {
+              "properties": {
+                "floats": {
+                  "enum": [
+                    "Xor",
+                    "Xor2"
+                  ],
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            },
             "outOfOrderTimeWindow": {
               "pattern": "^(0|(([0-9]+)y)?(([0-9]+)w)?(([0-9]+)d)?(([0-9]+)h)?(([0-9]+)m)?(([0-9]+)s)?(([0-9]+)ms)?)$",
               "type": "string"
