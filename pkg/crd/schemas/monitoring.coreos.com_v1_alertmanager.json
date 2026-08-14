@@ -6613,6 +6613,7 @@
           "properties": {
             "getConcurrency": {
               "format": "int32",
+              "minimum": 0,
               "type": "integer"
             },
             "httpConfig": {
@@ -6654,6 +6655,7 @@
             },
             "timeout": {
               "format": "int32",
+              "minimum": 0,
               "type": "integer"
             },
             "tlsConfig": {

@@ -17,16 +17,15 @@ package crd
 
 //go:generate crdjson -outdir=./schemas -url=https://github.com/prometheus-operator/prometheus-operator/releases/latest/download/stripped-down-crds.yaml
 
-//go:generate crdjson -outdir=./schemas -one-per-kind -url=https://raw.githubusercontent.com/istio/api/refs/tags/1.30.1/kubernetes/customresourcedefinitions.gen.yaml
+//go:generate crdjson -outdir=./schemas -one-per-kind -url=https://raw.githubusercontent.com/istio/api/refs/tags/1.30.3/kubernetes/customresourcedefinitions.gen.yaml
 
-//go:generate crdjson -outdir=./schemas -url=https://github.com/cert-manager/cert-manager/releases/download/v1.20.2/cert-manager.crds.yaml
+//go:generate crdjson -outdir=./schemas -url=https://github.com/cert-manager/cert-manager/releases/download/v1.20.3/cert-manager.crds.yaml
 
 //go:generate crdjson -outdir=./schemas -one-per-kind -url=https://github.com/external-secrets/external-secrets/releases/download/v2.5.0/external-secrets.yaml
 
 // CNPG Operator
-//go:generate crdjson -outdir=./schemas -url=https://github.com/cloudnative-pg/cloudnative-pg/releases/download/v1.27.1/cnpg-1.27.1.yaml
-// Barman Object Storage Backup plugin (helmChart=0.5.0, appVersion=0.11.0)
-//go:generate crdjson -outdir=./schemas -url=https://github.com/cloudnative-pg/plugin-barman-cloud/releases/download/v0.11.0/manifest.yaml
+//go:generate crdjson -outdir=./schemas -url=https://github.com/cloudnative-pg/cloudnative-pg/releases/download/v1.30.0/cnpg-1.30.0.yaml
+//go:generate crdjson -outdir=./schemas -url=https://github.com/cloudnative-pg/plugin-barman-cloud/releases/download/v0.13.0/manifest.yaml
 
 // Ztoperator CRD
 //go:generate crdjson -outdir=./schemas -url=https://raw.githubusercontent.com/kartverket/ztoperator/refs/heads/main/config/crd/bases/ztoperator.kartverket.no_authpolicies.yaml

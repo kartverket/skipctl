@@ -27,7 +27,13 @@
           "required": [
             "name"
           ],
-          "type": "object"
+          "type": "object",
+          "x-kubernetes-validations": [
+            {
+              "message": "cluster reference is immutable after creation",
+              "rule": "self == oldSelf"
+            }
+          ]
         },
         "deploymentStrategy": {
           "description": "The deployment strategy to use for pgbouncer to replace existing pods with new ones",
@@ -76,15 +82,15 @@
           "type": "integer"
         },
         "monitoring": {
-          "description": "The configuration of the monitoring infrastructure of this pooler.\n\nDeprecated: This feature will be removed in an upcoming release. If\nyou need this functionality, you can create a PodMonitor manually.",
+          "description": "The configuration of the monitoring infrastructure of this pooler.",
           "properties": {
             "enablePodMonitor": {
               "default": false,
-              "description": "Enable or disable the `PodMonitor`",
+              "description": "Enable or disable the `PodMonitor`\n\nDeprecated: This feature will be removed in an upcoming release. If\nyou need this functionality, you can create a PodMonitor manually.",
               "type": "boolean"
             },
             "podMonitorMetricRelabelings": {
-              "description": "The list of metric relabelings for the `PodMonitor`. Applied to samples before ingestion.",
+              "description": "The list of metric relabelings for the `PodMonitor`. Applied to samples before ingestion.\n\nDeprecated: This feature will be removed in an upcoming release. If\nyou need this functionality, you can create a PodMonitor manually.",
               "items": {
                 "description": "RelabelConfig allows dynamic rewriting of the label set for targets, alerts,\nscraped samples and remote write samples.\n\nMore info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config",
                 "properties": {
@@ -152,7 +158,7 @@
               "type": "array"
             },
             "podMonitorRelabelings": {
-              "description": "The list of relabelings for the `PodMonitor`. Applied to samples before scraping.",
+              "description": "The list of relabelings for the `PodMonitor`. Applied to samples before scraping.\n\nDeprecated: This feature will be removed in an upcoming release. If\nyou need this functionality, you can create a PodMonitor manually.",
               "items": {
                 "description": "RelabelConfig allows dynamic rewriting of the label set for targets, alerts,\nscraped samples and remote write samples.\n\nMore info: https://prometheus.io/docs/prometheus/latest/configuration/configuration/#relabel_config",
                 "properties": {
@@ -218,6 +224,17 @@
                 "type": "object"
               },
               "type": "array"
+            },
+            "tls": {
+              "description": "Configure TLS communication for the metrics endpoint.\nChanging tls.enabled option will force a rollout of all instances.",
+              "properties": {
+                "enabled": {
+                  "default": false,
+                  "description": "Enable TLS for the monitoring endpoint.\nChanging this option will force a rollout of all instances.",
+                  "type": "boolean"
+                }
+              },
+              "type": "object"
             }
           },
           "type": "object"
@@ -230,7 +247,7 @@
               "type": "string"
             },
             "authQuerySecret": {
-              "description": "The credentials of the user that need to be used for the authentication\nquery. In case it is specified, also an AuthQuery\n(e.g. \"SELECT usename, passwd FROM pg_catalog.pg_shadow WHERE usename=$1\")\nhas to be specified and no automatic CNPG Cluster integration will be triggered.",
+              "description": "The credentials of the user that need to be used for the authentication\nquery. In case it is specified, also an AuthQuery\n(e.g. \"SELECT usename, passwd FROM pg_catalog.pg_shadow WHERE usename=$1\")\nhas to be specified and no automatic CNPG Cluster integration will be triggered.\n\nDeprecated.",
               "properties": {
                 "name": {
                   "description": "Name of the referent.",
@@ -241,6 +258,76 @@
                 "name"
               ],
               "type": "object"
+            },
+            "clientCASecret": {
+              "description": "ClientCASecret provides PgBouncer’s client_tls_ca_file, the root\nCA for validating client certificates",
+              "properties": {
+                "name": {
+                  "description": "Name of the referent.",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "name"
+              ],
+              "type": "object"
+            },
+            "clientTLSSecret": {
+              "description": "ClientTLSSecret provides PgBouncer’s client_tls_key_file (private key)\nand client_tls_cert_file (certificate) used to accept client connections",
+              "properties": {
+                "name": {
+                  "description": "Name of the referent.",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "name"
+              ],
+              "type": "object"
+            },
+            "image": {
+              "description": "Image is the pgbouncer container image to use. When set, it takes\nprecedence over ImageCatalogRef and the operator default, but is\noverridden by an explicit image set in the pod template.",
+              "type": "string"
+            },
+            "imageCatalogRef": {
+              "description": "ImageCatalogRef points to an entry in an ImageCatalog or ClusterImageCatalog.\nMutually exclusive with Image.",
+              "properties": {
+                "apiGroup": {
+                  "description": "APIGroup is the group for the resource being referenced.\nIf APIGroup is not specified, the specified Kind must be in the core API group.\nFor any other third-party types, APIGroup is required.",
+                  "type": "string"
+                },
+                "key": {
+                  "description": "Key identifies the entry within the catalog's componentImages list.",
+                  "maxLength": 63,
+                  "pattern": "^[a-z0-9]([-a-z0-9]*[a-z0-9])?$",
+                  "type": "string"
+                },
+                "kind": {
+                  "description": "Kind is the type of resource being referenced",
+                  "type": "string"
+                },
+                "name": {
+                  "description": "Name is the name of resource being referenced",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "key",
+                "kind",
+                "name"
+              ],
+              "type": "object",
+              "x-kubernetes-map-type": "atomic",
+              "x-kubernetes-validations": [
+                {
+                  "message": "Only ImageCatalog and ClusterImageCatalog are supported",
+                  "rule": "self.kind == 'ImageCatalog' || self.kind == 'ClusterImageCatalog'"
+                },
+                {
+                  "message": "apiGroup must be postgresql.cnpg.io",
+                  "rule": "self.apiGroup == 'postgresql.cnpg.io'"
+                }
+              ]
             },
             "parameters": {
               "additionalProperties": {
@@ -269,9 +356,53 @@
                 "transaction"
               ],
               "type": "string"
+            },
+            "serverCASecret": {
+              "description": "ServerCASecret provides PgBouncer’s server_tls_ca_file, the root\nCA for validating PostgreSQL certificates",
+              "properties": {
+                "name": {
+                  "description": "Name of the referent.",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "name"
+              ],
+              "type": "object"
+            },
+            "serverTLSSecret": {
+              "description": "ServerTLSSecret, when pointing to a TLS secret, provides pgbouncer's\n`server_tls_key_file` and `server_tls_cert_file`, used when\nauthenticating against PostgreSQL.",
+              "properties": {
+                "name": {
+                  "description": "Name of the referent.",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "name"
+              ],
+              "type": "object"
             }
           },
-          "type": "object"
+          "type": "object",
+          "x-kubernetes-validations": [
+            {
+              "message": "image and imageCatalogRef are mutually exclusive",
+              "rule": "!(has(self.image) && has(self.imageCatalogRef))"
+            }
+          ]
+        },
+        "serviceAccountName": {
+          "description": "Name of an existing ServiceAccount in the same namespace to use for the pooler.\nWhen specified, the operator will not create a new ServiceAccount\nbut will use the provided one. This is useful for sharing a single\nServiceAccount across multiple poolers (e.g., for cloud IAM configurations).\nIf not specified, a ServiceAccount will be created with the pooler name.",
+          "maxLength": 253,
+          "pattern": "^[a-z0-9]([-a-z0-9]*[a-z0-9])?$",
+          "type": "string",
+          "x-kubernetes-validations": [
+            {
+              "message": "serviceAccountName is immutable",
+              "rule": "self == oldSelf"
+            }
+          ]
         },
         "serviceTemplate": {
           "description": "Template for the Service to be created",
@@ -2084,7 +2215,7 @@
                         "type": "object"
                       },
                       "resizePolicy": {
-                        "description": "Resources resize policy for the container.",
+                        "description": "Resources resize policy for the container.\nThis field cannot be set on ephemeral containers.",
                         "items": {
                           "description": "ContainerResizePolicy represents resource resize policy for the container.",
                           "properties": {
@@ -2266,7 +2397,7 @@
                             "type": "boolean"
                           },
                           "procMount": {
-                            "description": "procMount denotes the type of proc mount to use for the containers.\nThe default value is Default which uses the container runtime defaults for\nreadonly paths and masked paths.\nThis requires the ProcMountType feature flag to be enabled.\nNote that this field cannot be set when spec.os.name is windows.",
+                            "description": "procMount denotes the type of proc mount to use for the containers.\nThe default value is Default which uses the container runtime defaults for\nreadonly paths and masked paths.\nNote that this field cannot be set when spec.os.name is windows.",
                             "type": "string"
                           },
                           "readOnlyRootFilesystem": {
@@ -3657,7 +3788,7 @@
                             "type": "boolean"
                           },
                           "procMount": {
-                            "description": "procMount denotes the type of proc mount to use for the containers.\nThe default value is Default which uses the container runtime defaults for\nreadonly paths and masked paths.\nThis requires the ProcMountType feature flag to be enabled.\nNote that this field cannot be set when spec.os.name is windows.",
+                            "description": "procMount denotes the type of proc mount to use for the containers.\nThe default value is Default which uses the container runtime defaults for\nreadonly paths and masked paths.\nNote that this field cannot be set when spec.os.name is windows.",
                             "type": "string"
                           },
                           "readOnlyRootFilesystem": {
@@ -4046,7 +4177,7 @@
                   "type": "boolean"
                 },
                 "hostUsers": {
-                  "description": "Use the host's user namespace.\nOptional: Default to true.\nIf set to true or not present, the pod will be run in the host user namespace, useful\nfor when the pod needs a feature only available to the host user namespace, such as\nloading a kernel module with CAP_SYS_MODULE.\nWhen set to false, a new userns is created for the pod. Setting false is useful for\nmitigating container breakout vulnerabilities even allowing users to run their\ncontainers as root without actually having root privileges on the host.\nThis field is alpha-level and is only honored by servers that enable the UserNamespacesSupport feature.",
+                  "description": "Use the host's user namespace.\nOptional: Default to true.\nIf set to true or not present, the pod will be run in the host user namespace, useful\nfor when the pod needs a feature only available to the host user namespace, such as\nloading a kernel module with CAP_SYS_MODULE.\nWhen set to false, a new userns is created for the pod. Setting false is useful for\nmitigating container breakout vulnerabilities even allowing users to run their\ncontainers as root without actually having root privileges on the host.",
                   "type": "boolean"
                 },
                 "hostname": {
@@ -4894,7 +5025,7 @@
                         "type": "object"
                       },
                       "resizePolicy": {
-                        "description": "Resources resize policy for the container.",
+                        "description": "Resources resize policy for the container.\nThis field cannot be set on ephemeral containers.",
                         "items": {
                           "description": "ContainerResizePolicy represents resource resize policy for the container.",
                           "properties": {
@@ -5076,7 +5207,7 @@
                             "type": "boolean"
                           },
                           "procMount": {
-                            "description": "procMount denotes the type of proc mount to use for the containers.\nThe default value is Default which uses the container runtime defaults for\nreadonly paths and masked paths.\nThis requires the ProcMountType feature flag to be enabled.\nNote that this field cannot be set when spec.os.name is windows.",
+                            "description": "procMount denotes the type of proc mount to use for the containers.\nThe default value is Default which uses the container runtime defaults for\nreadonly paths and masked paths.\nNote that this field cannot be set when spec.os.name is windows.",
                             "type": "string"
                           },
                           "readOnlyRootFilesystem": {
@@ -5492,9 +5623,9 @@
                   "x-kubernetes-list-type": "atomic"
                 },
                 "resourceClaims": {
-                  "description": "ResourceClaims defines which ResourceClaims must be allocated\nand reserved before the Pod is allowed to start. The resources\nwill be made available to those containers which consume them\nby name.\n\nThis is an alpha field and requires enabling the\nDynamicResourceAllocation feature gate.\n\nThis field is immutable.",
+                  "description": "ResourceClaims defines which ResourceClaims must be allocated\nand reserved before the Pod is allowed to start. The resources\nwill be made available to those containers which consume them\nby name.\n\nThis is a stable field but requires that the\nDynamicResourceAllocation feature gate is enabled.\n\nThis field is immutable.",
                   "items": {
-                    "description": "PodResourceClaim references exactly one ResourceClaim, either directly\nor by naming a ResourceClaimTemplate which is then turned into a ResourceClaim\nfor the pod.\n\nIt adds a name to it that uniquely identifies the ResourceClaim inside the Pod.\nContainers that need access to the ResourceClaim reference it with this name.",
+                    "description": "PodResourceClaim references exactly one ResourceClaim, either directly\nor by naming a ResourceClaimTemplate which is then turned into a ResourceClaim\nfor the pod.\n\nIt adds a name to it that uniquely identifies the ResourceClaim inside the Pod.\nContainers that need access to the ResourceClaim reference it with this name.\n\nWhen the DRAWorkloadResourceClaims feature gate is enabled and this Pod\nbelongs to a PodGroup, a PodResourceClaim is matched to a\nPodGroupResourceClaim if all of their fields are equal (Name,\nResourceClaimName, and ResourceClaimTemplateName). A matched claim references\na single ResourceClaim shared across all Pods in the PodGroup, reserved for\nthe PodGroup in ResourceClaimStatus.ReservedFor rather than for individual\nPods.",
                     "properties": {
                       "name": {
                         "description": "Name uniquely identifies this resource claim inside the pod.\nThis must be a DNS_LABEL.",
@@ -5505,7 +5636,7 @@
                         "type": "string"
                       },
                       "resourceClaimTemplateName": {
-                        "description": "ResourceClaimTemplateName is the name of a ResourceClaimTemplate\nobject in the same namespace as this pod.\n\nThe template will be used to create a new ResourceClaim, which will\nbe bound to this pod. When this pod is deleted, the ResourceClaim\nwill also be deleted. The pod name and resource name, along with a\ngenerated component, will be used to form a unique name for the\nResourceClaim, which will be recorded in pod.status.resourceClaimStatuses.\n\nThis field is immutable and no changes will be made to the\ncorresponding ResourceClaim by the control plane after creating the\nResourceClaim.\n\nExactly one of ResourceClaimName and ResourceClaimTemplateName must\nbe set.",
+                        "description": "ResourceClaimTemplateName is the name of a ResourceClaimTemplate\nobject in the same namespace as this pod.\n\nThe template will be used to create a new ResourceClaim, which will\nbe bound to this pod. When this pod is deleted, the ResourceClaim\nwill also be deleted. The pod name and resource name, along with a\ngenerated component, will be used to form a unique name for the\nResourceClaim, which will be recorded in pod.status.resourceClaimStatuses.\n\nWhen the DRAWorkloadResourceClaims feature gate is enabled and the pod\nbelongs to a PodGroup that defines a PodGroupResourceClaim with the same\nName and ResourceClaimTemplateName, this PodResourceClaim resolves to the\nResourceClaim generated for the PodGroup. All pods in the group that\ndefine an equivalent PodResourceClaim matching the\nPodGroupResourceClaim's Name and ResourceClaimTemplateName share the same\ngenerated ResourceClaim. ResourceClaims generated for a PodGroup are\nowned by the PodGroup and their lifecycles are tied to the PodGroup\ninstead of any individual pod.\n\nThis field is immutable and no changes will be made to the\ncorresponding ResourceClaim by the control plane after creating the\nResourceClaim.\n\nExactly one of ResourceClaimName and ResourceClaimTemplateName must\nbe set.",
                         "type": "string"
                       }
                     },
@@ -5615,6 +5746,16 @@
                     "name"
                   ],
                   "x-kubernetes-list-type": "map"
+                },
+                "schedulingGroup": {
+                  "description": "SchedulingGroup provides a reference to the immediate scheduling runtime\ngrouping object that this Pod belongs to.\nThis field is used by the scheduler to identify the group and apply the\ncorrect group scheduling policies. The association with a group also\nimpacts other lifecycle aspects of a Pod that are relevant in a wider context\nof scheduling like preemption, resource attachment, etc. If not specified,\nthe Pod is treated as a single unit in all of these aspects.\nThe group object referenced by this field may not exist at the time the\nPod is created.\nThis field is immutable, but a group object with the same name may be\nrecreated with different policies. Doing this during pod scheduling\nmay result in the placement not conforming to the expected policies.",
+                  "properties": {
+                    "podGroupName": {
+                      "description": "PodGroupName specifies the name of the standalone PodGroup object\nthat represents the runtime instance of this group.\nMust be a DNS subdomain.",
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
                 },
                 "securityContext": {
                   "description": "SecurityContext holds pod-level security attributes and common container settings.\nOptional: Defaults to empty.  See type description for default values of each field.",
@@ -5802,7 +5943,7 @@
                         "type": "string"
                       },
                       "operator": {
-                        "description": "Operator represents a key's relationship to the value.\nValid operators are Exists and Equal. Defaults to Equal.\nExists is equivalent to wildcard for value, so that a pod can\ntolerate all taints of a particular category.",
+                        "description": "Operator represents a key's relationship to the value.\nValid operators are Exists, Equal, Lt, and Gt. Defaults to Equal.\nExists is equivalent to wildcard for value, so that a pod can\ntolerate all taints of a particular category.\nLt and Gt perform numeric comparisons (requires feature gate TaintTolerationComparisonOperators).",
                         "type": "string"
                       },
                       "tolerationSeconds": {
@@ -6352,7 +6493,7 @@
                                     "type": "object"
                                   },
                                   "resources": {
-                                    "description": "resources represents the minimum resources the volume should have.\nIf RecoverVolumeExpansionFailure feature is enabled users are allowed to specify resource requirements\nthat are lower than previous value but must still be higher than capacity recorded in the\nstatus field of the claim.\nMore info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#resources",
+                                    "description": "resources represents the minimum resources the volume should have.\nUsers are allowed to specify resource requirements\nthat are lower than previous value but must still be higher than capacity recorded in the\nstatus field of the claim.\nMore info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#resources",
                                     "properties": {
                                       "limits": {
                                         "additionalProperties": {
@@ -6638,7 +6779,7 @@
                         "type": "object"
                       },
                       "image": {
-                        "description": "image represents an OCI object (a container image or artifact) pulled and mounted on the kubelet's host machine.\nThe volume is resolved at pod startup depending on which PullPolicy value is provided:\n\n- Always: the kubelet always attempts to pull the reference. Container creation will fail If the pull fails.\n- Never: the kubelet never pulls the reference and only uses a local image or artifact. Container creation will fail if the reference isn't present.\n- IfNotPresent: the kubelet pulls if the reference isn't already present on disk. Container creation will fail if the reference isn't present and the pull fails.\n\nThe volume gets re-resolved if the pod gets deleted and recreated, which means that new remote content will become available on pod recreation.\nA failure to resolve or pull the image during pod startup will block containers from starting and may add significant latency. Failures will be retried using normal volume backoff and will be reported on the pod reason and message.\nThe types of objects that may be mounted by this volume are defined by the container runtime implementation on a host machine and at minimum must include all valid types supported by the container image field.\nThe OCI object gets mounted in a single directory (spec.containers[*].volumeMounts.mountPath) by merging the manifest layers in the same way as for container images.\nThe volume will be mounted read-only (ro) and non-executable files (noexec).\nSub path mounts for containers are not supported (spec.containers[*].volumeMounts.subpath) before 1.33.\nThe field spec.securityContext.fsGroupChangePolicy has no effect on this volume type.",
+                        "description": "image represents an OCI object (a container image or artifact) pulled and mounted on the kubelet's host machine.\nThe volume is resolved at pod startup depending on which PullPolicy value is provided:\n\n- Always: the kubelet always attempts to pull the reference. Container creation will fail If the pull fails.\n- Never: the kubelet never pulls the reference and only uses a local image or artifact. Container creation will fail if the reference isn't present.\n- IfNotPresent: the kubelet pulls if the reference isn't already present on disk. Container creation will fail if the reference isn't present and the pull fails.\n\nThe volume gets re-resolved if the pod gets deleted and recreated, which means that new remote content will become available on pod recreation.\nA failure to resolve or pull the image during pod startup will block containers from starting and may add significant latency. Failures will be retried using normal volume backoff and will be reported on the pod reason and message.\nThe types of objects that may be mounted by this volume are defined by the container runtime implementation on a host machine and at minimum must include all valid types supported by the container image field.\nThe OCI object gets mounted in a single directory (spec.containers[*].volumeMounts.mountPath) by merging the manifest layers in the same way as for container images.\nThe volume will be mounted read-only (ro).\nSub path mounts for containers are not supported (spec.containers[*].volumeMounts.subpath) before 1.33.\nThe field spec.securityContext.fsGroupChangePolicy has no effect on this volume type.",
                         "properties": {
                           "pullPolicy": {
                             "description": "Policy for pulling OCI objects. Possible values are:\nAlways: the kubelet always attempts to pull the reference. Container creation will fail If the pull fails.\nNever: the kubelet never pulls the reference and only uses a local image or artifact. Container creation will fail if the reference isn't present.\nIfNotPresent: the kubelet pulls if the reference isn't already present on disk. Container creation will fail if the reference isn't present and the pull fails.\nDefaults to Always if :latest tag is specified, or IfNotPresent otherwise.",
@@ -6781,7 +6922,7 @@
                         "type": "object"
                       },
                       "portworxVolume": {
-                        "description": "portworxVolume represents a portworx volume attached and mounted on kubelets host machine.\nDeprecated: PortworxVolume is deprecated. All operations for the in-tree portworxVolume type\nare redirected to the pxd.portworx.com CSI driver when the CSIMigrationPortworx feature-gate\nis on.",
+                        "description": "portworxVolume represents a portworx volume attached and mounted on kubelets host machine.\nDeprecated: PortworxVolume is deprecated. All operations for the in-tree portworxVolume type\nare redirected to the pxd.portworx.com CSI driver.",
                         "properties": {
                           "fsType": {
                             "description": "fSType represents the filesystem type to mount\nMust be a filesystem type supported by the host operating system.\nEx. \"ext4\", \"xfs\". Implicitly inferred to be \"ext4\" if unspecified.",
@@ -7033,6 +7174,13 @@
                                     "signerName": {
                                       "description": "Kubelet's generated CSRs will be addressed to this signer.",
                                       "type": "string"
+                                    },
+                                    "userAnnotations": {
+                                      "additionalProperties": {
+                                        "type": "string"
+                                      },
+                                      "description": "userAnnotations allow pod authors to pass additional information to\nthe signer implementation.  Kubernetes does not restrict or validate this\nmetadata in any way.\n\nThese values are copied verbatim into the `spec.unverifiedUserAnnotations` field of\nthe PodCertificateRequest objects that Kubelet creates.\n\nEntries are subject to the same validation as object metadata annotations,\nwith the addition that all keys must be domain-prefixed. No restrictions\nare placed on values, except an overall size limitation on the entire field.\n\nSigners should document the keys and values they support. Signers should\ndeny requests that contain keys they do not recognize.",
+                                      "type": "object"
                                     }
                                   },
                                   "required": [
@@ -7415,16 +7563,52 @@
     "status": {
       "description": "Most recently observed status of the Pooler. This data may not be up to\ndate. Populated by the system. Read-only.\nMore info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#spec-and-status",
       "properties": {
+        "error": {
+          "description": "Error is the latest admission validation error",
+          "type": "string"
+        },
+        "image": {
+          "description": "Image is the resolved pgbouncer container image that the operator is\nusing for this Pooler, including any override coming from spec.template.\nWhile Phase is Active or Paused this field reflects what the Deployment\nactually runs; while Phase is Inactive or Failed it may carry the last\nsuccessfully resolved value (or be empty if the Pooler has never reconciled\nsuccessfully).",
+          "type": "string"
+        },
         "instances": {
           "description": "The number of pods trying to be scheduled",
           "format": "int32",
           "type": "integer"
+        },
+        "phase": {
+          "description": "Phase summarizes the overall lifecycle state of the Pooler.",
+          "enum": [
+            "active",
+            "paused",
+            "inactive",
+            "failed"
+          ],
+          "type": "string"
+        },
+        "phaseReason": {
+          "description": "PhaseReason is a human-readable explanation of the current Phase.",
+          "type": "string"
         },
         "secrets": {
           "description": "The resource version of the config object",
           "properties": {
             "clientCA": {
               "description": "The client CA secret version",
+              "properties": {
+                "name": {
+                  "description": "The name of the secret",
+                  "type": "string"
+                },
+                "version": {
+                  "description": "The ResourceVersion of the secret",
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            },
+            "clientTLS": {
+              "description": "The client TLS secret version",
               "properties": {
                 "name": {
                   "description": "The name of the secret",

@@ -797,7 +797,7 @@
                     "type": "string"
                   },
                   "operator": {
-                    "description": "Operator represents a key's relationship to the value.\nValid operators are Exists and Equal. Defaults to Equal.\nExists is equivalent to wildcard for value, so that a pod can\ntolerate all taints of a particular category.",
+                    "description": "Operator represents a key's relationship to the value.\nValid operators are Exists, Equal, Lt, and Gt. Defaults to Equal.\nExists is equivalent to wildcard for value, so that a pod can\ntolerate all taints of a particular category.\nLt and Gt perform numeric comparisons (requires feature gate TaintTolerationComparisonOperators).",
                     "type": "string"
                   },
                   "tolerationSeconds": {
@@ -905,6 +905,10 @@
                         "name"
                       ],
                       "type": "object"
+                    },
+                    "useDefaultAzureCredentials": {
+                      "description": "Use the default Azure authentication flow, which includes DefaultAzureCredential.\nThis allows authentication using environment variables and managed identities.",
+                      "type": "boolean"
                     }
                   },
                   "type": "object"
@@ -920,10 +924,11 @@
                       "type": "array"
                     },
                     "compression": {
-                      "description": "Compress a backup file (a tar file per tablespace) while streaming it\nto the object store. Available options are empty string (no\ncompression, default), `gzip`, `bzip2`, and `snappy`.",
+                      "description": "Compress a backup file (a tar file per tablespace) while streaming it\nto the object store. Available options are empty string (no\ncompression, default), `gzip`, `bzip2`, `lz4`, and `snappy`.",
                       "enum": [
                         "bzip2",
                         "gzip",
+                        "lz4",
                         "snappy"
                       ],
                       "type": "string"
@@ -1282,14 +1287,35 @@
                       "type": "array"
                     },
                     "pgDumpExtraOptions": {
-                      "description": "List of custom options to pass to the `pg_dump` command. IMPORTANT:\nUse these options with caution and at your own risk, as the operator\ndoes not validate their content. Be aware that certain options may\nconflict with the operator's intended functionality or design.",
+                      "description": "List of custom options to pass to the `pg_dump` command.\n\nIMPORTANT: Use with caution. The operator does not validate these options,\nand certain flags may interfere with its intended functionality or design.\nYou are responsible for ensuring that the provided options are compatible\nwith your environment and desired behavior.",
+                      "items": {
+                        "type": "string"
+                      },
+                      "type": "array"
+                    },
+                    "pgRestoreDataOptions": {
+                      "description": "Custom options to pass to the `pg_restore` command during the `data`\nsection. This setting overrides the generic `pgRestoreExtraOptions` value.\n\nIMPORTANT: Use with caution. The operator does not validate these options,\nand certain flags may interfere with its intended functionality or design.\nYou are responsible for ensuring that the provided options are compatible\nwith your environment and desired behavior.",
                       "items": {
                         "type": "string"
                       },
                       "type": "array"
                     },
                     "pgRestoreExtraOptions": {
-                      "description": "List of custom options to pass to the `pg_restore` command. IMPORTANT:\nUse these options with caution and at your own risk, as the operator\ndoes not validate their content. Be aware that certain options may\nconflict with the operator's intended functionality or design.",
+                      "description": "List of custom options to pass to the `pg_restore` command.\n\nIMPORTANT: Use with caution. The operator does not validate these options,\nand certain flags may interfere with its intended functionality or design.\nYou are responsible for ensuring that the provided options are compatible\nwith your environment and desired behavior.",
+                      "items": {
+                        "type": "string"
+                      },
+                      "type": "array"
+                    },
+                    "pgRestorePostdataOptions": {
+                      "description": "Custom options to pass to the `pg_restore` command during the `post-data`\nsection. This setting overrides the generic `pgRestoreExtraOptions` value.\n\nIMPORTANT: Use with caution. The operator does not validate these options,\nand certain flags may interfere with its intended functionality or design.\nYou are responsible for ensuring that the provided options are compatible\nwith your environment and desired behavior.",
+                      "items": {
+                        "type": "string"
+                      },
+                      "type": "array"
+                    },
+                    "pgRestorePredataOptions": {
+                      "description": "Custom options to pass to the `pg_restore` command during the `pre-data`\nsection. This setting overrides the generic `pgRestoreExtraOptions` value.\n\nIMPORTANT: Use with caution. The operator does not validate these options,\nand certain flags may interfere with its intended functionality or design.\nYou are responsible for ensuring that the provided options are compatible\nwith your environment and desired behavior.",
                       "items": {
                         "type": "string"
                       },
@@ -1359,7 +1385,7 @@
                   "type": "string"
                 },
                 "options": {
-                  "description": "The list of options that must be passed to initdb when creating the cluster.\nDeprecated: This could lead to inconsistent configurations,\nplease use the explicit provided parameters instead.\nIf defined, explicit values will be ignored.",
+                  "description": "The list of options that must be passed to initdb when creating the cluster.\n\nDeprecated: This could lead to inconsistent configurations,\nplease use the explicit provided parameters instead.\nIf defined, explicit values will be ignored.",
                   "items": {
                     "type": "string"
                   },
@@ -1681,7 +1707,7 @@
                       "type": "string"
                     },
                     "targetTime": {
-                      "description": "The target time as a timestamp in the RFC3339 standard",
+                      "description": "The target time as a timestamp in RFC3339 format or PostgreSQL timestamp format.\nTimestamps without an explicit timezone are interpreted as UTC.",
                       "type": "string"
                     },
                     "targetXID": {
@@ -2107,7 +2133,7 @@
                       "type": "object"
                     },
                     "resources": {
-                      "description": "resources represents the minimum resources the volume should have.\nIf RecoverVolumeExpansionFailure feature is enabled users are allowed to specify resource requirements\nthat are lower than previous value but must still be higher than capacity recorded in the\nstatus field of the claim.\nMore info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#resources",
+                      "description": "resources represents the minimum resources the volume should have.\nUsers are allowed to specify resource requirements\nthat are lower than previous value but must still be higher than capacity recorded in the\nstatus field of the claim.\nMore info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#resources",
                       "properties": {
                         "limits": {
                           "additionalProperties": {
@@ -2335,6 +2361,10 @@
                           "name"
                         ],
                         "type": "object"
+                      },
+                      "useDefaultAzureCredentials": {
+                        "description": "Use the default Azure authentication flow, which includes DefaultAzureCredential.\nThis allows authentication using environment variables and managed identities.",
+                        "type": "boolean"
                       }
                     },
                     "type": "object"
@@ -2350,10 +2380,11 @@
                         "type": "array"
                       },
                       "compression": {
-                        "description": "Compress a backup file (a tar file per tablespace) while streaming it\nto the object store. Available options are empty string (no\ncompression, default), `gzip`, `bzip2`, and `snappy`.",
+                        "description": "Compress a backup file (a tar file per tablespace) while streaming it\nto the object store. Available options are empty string (no\ncompression, default), `gzip`, `bzip2`, `lz4`, and `snappy`.",
                         "enum": [
                           "bzip2",
                           "gzip",
+                          "lz4",
                           "snappy"
                         ],
                         "type": "string"
@@ -2880,7 +2911,7 @@
                     "type": "string"
                   },
                   "inRoles": {
-                    "description": "List of one or more existing roles to which this role will be\nimmediately added as a new member. Default empty.",
+                    "description": "List of one or more existing roles to which this role will be\nimmediately added as a new member. Default empty.\nChanges to the list are applied to an existing role through\n`GRANT` and `REVOKE` statements, not only at role creation.",
                     "items": {
                       "type": "string"
                     },
@@ -2888,7 +2919,7 @@
                   },
                   "inherit": {
                     "default": true,
-                    "description": "Whether a role \"inherits\" the privileges of roles it is a member of.\nDefaults is `true`.",
+                    "description": "Whether a role \"inherits\" the privileges of roles it is a member of.\nDefault is `true`.",
                     "type": "boolean"
                   },
                   "login": {
@@ -2900,7 +2931,7 @@
                     "type": "string"
                   },
                   "passwordSecret": {
-                    "description": "Secret containing the password of the role (if present)\nIf null, the password will be ignored unless DisablePassword is set",
+                    "description": "Secret containing the password of the role (if present).\nIf null, the password will be ignored unless DisablePassword is set.\nWhen set, the secret must follow the `kubernetes.io/basic-auth` format\nand contain both a `username` and a `password` field.",
                     "properties": {
                       "name": {
                         "description": "Name of the referent.",
@@ -3256,6 +3287,10 @@
               "description": "Enable or disable the `PodMonitor`\n\nDeprecated: This feature will be removed in an upcoming release. If\nyou need this functionality, you can create a PodMonitor manually.",
               "type": "boolean"
             },
+            "metricsQueriesTTL": {
+              "description": "The interval during which metrics computed from queries are considered current.\nOnce it is exceeded, a new scrape will trigger a rerun\nof the queries.\nIf not set, defaults to 30 seconds, in line with Prometheus scraping defaults.\nSetting this to zero disables the caching mechanism and can cause heavy load on the PostgreSQL server.",
+              "type": "string"
+            },
             "podMonitorMetricRelabelings": {
               "description": "The list of metric relabelings for the `PodMonitor`. Applied to samples before ingestion.\n\nDeprecated: This feature will be removed in an upcoming release. If\nyou need this functionality, you can create a PodMonitor manually.",
               "items": {
@@ -3456,6 +3491,222 @@
           },
           "type": "array"
         },
+        "podSecurityContext": {
+          "description": "Override the PodSecurityContext applied to every Pod of the cluster.\nWhen set, this overrides the operator's default PodSecurityContext for the cluster.\nIf omitted, the operator defaults are used.\nThis field doesn't have any effect if SecurityContextConstraints are present.",
+          "properties": {
+            "appArmorProfile": {
+              "description": "appArmorProfile is the AppArmor options to use by the containers in this pod.\nNote that this field cannot be set when spec.os.name is windows.",
+              "properties": {
+                "localhostProfile": {
+                  "description": "localhostProfile indicates a profile loaded on the node that should be used.\nThe profile must be preconfigured on the node to work.\nMust match the loaded name of the profile.\nMust be set if and only if type is \"Localhost\".",
+                  "type": "string"
+                },
+                "type": {
+                  "description": "type indicates which kind of AppArmor profile will be applied.\nValid options are:\n  Localhost - a profile pre-loaded on the node.\n  RuntimeDefault - the container runtime's default profile.\n  Unconfined - no AppArmor enforcement.",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "type"
+              ],
+              "type": "object"
+            },
+            "fsGroup": {
+              "description": "A special supplemental group that applies to all containers in a pod.\nSome volume types allow the Kubelet to change the ownership of that volume\nto be owned by the pod:\n\n1. The owning GID will be the FSGroup\n2. The setgid bit is set (new files created in the volume will be owned by FSGroup)\n3. The permission bits are OR'd with rw-rw----\n\nIf unset, the Kubelet will not modify the ownership and permissions of any volume.\nNote that this field cannot be set when spec.os.name is windows.",
+              "format": "int64",
+              "type": "integer"
+            },
+            "fsGroupChangePolicy": {
+              "description": "fsGroupChangePolicy defines behavior of changing ownership and permission of the volume\nbefore being exposed inside Pod. This field will only apply to\nvolume types which support fsGroup based ownership(and permissions).\nIt will have no effect on ephemeral volume types such as: secret, configmaps\nand emptydir.\nValid values are \"OnRootMismatch\" and \"Always\". If not specified, \"Always\" is used.\nNote that this field cannot be set when spec.os.name is windows.",
+              "type": "string"
+            },
+            "runAsGroup": {
+              "description": "The GID to run the entrypoint of the container process.\nUses runtime default if unset.\nMay also be set in SecurityContext.  If set in both SecurityContext and\nPodSecurityContext, the value specified in SecurityContext takes precedence\nfor that container.\nNote that this field cannot be set when spec.os.name is windows.",
+              "format": "int64",
+              "type": "integer"
+            },
+            "runAsNonRoot": {
+              "description": "Indicates that the container must run as a non-root user.\nIf true, the Kubelet will validate the image at runtime to ensure that it\ndoes not run as UID 0 (root) and fail to start the container if it does.\nIf unset or false, no such validation will be performed.\nMay also be set in SecurityContext.  If set in both SecurityContext and\nPodSecurityContext, the value specified in SecurityContext takes precedence.",
+              "type": "boolean"
+            },
+            "runAsUser": {
+              "description": "The UID to run the entrypoint of the container process.\nDefaults to user specified in image metadata if unspecified.\nMay also be set in SecurityContext.  If set in both SecurityContext and\nPodSecurityContext, the value specified in SecurityContext takes precedence\nfor that container.\nNote that this field cannot be set when spec.os.name is windows.",
+              "format": "int64",
+              "type": "integer"
+            },
+            "seLinuxChangePolicy": {
+              "description": "seLinuxChangePolicy defines how the container's SELinux label is applied to all volumes used by the Pod.\nIt has no effect on nodes that do not support SELinux or to volumes does not support SELinux.\nValid values are \"MountOption\" and \"Recursive\".\n\n\"Recursive\" means relabeling of all files on all Pod volumes by the container runtime.\nThis may be slow for large volumes, but allows mixing privileged and unprivileged Pods sharing the same volume on the same node.\n\n\"MountOption\" mounts all eligible Pod volumes with `-o context` mount option.\nThis requires all Pods that share the same volume to use the same SELinux label.\nIt is not possible to share the same volume among privileged and unprivileged Pods.\nEligible volumes are in-tree FibreChannel and iSCSI volumes, and all CSI volumes\nwhose CSI driver announces SELinux support by setting spec.seLinuxMount: true in their\nCSIDriver instance. Other volumes are always re-labelled recursively.\n\"MountOption\" value is allowed only when SELinuxMount feature gate is enabled.\n\nIf not specified and SELinuxMount feature gate is enabled, \"MountOption\" is used.\nIf not specified and SELinuxMount feature gate is disabled, \"MountOption\" is used for ReadWriteOncePod volumes\nand \"Recursive\" for all other volumes.\n\nThis field affects only Pods that have SELinux label set, either in PodSecurityContext or in SecurityContext of all containers.\n\nAll Pods that use the same volume should use the same seLinuxChangePolicy, otherwise some pods can get stuck in ContainerCreating state.\nNote that this field cannot be set when spec.os.name is windows.",
+              "type": "string"
+            },
+            "seLinuxOptions": {
+              "description": "The SELinux context to be applied to all containers.\nIf unspecified, the container runtime will allocate a random SELinux context for each\ncontainer.  May also be set in SecurityContext.  If set in\nboth SecurityContext and PodSecurityContext, the value specified in SecurityContext\ntakes precedence for that container.\nNote that this field cannot be set when spec.os.name is windows.",
+              "properties": {
+                "level": {
+                  "description": "Level is SELinux level label that applies to the container.",
+                  "type": "string"
+                },
+                "role": {
+                  "description": "Role is a SELinux role label that applies to the container.",
+                  "type": "string"
+                },
+                "type": {
+                  "description": "Type is a SELinux type label that applies to the container.",
+                  "type": "string"
+                },
+                "user": {
+                  "description": "User is a SELinux user label that applies to the container.",
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            },
+            "seccompProfile": {
+              "description": "The seccomp options to use by the containers in this pod.\nNote that this field cannot be set when spec.os.name is windows.",
+              "properties": {
+                "localhostProfile": {
+                  "description": "localhostProfile indicates a profile defined in a file on the node should be used.\nThe profile must be preconfigured on the node to work.\nMust be a descending path, relative to the kubelet's configured seccomp profile location.\nMust be set if type is \"Localhost\". Must NOT be set for any other type.",
+                  "type": "string"
+                },
+                "type": {
+                  "description": "type indicates which kind of seccomp profile will be applied.\nValid options are:\n\nLocalhost - a profile defined in a file on the node should be used.\nRuntimeDefault - the container runtime default profile should be used.\nUnconfined - no profile should be applied.",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "type"
+              ],
+              "type": "object"
+            },
+            "supplementalGroups": {
+              "description": "A list of groups applied to the first process run in each container, in\naddition to the container's primary GID and fsGroup (if specified).  If\nthe SupplementalGroupsPolicy feature is enabled, the\nsupplementalGroupsPolicy field determines whether these are in addition\nto or instead of any group memberships defined in the container image.\nIf unspecified, no additional groups are added, though group memberships\ndefined in the container image may still be used, depending on the\nsupplementalGroupsPolicy field.\nNote that this field cannot be set when spec.os.name is windows.",
+              "items": {
+                "format": "int64",
+                "type": "integer"
+              },
+              "type": "array",
+              "x-kubernetes-list-type": "atomic"
+            },
+            "supplementalGroupsPolicy": {
+              "description": "Defines how supplemental groups of the first container processes are calculated.\nValid values are \"Merge\" and \"Strict\". If not specified, \"Merge\" is used.\n(Alpha) Using the field requires the SupplementalGroupsPolicy feature gate to be enabled\nand the container runtime must implement support for this feature.\nNote that this field cannot be set when spec.os.name is windows.",
+              "type": "string"
+            },
+            "sysctls": {
+              "description": "Sysctls hold a list of namespaced sysctls used for the pod. Pods with unsupported\nsysctls (by the container runtime) might fail to launch.\nNote that this field cannot be set when spec.os.name is windows.",
+              "items": {
+                "description": "Sysctl defines a kernel parameter to be set",
+                "properties": {
+                  "name": {
+                    "description": "Name of a property to set",
+                    "type": "string"
+                  },
+                  "value": {
+                    "description": "Value of a property to set",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "name",
+                  "value"
+                ],
+                "type": "object"
+              },
+              "type": "array",
+              "x-kubernetes-list-type": "atomic"
+            },
+            "windowsOptions": {
+              "description": "The Windows specific settings applied to all containers.\nIf unspecified, the options within a container's SecurityContext will be used.\nIf set in both SecurityContext and PodSecurityContext, the value specified in SecurityContext takes precedence.\nNote that this field cannot be set when spec.os.name is linux.",
+              "properties": {
+                "gmsaCredentialSpec": {
+                  "description": "GMSACredentialSpec is where the GMSA admission webhook\n(https://github.com/kubernetes-sigs/windows-gmsa) inlines the contents of the\nGMSA credential spec named by the GMSACredentialSpecName field.",
+                  "type": "string"
+                },
+                "gmsaCredentialSpecName": {
+                  "description": "GMSACredentialSpecName is the name of the GMSA credential spec to use.",
+                  "type": "string"
+                },
+                "hostProcess": {
+                  "description": "HostProcess determines if a container should be run as a 'Host Process' container.\nAll of a Pod's containers must have the same effective HostProcess value\n(it is not allowed to have a mix of HostProcess containers and non-HostProcess containers).\nIn addition, if HostProcess is true then HostNetwork must also be set to true.",
+                  "type": "boolean"
+                },
+                "runAsUserName": {
+                  "description": "The UserName in Windows to run the entrypoint of the container process.\nDefaults to the user specified in image metadata if unspecified.\nMay also be set in PodSecurityContext. If set in both SecurityContext and\nPodSecurityContext, the value specified in SecurityContext takes precedence.",
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          },
+          "type": "object"
+        },
+        "podSelectorRefs": {
+          "description": "PodSelectorRefs defines named pod label selectors that can be referenced\nin pg_hba rules using the ${podselector:NAME} syntax in the address field.\nThe operator resolves matching pod IPs and the instance manager expands\npg_hba lines accordingly. Only pods in the Cluster's own namespace are considered.",
+          "items": {
+            "description": "PodSelectorRef defines a named pod label selector for use in pg_hba rules.\nPods matching the selector in the Cluster's namespace will have their IPs\nresolved and made available for pg_hba address expansion via the\n`${podselector:NAME}` syntax.",
+            "properties": {
+              "name": {
+                "description": "Name is the identifier used to reference this selector in pg_hba rules\nvia the ${podselector:NAME} syntax in the address field.",
+                "minLength": 1,
+                "pattern": "^[a-z]([a-z0-9_-]*[a-z0-9])?$",
+                "type": "string"
+              },
+              "selector": {
+                "description": "Selector is a label selector that identifies the pods whose IPs\nshould be resolved. Only pods in the Cluster's namespace are considered.",
+                "properties": {
+                  "matchExpressions": {
+                    "description": "matchExpressions is a list of label selector requirements. The requirements are ANDed.",
+                    "items": {
+                      "description": "A label selector requirement is a selector that contains values, a key, and an operator that\nrelates the key and values.",
+                      "properties": {
+                        "key": {
+                          "description": "key is the label key that the selector applies to.",
+                          "type": "string"
+                        },
+                        "operator": {
+                          "description": "operator represents a key's relationship to a set of values.\nValid operators are In, NotIn, Exists and DoesNotExist.",
+                          "type": "string"
+                        },
+                        "values": {
+                          "description": "values is an array of string values. If the operator is In or NotIn,\nthe values array must be non-empty. If the operator is Exists or DoesNotExist,\nthe values array must be empty. This array is replaced during a strategic\nmerge patch.",
+                          "items": {
+                            "type": "string"
+                          },
+                          "type": "array",
+                          "x-kubernetes-list-type": "atomic"
+                        }
+                      },
+                      "required": [
+                        "key",
+                        "operator"
+                      ],
+                      "type": "object"
+                    },
+                    "type": "array",
+                    "x-kubernetes-list-type": "atomic"
+                  },
+                  "matchLabels": {
+                    "additionalProperties": {
+                      "type": "string"
+                    },
+                    "description": "matchLabels is a map of {key,value} pairs. A single {key,value} in the matchLabels\nmap is equivalent to an element of matchExpressions, whose key field is \"key\", the\noperator is \"In\", and the values array contains only \"value\". The requirements are ANDed.",
+                    "type": "object"
+                  }
+                },
+                "type": "object",
+                "x-kubernetes-map-type": "atomic"
+              }
+            },
+            "required": [
+              "name",
+              "selector"
+            ],
+            "type": "object"
+          },
+          "type": "array",
+          "x-kubernetes-list-map-keys": [
+            "name"
+          ],
+          "x-kubernetes-list-type": "map"
+        },
         "postgresGID": {
           "default": 26,
           "description": "The GID of the `postgres` user inside the image, defaults to `26`",
@@ -3480,12 +3731,48 @@
               "items": {
                 "description": "ExtensionConfiguration is the configuration used to add\nPostgreSQL extensions to the Cluster.",
                 "properties": {
+                  "bin_path": {
+                    "description": "A list of directories within the image to be appended to the\nPostgreSQL process's `PATH` environment variable.",
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  },
                   "dynamic_library_path": {
                     "description": "The list of directories inside the image which should be added to dynamic_library_path.\nIf not defined, defaults to \"/lib\".",
                     "items": {
                       "type": "string"
                     },
                     "type": "array"
+                  },
+                  "env": {
+                    "description": "Env is a list of custom environment variables to be set in the\nPostgreSQL process for this extension. It is the responsibility of the\ncluster administrator to ensure the variables are correct for the\nspecific extension. Note that changes to these variables require\na manual cluster restart to take effect.",
+                    "items": {
+                      "description": "ExtensionEnvVar defines an environment variable for a specific extension\nimage volume.",
+                      "properties": {
+                        "name": {
+                          "description": "Name of the environment variable to be injected into the\nPostgreSQL process.",
+                          "minLength": 1,
+                          "pattern": "^[a-zA-Z_][a-zA-Z0-9_]*$",
+                          "type": "string"
+                        },
+                        "value": {
+                          "description": "Value of the environment variable. CloudNativePG performs a direct\nreplacement of this value, with support for placeholder expansion.\nThe ${`image_root`} placeholder resolves to the absolute mount path\nof the extension's volume (e.g., `/extensions/my-extension`). This\nis particularly useful for allowing applications or libraries to\nlocate specific directories within the mounted image.\nUnrecognized placeholders are rejected. To include a literal ${...}\nin the value, escape it as $${...}.",
+                          "minLength": 1,
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "name",
+                        "value"
+                      ],
+                      "type": "object"
+                    },
+                    "type": "array",
+                    "x-kubernetes-list-map-keys": [
+                      "name"
+                    ],
+                    "x-kubernetes-list-type": "map"
                   },
                   "extension_control_path": {
                     "description": "The list of directories inside the image which should be added to extension_control_path.\nIf not defined, defaults to \"/share\".",
@@ -3495,7 +3782,7 @@
                     "type": "array"
                   },
                   "image": {
-                    "description": "The image containing the extension, required",
+                    "description": "The image containing the extension.",
                     "properties": {
                       "pullPolicy": {
                         "description": "Policy for pulling OCI objects. Possible values are:\nAlways: the kubelet always attempts to pull the reference. Container creation will fail If the pull fails.\nNever: the kubelet never pulls the reference and only uses a local image or artifact. Container creation will fail if the reference isn't present.\nIfNotPresent: the kubelet pulls if the reference isn't already present on disk. Container creation will fail if the reference isn't present and the pull fails.\nDefaults to Always if :latest tag is specified, or IfNotPresent otherwise.",
@@ -3506,13 +3793,7 @@
                         "type": "string"
                       }
                     },
-                    "type": "object",
-                    "x-kubernetes-validations": [
-                      {
-                        "message": "An image reference is required",
-                        "rule": "has(self.reference)"
-                      }
-                    ]
+                    "type": "object"
                   },
                   "ld_library_path": {
                     "description": "The list of directories inside the image which should be added to ld_library_path.",
@@ -3522,19 +3803,23 @@
                     "type": "array"
                   },
                   "name": {
-                    "description": "The name of the extension, required",
+                    "description": "The name of the extension, required. The limit of 59 characters\nleaves room for the prefix the operator adds when deriving the\nextension's Kubernetes Volume name (capped at 63 characters).",
+                    "maxLength": 59,
                     "minLength": 1,
-                    "pattern": "^[a-z0-9]([-a-z0-9]*[a-z0-9])?$",
+                    "pattern": "^[a-z0-9]([-a-z0-9_]*[a-z0-9])?$",
                     "type": "string"
                   }
                 },
                 "required": [
-                  "image",
                   "name"
                 ],
                 "type": "object"
               },
-              "type": "array"
+              "type": "array",
+              "x-kubernetes-list-map-keys": [
+                "name"
+              ],
+              "x-kubernetes-list-type": "map"
             },
             "ldap": {
               "description": "Options to specify LDAP configuration",
@@ -3629,7 +3914,7 @@
               "type": "object"
             },
             "pg_hba": {
-              "description": "PostgreSQL Host Based Authentication rules (lines to be appended\nto the pg_hba.conf file)",
+              "description": "PostgreSQL Host Based Authentication rules (lines to be appended\nto the pg_hba.conf file).\nUse the ${podselector:NAME} syntax to reference a pod selector;\nthe rule will be expanded for each Pod IP matching that selector.",
               "items": {
                 "type": "string"
               },
@@ -3685,6 +3970,10 @@
                   ],
                   "type": "string"
                 },
+                "failoverQuorum": {
+                  "description": "FailoverQuorum enables a quorum-based check before failover, improving\ndata durability and safety during failover events in CloudNativePG-managed\nPostgreSQL clusters.",
+                  "type": "boolean"
+                },
                 "maxStandbyNamesFromCluster": {
                   "description": "Specifies the maximum number of local cluster pods that can be\nautomatically included in the `synchronous_standby_names` option in\nPostgreSQL.",
                   "type": "integer"
@@ -3737,9 +4026,43 @@
           },
           "type": "object"
         },
+        "primaryLease": {
+          "description": "Configuration of the Kubernetes `Lease` used to coordinate safe primary\nelection within the cluster. When omitted, the operator applies built-in\ndefaults; tune these values only if you understand the consequences for\nfailover timing.",
+          "properties": {
+            "leaseDurationSeconds": {
+              "default": 15,
+              "description": "How long, in seconds, the primary lease is considered valid before it\nexpires and another instance may acquire it. It must be greater than\n`renewDeadlineSeconds`.\nDefaults to 15.",
+              "format": "int32",
+              "minimum": 1,
+              "type": "integer"
+            },
+            "releasedLeaseDurationSeconds": {
+              "default": 1,
+              "description": "The TTL, in seconds, written when the primary explicitly releases the\nlease on a clean shutdown, allowing a replica to promote without waiting\nfor the full lease duration to expire.\nDefaults to 1.",
+              "format": "int32",
+              "minimum": 1,
+              "type": "integer"
+            },
+            "renewDeadlineSeconds": {
+              "default": 10,
+              "description": "How long, in seconds, the current primary keeps retrying to renew the\nlease before giving up and stopping. It must be smaller than\n`leaseDurationSeconds`.\nDefaults to 10.",
+              "format": "int32",
+              "minimum": 1,
+              "type": "integer"
+            },
+            "retryPeriodSeconds": {
+              "default": 2,
+              "description": "How frequently, in seconds, a non-holder instance retries acquiring or\nrenewing the lease.\nDefaults to 2.",
+              "format": "int32",
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          "type": "object"
+        },
         "primaryUpdateMethod": {
           "default": "restart",
-          "description": "Method to follow to upgrade the primary server during a rolling\nupdate procedure, after all replicas have been successfully updated:\nit can be with a switchover (`switchover`) or in-place (`restart` - default)",
+          "description": "Method to follow to upgrade the primary server during a rolling\nupdate procedure, after all replicas have been successfully updated:\nit can be with a switchover (`switchover`) or in-place (`restart` - default).\nNote: when using `switchover`, the operator will reject updates that change both\nthe image name and PostgreSQL configuration parameters simultaneously to avoid\nconfiguration mismatches during the switchover process.",
           "enum": [
             "switchover",
             "restart"
@@ -4170,6 +4493,13 @@
                       "signerName": {
                         "description": "Kubelet's generated CSRs will be addressed to this signer.",
                         "type": "string"
+                      },
+                      "userAnnotations": {
+                        "additionalProperties": {
+                          "type": "string"
+                        },
+                        "description": "userAnnotations allow pod authors to pass additional information to\nthe signer implementation.  Kubernetes does not restrict or validate this\nmetadata in any way.\n\nThese values are copied verbatim into the `spec.unverifiedUserAnnotations` field of\nthe PodCertificateRequest objects that Kubelet creates.\n\nEntries are subject to the same validation as object metadata annotations,\nwith the addition that all keys must be domain-prefixed. No restrictions\nare placed on values, except an overall size limitation on the entire field.\n\nSigners should document the keys and values they support. Signers should\ndeny requests that contain keys they do not recognize.",
+                        "type": "object"
                       }
                     },
                     "required": [
@@ -4433,6 +4763,156 @@
           ],
           "type": "object"
         },
+        "securityContext": {
+          "description": "Override the SecurityContext applied to every Container in the Pod of the cluster.\nWhen set, this overrides the operator's default Container SecurityContext.\nIf omitted, the operator defaults are used.",
+          "properties": {
+            "allowPrivilegeEscalation": {
+              "description": "AllowPrivilegeEscalation controls whether a process can gain more\nprivileges than its parent process. This bool directly controls if\nthe no_new_privs flag will be set on the container process.\nAllowPrivilegeEscalation is true always when the container is:\n1) run as Privileged\n2) has CAP_SYS_ADMIN\nNote that this field cannot be set when spec.os.name is windows.",
+              "type": "boolean"
+            },
+            "appArmorProfile": {
+              "description": "appArmorProfile is the AppArmor options to use by this container. If set, this profile\noverrides the pod's appArmorProfile.\nNote that this field cannot be set when spec.os.name is windows.",
+              "properties": {
+                "localhostProfile": {
+                  "description": "localhostProfile indicates a profile loaded on the node that should be used.\nThe profile must be preconfigured on the node to work.\nMust match the loaded name of the profile.\nMust be set if and only if type is \"Localhost\".",
+                  "type": "string"
+                },
+                "type": {
+                  "description": "type indicates which kind of AppArmor profile will be applied.\nValid options are:\n  Localhost - a profile pre-loaded on the node.\n  RuntimeDefault - the container runtime's default profile.\n  Unconfined - no AppArmor enforcement.",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "type"
+              ],
+              "type": "object"
+            },
+            "capabilities": {
+              "description": "The capabilities to add/drop when running containers.\nDefaults to the default set of capabilities granted by the container runtime.\nNote that this field cannot be set when spec.os.name is windows.",
+              "properties": {
+                "add": {
+                  "description": "Added capabilities",
+                  "items": {
+                    "description": "Capability represent POSIX capabilities type",
+                    "type": "string"
+                  },
+                  "type": "array",
+                  "x-kubernetes-list-type": "atomic"
+                },
+                "drop": {
+                  "description": "Removed capabilities",
+                  "items": {
+                    "description": "Capability represent POSIX capabilities type",
+                    "type": "string"
+                  },
+                  "type": "array",
+                  "x-kubernetes-list-type": "atomic"
+                }
+              },
+              "type": "object"
+            },
+            "privileged": {
+              "description": "Run container in privileged mode.\nProcesses in privileged containers are essentially equivalent to root on the host.\nDefaults to false.\nNote that this field cannot be set when spec.os.name is windows.",
+              "type": "boolean"
+            },
+            "procMount": {
+              "description": "procMount denotes the type of proc mount to use for the containers.\nThe default value is Default which uses the container runtime defaults for\nreadonly paths and masked paths.\nNote that this field cannot be set when spec.os.name is windows.",
+              "type": "string"
+            },
+            "readOnlyRootFilesystem": {
+              "description": "Whether this container has a read-only root filesystem.\nDefault is false.\nNote that this field cannot be set when spec.os.name is windows.",
+              "type": "boolean"
+            },
+            "runAsGroup": {
+              "description": "The GID to run the entrypoint of the container process.\nUses runtime default if unset.\nMay also be set in PodSecurityContext.  If set in both SecurityContext and\nPodSecurityContext, the value specified in SecurityContext takes precedence.\nNote that this field cannot be set when spec.os.name is windows.",
+              "format": "int64",
+              "type": "integer"
+            },
+            "runAsNonRoot": {
+              "description": "Indicates that the container must run as a non-root user.\nIf true, the Kubelet will validate the image at runtime to ensure that it\ndoes not run as UID 0 (root) and fail to start the container if it does.\nIf unset or false, no such validation will be performed.\nMay also be set in PodSecurityContext.  If set in both SecurityContext and\nPodSecurityContext, the value specified in SecurityContext takes precedence.",
+              "type": "boolean"
+            },
+            "runAsUser": {
+              "description": "The UID to run the entrypoint of the container process.\nDefaults to user specified in image metadata if unspecified.\nMay also be set in PodSecurityContext.  If set in both SecurityContext and\nPodSecurityContext, the value specified in SecurityContext takes precedence.\nNote that this field cannot be set when spec.os.name is windows.",
+              "format": "int64",
+              "type": "integer"
+            },
+            "seLinuxOptions": {
+              "description": "The SELinux context to be applied to the container.\nIf unspecified, the container runtime will allocate a random SELinux context for each\ncontainer.  May also be set in PodSecurityContext.  If set in both SecurityContext and\nPodSecurityContext, the value specified in SecurityContext takes precedence.\nNote that this field cannot be set when spec.os.name is windows.",
+              "properties": {
+                "level": {
+                  "description": "Level is SELinux level label that applies to the container.",
+                  "type": "string"
+                },
+                "role": {
+                  "description": "Role is a SELinux role label that applies to the container.",
+                  "type": "string"
+                },
+                "type": {
+                  "description": "Type is a SELinux type label that applies to the container.",
+                  "type": "string"
+                },
+                "user": {
+                  "description": "User is a SELinux user label that applies to the container.",
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            },
+            "seccompProfile": {
+              "description": "The seccomp options to use by this container. If seccomp options are\nprovided at both the pod & container level, the container options\noverride the pod options.\nNote that this field cannot be set when spec.os.name is windows.",
+              "properties": {
+                "localhostProfile": {
+                  "description": "localhostProfile indicates a profile defined in a file on the node should be used.\nThe profile must be preconfigured on the node to work.\nMust be a descending path, relative to the kubelet's configured seccomp profile location.\nMust be set if type is \"Localhost\". Must NOT be set for any other type.",
+                  "type": "string"
+                },
+                "type": {
+                  "description": "type indicates which kind of seccomp profile will be applied.\nValid options are:\n\nLocalhost - a profile defined in a file on the node should be used.\nRuntimeDefault - the container runtime default profile should be used.\nUnconfined - no profile should be applied.",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "type"
+              ],
+              "type": "object"
+            },
+            "windowsOptions": {
+              "description": "The Windows specific settings applied to all containers.\nIf unspecified, the options from the PodSecurityContext will be used.\nIf set in both SecurityContext and PodSecurityContext, the value specified in SecurityContext takes precedence.\nNote that this field cannot be set when spec.os.name is linux.",
+              "properties": {
+                "gmsaCredentialSpec": {
+                  "description": "GMSACredentialSpec is where the GMSA admission webhook\n(https://github.com/kubernetes-sigs/windows-gmsa) inlines the contents of the\nGMSA credential spec named by the GMSACredentialSpecName field.",
+                  "type": "string"
+                },
+                "gmsaCredentialSpecName": {
+                  "description": "GMSACredentialSpecName is the name of the GMSA credential spec to use.",
+                  "type": "string"
+                },
+                "hostProcess": {
+                  "description": "HostProcess determines if a container should be run as a 'Host Process' container.\nAll of a Pod's containers must have the same effective HostProcess value\n(it is not allowed to have a mix of HostProcess containers and non-HostProcess containers).\nIn addition, if HostProcess is true then HostNetwork must also be set to true.",
+                  "type": "boolean"
+                },
+                "runAsUserName": {
+                  "description": "The UserName in Windows to run the entrypoint of the container process.\nDefaults to the user specified in image metadata if unspecified.\nMay also be set in PodSecurityContext. If set in both SecurityContext and\nPodSecurityContext, the value specified in SecurityContext takes precedence.",
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          },
+          "type": "object"
+        },
+        "serviceAccountName": {
+          "description": "Name of an existing ServiceAccount in the same namespace to use for the cluster.\nWhen specified, the operator will not create a new ServiceAccount\nbut will use the provided one. This is useful for sharing a single\nServiceAccount across multiple clusters (e.g., for cloud IAM configurations).\nIf not specified, a ServiceAccount will be created with the cluster name.\nMutually exclusive with ServiceAccountTemplate.",
+          "maxLength": 253,
+          "pattern": "^[a-z0-9]([-a-z0-9]*[a-z0-9])?$",
+          "type": "string",
+          "x-kubernetes-validations": [
+            {
+              "message": "serviceAccountName is immutable",
+              "rule": "self == oldSelf"
+            }
+          ]
+        },
         "serviceAccountTemplate": {
           "description": "Configure the generation of the service account",
           "properties": {
@@ -4548,7 +5028,7 @@
                   "type": "object"
                 },
                 "resources": {
-                  "description": "resources represents the minimum resources the volume should have.\nIf RecoverVolumeExpansionFailure feature is enabled users are allowed to specify resource requirements\nthat are lower than previous value but must still be higher than capacity recorded in the\nstatus field of the claim.\nMore info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#resources",
+                  "description": "resources represents the minimum resources the volume should have.\nUsers are allowed to specify resource requirements\nthat are lower than previous value but must still be higher than capacity recorded in the\nstatus field of the claim.\nMore info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#resources",
                   "properties": {
                     "limits": {
                       "additionalProperties": {
@@ -4766,7 +5246,7 @@
                         "type": "object"
                       },
                       "resources": {
-                        "description": "resources represents the minimum resources the volume should have.\nIf RecoverVolumeExpansionFailure feature is enabled users are allowed to specify resource requirements\nthat are lower than previous value but must still be higher than capacity recorded in the\nstatus field of the claim.\nMore info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#resources",
+                        "description": "resources represents the minimum resources the volume should have.\nUsers are allowed to specify resource requirements\nthat are lower than previous value but must still be higher than capacity recorded in the\nstatus field of the claim.\nMore info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#resources",
                         "properties": {
                           "limits": {
                             "additionalProperties": {
@@ -5055,7 +5535,7 @@
                   "type": "object"
                 },
                 "resources": {
-                  "description": "resources represents the minimum resources the volume should have.\nIf RecoverVolumeExpansionFailure feature is enabled users are allowed to specify resource requirements\nthat are lower than previous value but must still be higher than capacity recorded in the\nstatus field of the claim.\nMore info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#resources",
+                  "description": "resources represents the minimum resources the volume should have.\nUsers are allowed to specify resource requirements\nthat are lower than previous value but must still be higher than capacity recorded in the\nstatus field of the claim.\nMore info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#resources",
                   "properties": {
                     "limits": {
                       "additionalProperties": {
@@ -5446,7 +5926,7 @@
           "type": "object"
         },
         "latestGeneratedNode": {
-          "description": "ID of the latest generated node (used to avoid node name clashing)",
+          "description": "ID of the latest generated node (used to avoid node name clashing)\n\nDeprecated: this field is not set anymore",
           "type": "integer"
         },
         "managedRolesStatus": {
@@ -5469,7 +5949,7 @@
                 },
                 "type": "array"
               },
-              "description": "CannotReconcile lists roles that cannot be reconciled in PostgreSQL,\nwith an explanation of the cause",
+              "description": "CannotReconcile lists roles that cannot be reconciled, with an\nexplanation of the cause. Failures may originate in PostgreSQL\n(e.g. dropping a role that owns objects) or in Kubernetes (e.g.\nthe referenced password Secret cannot be fetched).",
               "type": "object"
             },
             "passwordStatus": {
@@ -5498,9 +5978,104 @@
           "description": "OnlineUpdateEnabled shows if the online upgrade is enabled inside the cluster",
           "type": "boolean"
         },
+        "operatorCertificateFingerprint": {
+          "description": "OperatorCertificateFingerprint is the SHA256 fingerprint of the operator's\nin-memory client certificate public key. The instance manager pins this\nfingerprint to authenticate requests from the operator.",
+          "type": "string"
+        },
         "pgDataImageInfo": {
           "description": "PGDataImageInfo contains the details of the latest image that has run on the current data directory.",
           "properties": {
+            "extensions": {
+              "description": "Extensions contains the container image extensions available for the current Image",
+              "items": {
+                "description": "ExtensionConfiguration is the configuration used to add\nPostgreSQL extensions to the Cluster.",
+                "properties": {
+                  "bin_path": {
+                    "description": "A list of directories within the image to be appended to the\nPostgreSQL process's `PATH` environment variable.",
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  },
+                  "dynamic_library_path": {
+                    "description": "The list of directories inside the image which should be added to dynamic_library_path.\nIf not defined, defaults to \"/lib\".",
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  },
+                  "env": {
+                    "description": "Env is a list of custom environment variables to be set in the\nPostgreSQL process for this extension. It is the responsibility of the\ncluster administrator to ensure the variables are correct for the\nspecific extension. Note that changes to these variables require\na manual cluster restart to take effect.",
+                    "items": {
+                      "description": "ExtensionEnvVar defines an environment variable for a specific extension\nimage volume.",
+                      "properties": {
+                        "name": {
+                          "description": "Name of the environment variable to be injected into the\nPostgreSQL process.",
+                          "minLength": 1,
+                          "pattern": "^[a-zA-Z_][a-zA-Z0-9_]*$",
+                          "type": "string"
+                        },
+                        "value": {
+                          "description": "Value of the environment variable. CloudNativePG performs a direct\nreplacement of this value, with support for placeholder expansion.\nThe ${`image_root`} placeholder resolves to the absolute mount path\nof the extension's volume (e.g., `/extensions/my-extension`). This\nis particularly useful for allowing applications or libraries to\nlocate specific directories within the mounted image.\nUnrecognized placeholders are rejected. To include a literal ${...}\nin the value, escape it as $${...}.",
+                          "minLength": 1,
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "name",
+                        "value"
+                      ],
+                      "type": "object"
+                    },
+                    "type": "array",
+                    "x-kubernetes-list-map-keys": [
+                      "name"
+                    ],
+                    "x-kubernetes-list-type": "map"
+                  },
+                  "extension_control_path": {
+                    "description": "The list of directories inside the image which should be added to extension_control_path.\nIf not defined, defaults to \"/share\".",
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  },
+                  "image": {
+                    "description": "The image containing the extension.",
+                    "properties": {
+                      "pullPolicy": {
+                        "description": "Policy for pulling OCI objects. Possible values are:\nAlways: the kubelet always attempts to pull the reference. Container creation will fail If the pull fails.\nNever: the kubelet never pulls the reference and only uses a local image or artifact. Container creation will fail if the reference isn't present.\nIfNotPresent: the kubelet pulls if the reference isn't already present on disk. Container creation will fail if the reference isn't present and the pull fails.\nDefaults to Always if :latest tag is specified, or IfNotPresent otherwise.",
+                        "type": "string"
+                      },
+                      "reference": {
+                        "description": "Required: Image or artifact reference to be used.\nBehaves in the same way as pod.spec.containers[*].image.\nPull secrets will be assembled in the same way as for the container image by looking up node credentials, SA image pull secrets, and pod spec image pull secrets.\nMore info: https://kubernetes.io/docs/concepts/containers/images\nThis field is optional to allow higher level config management to default or override\ncontainer images in workload controllers like Deployments and StatefulSets.",
+                        "type": "string"
+                      }
+                    },
+                    "type": "object"
+                  },
+                  "ld_library_path": {
+                    "description": "The list of directories inside the image which should be added to ld_library_path.",
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  },
+                  "name": {
+                    "description": "The name of the extension, required. The limit of 59 characters\nleaves room for the prefix the operator adds when deriving the\nextension's Kubernetes Volume name (capped at 63 characters).",
+                    "maxLength": 59,
+                    "minLength": 1,
+                    "pattern": "^[a-z0-9]([-a-z0-9_]*[a-z0-9])?$",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "name"
+                ],
+                "type": "object"
+              },
+              "type": "array"
+            },
             "image": {
               "description": "Image is the image name",
               "type": "string"
@@ -5584,6 +6159,34 @@
             "type": "object"
           },
           "type": "array"
+        },
+        "podSelectorRefs": {
+          "description": "PodSelectorRefs contains the resolved pod IPs for each named selector\ndefined in spec.podSelectorRefs.",
+          "items": {
+            "description": "PodSelectorRefStatus contains the resolved pod IPs for a named selector.",
+            "properties": {
+              "ips": {
+                "description": "IPs is the list of pod IPs matching the selector.\nEach IP is a single address (no CIDR notation).",
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "name": {
+                "description": "Name corresponds to the name in the spec's PodSelectorRef.",
+                "type": "string"
+              }
+            },
+            "required": [
+              "name"
+            ],
+            "type": "object"
+          },
+          "type": "array",
+          "x-kubernetes-list-map-keys": [
+            "name"
+          ],
+          "x-kubernetes-list-type": "map"
         },
         "poolerIntegrations": {
           "description": "The integration needed by poolers referencing the cluster",
@@ -5682,6 +6285,10 @@
           },
           "type": "object"
         },
+        "selector": {
+          "description": "Selector is the serialized form of the label selector that identifies\nthe pods managed by this cluster. Populated by the operator and exposed\nthrough the scale sub-resource so an autoscaler (such as HPA or VPA)\ncan discover the managed instance pods.",
+          "type": "string"
+        },
         "switchReplicaClusterStatus": {
           "description": "SwitchReplicaClusterStatus is the status of the switch to replica cluster",
           "properties": {
@@ -5725,6 +6332,115 @@
             "type": "object"
           },
           "type": "array"
+        },
+        "targetPgDataImageInfo": {
+          "description": "TargetPGDataImageInfo contains the details of the target image for an\nin-progress major upgrade. It is set before the upgrade Job is created,\nand cleared on successful completion or when the upgrade is rolled back.",
+          "properties": {
+            "extensions": {
+              "description": "Extensions contains the container image extensions available for the current Image",
+              "items": {
+                "description": "ExtensionConfiguration is the configuration used to add\nPostgreSQL extensions to the Cluster.",
+                "properties": {
+                  "bin_path": {
+                    "description": "A list of directories within the image to be appended to the\nPostgreSQL process's `PATH` environment variable.",
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  },
+                  "dynamic_library_path": {
+                    "description": "The list of directories inside the image which should be added to dynamic_library_path.\nIf not defined, defaults to \"/lib\".",
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  },
+                  "env": {
+                    "description": "Env is a list of custom environment variables to be set in the\nPostgreSQL process for this extension. It is the responsibility of the\ncluster administrator to ensure the variables are correct for the\nspecific extension. Note that changes to these variables require\na manual cluster restart to take effect.",
+                    "items": {
+                      "description": "ExtensionEnvVar defines an environment variable for a specific extension\nimage volume.",
+                      "properties": {
+                        "name": {
+                          "description": "Name of the environment variable to be injected into the\nPostgreSQL process.",
+                          "minLength": 1,
+                          "pattern": "^[a-zA-Z_][a-zA-Z0-9_]*$",
+                          "type": "string"
+                        },
+                        "value": {
+                          "description": "Value of the environment variable. CloudNativePG performs a direct\nreplacement of this value, with support for placeholder expansion.\nThe ${`image_root`} placeholder resolves to the absolute mount path\nof the extension's volume (e.g., `/extensions/my-extension`). This\nis particularly useful for allowing applications or libraries to\nlocate specific directories within the mounted image.\nUnrecognized placeholders are rejected. To include a literal ${...}\nin the value, escape it as $${...}.",
+                          "minLength": 1,
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "name",
+                        "value"
+                      ],
+                      "type": "object"
+                    },
+                    "type": "array",
+                    "x-kubernetes-list-map-keys": [
+                      "name"
+                    ],
+                    "x-kubernetes-list-type": "map"
+                  },
+                  "extension_control_path": {
+                    "description": "The list of directories inside the image which should be added to extension_control_path.\nIf not defined, defaults to \"/share\".",
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  },
+                  "image": {
+                    "description": "The image containing the extension.",
+                    "properties": {
+                      "pullPolicy": {
+                        "description": "Policy for pulling OCI objects. Possible values are:\nAlways: the kubelet always attempts to pull the reference. Container creation will fail If the pull fails.\nNever: the kubelet never pulls the reference and only uses a local image or artifact. Container creation will fail if the reference isn't present.\nIfNotPresent: the kubelet pulls if the reference isn't already present on disk. Container creation will fail if the reference isn't present and the pull fails.\nDefaults to Always if :latest tag is specified, or IfNotPresent otherwise.",
+                        "type": "string"
+                      },
+                      "reference": {
+                        "description": "Required: Image or artifact reference to be used.\nBehaves in the same way as pod.spec.containers[*].image.\nPull secrets will be assembled in the same way as for the container image by looking up node credentials, SA image pull secrets, and pod spec image pull secrets.\nMore info: https://kubernetes.io/docs/concepts/containers/images\nThis field is optional to allow higher level config management to default or override\ncontainer images in workload controllers like Deployments and StatefulSets.",
+                        "type": "string"
+                      }
+                    },
+                    "type": "object"
+                  },
+                  "ld_library_path": {
+                    "description": "The list of directories inside the image which should be added to ld_library_path.",
+                    "items": {
+                      "type": "string"
+                    },
+                    "type": "array"
+                  },
+                  "name": {
+                    "description": "The name of the extension, required. The limit of 59 characters\nleaves room for the prefix the operator adds when deriving the\nextension's Kubernetes Volume name (capped at 63 characters).",
+                    "maxLength": 59,
+                    "minLength": 1,
+                    "pattern": "^[a-z0-9]([-a-z0-9_]*[a-z0-9])?$",
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "name"
+                ],
+                "type": "object"
+              },
+              "type": "array"
+            },
+            "image": {
+              "description": "Image is the image name",
+              "type": "string"
+            },
+            "majorVersion": {
+              "description": "MajorVersion is the major version of the image",
+              "type": "integer"
+            }
+          },
+          "required": [
+            "image",
+            "majorVersion"
+          ],
+          "type": "object"
         },
         "targetPrimary": {
           "description": "Target primary instance, this is different from the previous one\nduring a switchover or a failover",
