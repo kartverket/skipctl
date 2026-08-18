@@ -17,7 +17,7 @@ require (
 	github.com/sergi/go-diff v1.4.0
 	github.com/spf13/cobra v1.10.2
 	github.com/spf13/pflag v1.0.10
-	github.com/stretchr/testify v1.11.1
+	github.com/stretchr/testify v1.12.0
 	github.com/yannh/kubeconform v0.8.0
 	go.yaml.in/yaml/v4 v4.0.0-rc.6
 	golang.org/x/oauth2 v0.36.0
@@ -125,7 +125,6 @@ require (
 	github.com/opencontainers/image-spec v1.1.1 // indirect
 	github.com/petermattis/goid v0.0.0-20260716134002-a9b348f0a2b9 // indirect
 	github.com/pjbgf/sha1cd v0.6.0 // indirect
-	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
 	github.com/prometheus/client_model v0.6.2 // indirect
 	github.com/prometheus/common v0.70.1 // indirect
 	github.com/prometheus/procfs v0.21.1 // indirect
