@@ -13,6 +13,7 @@ package crd
 // Skiperator dependencies down below
 //go:generate crdjson -outdir=./schemas -url=https://raw.githubusercontent.com/nais/liberator/refs/heads/main/config/crd/bases/nais.io_azureadapplications.yaml
 //go:generate crdjson -outdir=./schemas -url=https://raw.githubusercontent.com/nais/liberator/refs/heads/main/config/crd/bases/nais.io_idportenclients.yaml
+//go:generate crdjson -outdir=./schemas -url=https://raw.githubusercontent.com/nais/liberator/refs/heads/main/config/crd/bases/nais.io_ansattportenclients.yaml
 //go:generate crdjson -outdir=./schemas -url=https://raw.githubusercontent.com/nais/liberator/refs/heads/main/config/crd/bases/nais.io_maskinportenclients.yaml
 
 //go:generate crdjson -outdir=./schemas -url=https://github.com/prometheus-operator/prometheus-operator/releases/latest/download/stripped-down-crds.yaml
