@@ -11,7 +11,7 @@ require (
 	github.com/grpc-ecosystem/go-grpc-middleware/providers/prometheus v1.1.0
 	github.com/oklog/run v1.2.0
 	github.com/pkg/errors v0.9.1
-	github.com/posthog/posthog-go v1.23.1
+	github.com/posthog/posthog-go v1.24.3
 	github.com/prometheus-community/pro-bing v0.9.1
 	github.com/prometheus/client_golang v1.24.1
 	github.com/sergi/go-diff v1.4.0
