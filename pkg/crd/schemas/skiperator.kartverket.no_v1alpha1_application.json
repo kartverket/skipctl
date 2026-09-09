@@ -1228,7 +1228,7 @@
           "type": "string"
         },
         "ingresses": {
-          "description": "Any external hostnames that route to this application. Using a skip.statkart.no-address\nwill make the application reachable for kartverket-clients (internal), other addresses\nmake the app reachable on the internet. Note that other addresses than skip.statkart.no\n(also known as pretty hostnames) requires additional DNS setup.\nThe below hostnames will also have TLS certificates issued and be reachable on both\nHTTP and HTTPS.\n\nIngresses must be lowercase, contain no spaces, be a non-empty string, and have a hostname/domain separated by a period\nThey can optionally be suffixed with a plus and name of a custom TLS secret located in the istio-gateways namespace.\nE.g. \"foo.atkv3-dev.kartverket-intern.cloud+env-wildcard-cert\"",
+          "description": "Any external hostnames that route to this application. Using a skip.statkart.no-address\nwill make the application reachable for kartverket-clients (internal), other addresses\nmake the app reachable on the internet. Note that other addresses than skip.statkart.no\n(also known as pretty hostnames) requires additional DNS setup.\nThe below hostnames will also have TLS certificates issued and be reachable on both\nHTTP and HTTPS.\n\nIngresses must be lowercase, contain no spaces, be a non-empty string, and have a hostname/domain separated by a period\nThey can optionally be suffixed with a plus and the name of a custom TLS secret in the istio-gateways namespace.\nBoth routing providers read the secret from that namespace.\nE.g. \"foo.atkv3-dev.kartverket-intern.cloud+env-wildcard-cert\"",
           "items": {
             "type": "string"
           },
@@ -1247,7 +1247,7 @@
           "description": "IstioSettings are used to configure istio specific resources such as telemetry. Currently, adjusting sampling\ninterval for tracing is the only supported option.\nBy default, tracing is enabled with a random sampling percentage of 10%.",
           "properties": {
             "retries": {
-              "description": "Retries is configurable automatic retries for requests towards the application.\nBy default requests falling under: \"connect-failure,refused-stream,unavailable,cancelled\" will be retried.",
+              "description": "Retries is configurable automatic retries for requests towards the application.\nBy default requests falling under: \"connect-failure,refused-stream,unavailable,cancelled\" will be retried.\n\nRetries require spec.routingProvider=Legacy. Gateway API serves HTTPRoute\nretries only on its experimental channel, which SKIP clusters do not install,\nso an Application that asks for both retries and Standard routing is rejected\ninstead of losing its retry policy.",
               "properties": {
                 "attempts": {
                   "description": "Attempts is the number of retries to be allowed for a given request before giving up. The interval between retries will be determined automatically (25ms+).\nDefault is 2",
@@ -1812,6 +1812,15 @@
           },
           "type": "object"
         },
+        "routingProvider": {
+          "default": "Legacy",
+          "description": "RoutingProvider controls which routing API Skiperator uses for ingresses.\nLegacy uses Istio Gateway and VirtualService. Standard uses Kubernetes Gateway API.",
+          "enum": [
+            "Legacy",
+            "Standard"
+          ],
+          "type": "string"
+        },
         "startup": {
           "description": "Kubernetes uses startup probes to know when a container application has started.\nIf such a probe is configured, it disables liveness and readiness checks until it\nsucceeds, making sure those probes don't interfere with the application startup.\nThis can be used to adopt liveness checks on slow starting containers, avoiding them\ngetting killed by Kubernetes before they are up and running.\nStartup is optional, but when provided, path and port are required",
           "properties": {
@@ -2153,6 +2162,10 @@
         {
           "message": "extraContainers ingressPort must differ from spec.port",
           "rule": "!has(self.extraContainers) || self.extraContainers.all(c, !has(c.ingressPort) || c.ingressPort != self.port)"
+        },
+        {
+          "message": "spec.istioSettings.retries is not supported with spec.routingProvider=Standard, since Gateway API serves HTTPRoute retries only on its experimental channel",
+          "rule": "self.routingProvider != 'Standard' || !has(self.istioSettings) || !has(self.istioSettings.retries)"
         }
       ]
     },
@@ -2220,6 +2233,10 @@
             "type": "object"
           },
           "type": "array"
+        },
+        "migrationStartedAt": {
+          "format": "date-time",
+          "type": "string"
         },
         "subresources": {
           "additionalProperties": {
