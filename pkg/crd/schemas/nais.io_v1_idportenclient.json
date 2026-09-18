@@ -96,6 +96,8 @@
         }
       },
       "required": [
+        "frontchannelLogoutURI",
+        "redirectURIs",
         "secretName"
       ],
       "type": "object"
