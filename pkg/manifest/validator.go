@@ -4,6 +4,7 @@ import (
 	"github.com/google/go-jsonnet"
 	"github.com/kartverket/skipctl/pkg/constants"
 	"github.com/kartverket/skipctl/pkg/logging"
+	"github.com/yannh/kubeconform/pkg/validator"
 )
 
 type Validator struct {
@@ -54,26 +55,30 @@ func (v *Validator) validateJsonnet(file *Document) error {
 		logging.LogValidationErrors(file.Name, nil, err, v.outputJSON)
 		return err
 	}
-	res, results, k8err := v.k8s.validateK8sSchema(file.Name, content)
+	summary, k8err := v.k8s.validateK8sSchema(file.Name, content)
 
 	// Log validation errors for each result
-	for _, result := range results {
-		logging.LogValidationErrors(file.Name, result.ValidationErrors, result.Err, v.outputJSON)
+	for _, result := range summary.Result {
+		if result.Status == validator.Invalid || result.Status == validator.Error {
+			logging.LogValidationErrors(file.Name, result.ValidationErrors, result.Err, v.outputJSON)
+		}
 	}
 
-	v.countValidateRes(&res)
+	v.countValidateRes(&summary)
 	return k8err
 }
 
 func (v *Validator) validateYaml(d *Document) error {
-	result, results, jerr := v.k8s.validateK8sSchema(d.Name, d.Content)
+	summary, jerr := v.k8s.validateK8sSchema(d.Name, d.Content)
 
 	// Log validation errors for each result
-	for _, r := range results {
-		logging.LogValidationErrors(d.Name, r.ValidationErrors, r.Err, v.outputJSON)
+	for _, result := range summary.Result {
+		if result.Status == validator.Invalid || result.Status == validator.Error {
+			logging.LogValidationErrors(d.Name, result.ValidationErrors, result.Err, v.outputJSON)
+		}
 	}
 
-	v.countValidateRes(&result)
+	v.countValidateRes(&summary)
 	return jerr
 }
 func (v *Validator) countValidateRes(result *ValidateResult) {
