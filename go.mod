@@ -1,6 +1,6 @@
 module github.com/kartverket/skipctl
 
-go 1.26.7
+go 1.27.3
 
 require (
 	github.com/PumpkinSeed/slog-context v0.1.2
