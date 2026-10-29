@@ -24,6 +24,7 @@ type ValidateResult struct {
 	InvalidCount int
 	ErrorCount   int
 	SkippedCount int
+	Result       []validator.Result
 }
 
 func (vr *ValidateResult) GetTotalResources() int {
@@ -43,14 +44,14 @@ func isJSONArray(content string) bool {
 //
 // The content can be either in form JSON or YAML.
 // It handles both single resources and arrays of resources.
-func (k8 *K8sValidator) validateK8sSchema(filename string, content string) (ValidateResult, []validator.Result, error) {
+func (k8 *K8sValidator) validateK8sSchema(filename string, content string) (ValidateResult, error) {
 	content = strings.TrimSpace(content)
 
 	if isJSONArray(content) {
 		// Parse the content as an array of raw JSON messages
 		var resources []json.RawMessage
 		if err := json.Unmarshal([]byte(content), &resources); err != nil {
-			return ValidateResult{}, nil, fmt.Errorf("failed to parse JSON array: %w", err)
+			return ValidateResult{}, fmt.Errorf("failed to parse JSON array: %w", err)
 		}
 
 		// Validate each resource in the array
@@ -66,7 +67,7 @@ func (k8 *K8sValidator) validateK8sSchema(filename string, content string) (Vali
 //
 // For each resource, it creates a reader and validates it individually.
 // Only for JSON arrays.
-func (k8 *K8sValidator) validateResourceArray(filename string, resources []json.RawMessage) (ValidateResult, []validator.Result, error) {
+func (k8 *K8sValidator) validateResourceArray(filename string, resources []json.RawMessage) (ValidateResult, error) {
 	var allResults []validator.Result
 
 	for i, resource := range resources {
@@ -79,14 +80,43 @@ func (k8 *K8sValidator) validateResourceArray(filename string, resources []json.
 	return k8.processValidationResults(filename, allResults)
 }
 
+func (k8 *K8sValidator) checkIfValidSchema(result validator.Result) error {
+	if result.Err == nil {
+		return nil
+	}
+
+	errMsg := result.Err.Error()
+	// Give a hint about api version if we find 'could not find schema'
+	if strings.Contains(errMsg, "could not find schema") {
+		// Get the resource signature to extract schema kind and version (apiVersion)
+		sig, sigErr := result.Resource.Signature()
+		if sigErr == nil && sig.Kind != "" {
+			if sig.Version != "" {
+				return fmt.Errorf("%s Hint: The schema for %s with version '%s' was not found.\n   Please verify that the apiVersion is correct and supported.\n   Common causes:\n   • Incorrect apiVersion (e.g., v1beta1)\n   • Unsupported or deprecated API version\n   • Missing CRD schema",
+					errMsg, sig.Kind, sig.Version)
+			}
+			return fmt.Errorf("%s Hint: The schema for %s was not found.\n   Please verify that the apiVersion is correct and supported.\n   Common causes:\n   • Incorrect apiVersion (e.g., v1beta1)\n   • Unsupported or deprecated API version\n   • Missing CRD schema",
+				errMsg, sig.Kind)
+		}
+	}
+	return result.Err
+}
+
 // processValidationResults processes the results of the validation.
 //
 // Counts the number of valid, invalid, error, and skipped resources,
 // and returns the errors encountered during validation along with the results.
-func (k8 *K8sValidator) processValidationResults(filename string, results []validator.Result) (ValidateResult, []validator.Result, error) {
+func (k8 *K8sValidator) processValidationResults(filename string, results []validator.Result) (ValidateResult, error) {
 	// Initialize counters for each status
 	var validCount, invalidCount, errorCount, skippedCount int
 	var err error
+
+	// Enrich schema-not-found errors with helpful API version hints
+	for i := range results {
+		if results[i].Status == validator.Error {
+			results[i].Err = k8.checkIfValidSchema(results[i])
+		}
+	}
 
 	for _, result := range results {
 		switch result.Status {
@@ -109,16 +139,13 @@ func (k8 *K8sValidator) processValidationResults(filename string, results []vali
 		}
 	}
 
-	if err != nil {
-		k8.log.Error(err.Error())
-	}
-
 	return ValidateResult{
 		ValidCount:   validCount,
 		InvalidCount: invalidCount,
 		ErrorCount:   errorCount,
 		SkippedCount: skippedCount,
-	}, results, err
+		Result:       results,
+	}, err
 }
 
 // initValidator initializes the Kubernetes schema validator.
