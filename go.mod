@@ -23,7 +23,7 @@ require (
 	golang.org/x/oauth2 v0.37.0
 	google.golang.org/api v0.308.0
 	google.golang.org/grpc v1.85.0
-	google.golang.org/protobuf v1.36.13-0.20261016172727-e9ee2a76ab8e
+	google.golang.org/protobuf v1.37.0-rc.1
 	sigs.k8s.io/kustomize/api v0.21.3
 	sigs.k8s.io/kustomize/kyaml v0.21.3
 	sigs.k8s.io/yaml v1.6.0
