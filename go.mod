@@ -19,7 +19,7 @@ require (
 	github.com/spf13/pflag v1.0.10
 	github.com/stretchr/testify v1.12.1
 	github.com/yannh/kubeconform v0.8.0
-	go.yaml.in/yaml/v4 v4.0.0-rc.6
+	go.yaml.in/yaml/v4 v4.0.0-rc.7
 	golang.org/x/oauth2 v0.37.0
 	google.golang.org/api v0.308.0
 	google.golang.org/grpc v1.85.0
