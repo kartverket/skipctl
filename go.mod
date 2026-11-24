@@ -14,7 +14,7 @@ require (
 	github.com/posthog/posthog-go v1.44.1
 	github.com/prometheus-community/pro-bing v0.9.1
 	github.com/prometheus/client_golang v1.25.0
-	github.com/sergi/go-diff v1.4.0
+	github.com/sergi/go-diff v1.4.5
 	github.com/spf13/cobra v1.10.2
 	github.com/spf13/pflag v1.1.0
 	github.com/stretchr/testify v1.12.1
